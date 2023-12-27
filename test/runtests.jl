@@ -6,27 +6,13 @@ const ze = Zero()
 
 @testset "Constructors" begin
 
-    @test Vec{1}(1).v === 1
-    @test Vec{1}(1.0).v === 1.0
-    @test typeof(Vec(1.0)) === Vec1D{1,Float64}
+    @test Vec(x=1).x === 1
+    @test Vec(y=1.0).y === 1.0
+    @test typeof(Vec(z=1.0)) === Vec{Union{Zero,Float64},1,Zero,Zero,Float64}
 
-    @test_throws DomainError Vec{0}(1)
+    @test eltype(Vec(x=1.0,y=2)) === Union{Zero,Float64}
 
-    @test xx(Vec{1,2}(1,2)) === 1
-    @test yy(Vec{1,2}(1,2)) === 2
-    @test xx(Vec{1,2}(1.0,2.0)) === 1.0
-    @test yy(Vec{1,2}(1.0,2.0)) === 2.0
-
-    @test xx(Vec{2,1}(1.0,2.0)) === 2.0
-    @test yy(Vec{2,1}(1.0,2.0)) === 1.0
-
-    @test typeof(Vec(1.0,2)) === Vec2D{1,2,Float64}
-
-    @test_throws DomainError Vec{0,2}(1.0,2.0)
-    @test_throws DomainError Vec{1,4}(1.0,2.0)
-    @test_throws DomainError Vec{1,1}(1.0,2.0)
-
-    @test typeof(Vec(1,3,4.0im)) === Vec3D{ComplexF64}
+    @test eltype(Vec(x=1,y=3,z=4.0im)) === ComplexF64
 
 end
 
@@ -37,17 +23,17 @@ end
 
     @test all(x->(x===ze),Vec())
 
-    a1 = Vec1D{1}(1.0)
+    a1 = Vec(x=1.0)
     @test a1[1] === 1.0
     @test a1[2] === ze
     @test a1[3] === ze
 
-    a2 = Vec1D{2}(1.0)
+    a2 = Vec(y=1.0)
     @test a2[1] === ze
     @test a2[2] === 1.0
     @test a2[3] === ze
 
-    a3 = Vec1D{3}(1.0)
+    a3 = Vec(z=1.0)
     @test a3[1] === ze
     @test a3[2] === ze
     @test a3[3] === 1.0
