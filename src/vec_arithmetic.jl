@@ -34,11 +34,11 @@ muladd(x::Integer,::One,y::Zero) = x
 @inline +(a::AbstractVec, b::AbstractVec) = Vec(x=a.x+b.x, y=a.y+b.y, z=a.z+b.z)
 @inline +(a::AbstractVec...) = Vec(x=+(_x.(a)...), y=+(_y.(a)...), z=+(_z.(a)...))
 @inline -(a::AbstractVec, b::AbstractVec) = Vec(x=a.x-b.x, y=a.y-b.y, z=a.z-b.z)
-@inline -(a::AbstractVec) = 𝟎⃗ - a
-#
+@inline -(a::AbstractVec) = _zero(a) - a
+
 @inline muladd(a::Number, v::AbstractVec, u::AbstractVec) = Vec(x=muladd(a,_x(v),_x(u)), y=muladd(a,_y(v),_y(u)), z=muladd(a,_z(v),_z(u)))
 @inline muladd(v::AbstractVec, a::Number, u::AbstractVec) = Vec(x=muladd(a,_x(v),_x(u)), y=muladd(a,_y(v),_y(u)), z=muladd(a,_z(v),_z(u)))
-#
+
 @inline dot(a::AbstractVec,b::AbstractVec) = @muladd a.x*b.x + a.y*b.y + a.z*b.z
 
 @inline fsqrt(x) = @fastmath sqrt(x)
@@ -54,7 +54,7 @@ muladd(x::Integer,::One,y::Zero) = x
 @inline norm(u::Vec{T1,1,Zero,Zero,T2},p=2) where {T1,T2} = abs(u.z)
 
 @inline normalize(u::Vec) = u/norm(u)
-#
+
 @muladd @inline function cross(a::AbstractVec,b::AbstractVec) 
     ax = a.x
     ay = a.y
