@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = VectorBasis
+CurrentModule = TensorsLite
 ```
 
-# VectorBasis
+# TensorsLite
 
-Documentation for [VectorBasis](https://github.com/favba/VectorBasis.jl).
+Documentation for [TensorsLite](https://github.com/favba/TensorsLite.jl).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [VectorBasis]
+Modules = [TensorsLite]
 ```

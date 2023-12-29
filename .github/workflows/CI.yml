@@ -64,6 +64,6 @@ jobs:
         shell: julia --project=docs --color=yes {0}
         run: |
           using Documenter: DocMeta, doctest
-          using VectorBasis
-          DocMeta.setdocmeta!(VectorBasis, :DocTestSetup, :(using VectorBasis); recursive=true)
-          doctest(VectorBasis)
+          using TensorsLite
+          DocMeta.setdocmeta!(TensorsLite, :DocTestSetup, :(using TensorsLite); recursive=true)
+          doctest(TensorsLite)

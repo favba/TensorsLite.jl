@@ -1,4 +1,4 @@
-module VectorBasis
+module TensorsLite
 
 using Zeros
 using MuladdMacro

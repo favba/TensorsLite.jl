@@ -1,16 +1,16 @@
-using VectorBasis
+using TensorsLite
 using Documenter
 
-DocMeta.setdocmeta!(VectorBasis, :DocTestSetup, :(using VectorBasis); recursive=true)
+DocMeta.setdocmeta!(TensorsLite, :DocTestSetup, :(using TensorsLite); recursive=true)
 
 makedocs(;
-    modules=[VectorBasis],
+    modules=[TensorsLite],
     authors="Felipe A. V. de Bragança Alves <favbalves@gmail.com> and contributors",
-    repo="https://github.com/favba/VectorBasis.jl/blob/{commit}{path}#{line}",
-    sitename="VectorBasis.jl",
+    repo="https://github.com/favba/TensorsLite.jl/blob/{commit}{path}#{line}",
+    sitename="TensorsLite.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://favba.github.io/VectorBasis.jl",
+        canonical="https://favba.github.io/TensorsLite.jl",
         edit_link="main",
         assets=String[],
     ),
@@ -20,6 +20,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/favba/VectorBasis.jl",
+    repo="github.com/favba/TensorsLite.jl",
     devbranch="main",
 )
