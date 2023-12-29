@@ -3,7 +3,7 @@ module VectorBasis
 using Zeros
 using MuladdMacro
 
-export Vec, AbstractVec
+export Vec, Ten, AbstractVec, dotadd, otimes, ⊗
 export 𝐢, 𝐣, 𝐤
 
 abstract type AbstractVec{T,N} <: AbstractArray{T,N} end
@@ -72,6 +72,7 @@ Base.IndexStyle(::Type{T}) where T<:Vec{<:Any,2} = IndexCartesian()
 
 function _my_convert(T::Type,x::T1) where T1
     T1 === Zero && return x
+    T1 === One && return x
     return convert(T,x)
 end
 
