@@ -44,6 +44,7 @@ end
 @inline dotadd(v::AbstractVec{<:Any,1},T::AbstractTen,u::AbstractVec{<:Any,1}) = muladd(v,T,u)
 
 @inline *(T::AbstractTen,B::AbstractTen) = Vec(T*B.x,T*B.y,T*B.z)
+@inline dot(T::AbstractTen,B::AbstractTen) = T*B
 
 @inline muladd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = Vec(muladd(A,B.x,C.x), muladd(A,B.y,C.y), muladd(A,B.z,C.z))
 @inline dotadd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = muladd(A,B,C)
@@ -53,3 +54,5 @@ end
                                                     zx=u.z*v.x, zy=u.z*v.y, zz=u.z*v.z)
 
 const ⊗ = otimes
+
+@inline inner(A::AbstractTen,B::AbstractTen) = real(dotadd(A.x,conj(B.x),dotadd(A.y,conj(B.y),dot(A.z,conj(B.z)))))

@@ -1,10 +1,11 @@
 using TensorsLite
 using Zeros
 using Test
+using LinearAlgebra
 
 const ze = Zero()
 
-@testset "Constructors" begin
+@testset "Vector Constructors" begin
 
     @test Vec(x=1).x === 1
     @test Vec(y=1.0).y === 1.0
@@ -14,28 +15,140 @@ const ze = Zero()
 
     @test eltype(Vec(x=1,y=3,z=4.0im)) === ComplexF64
 
+    @test eltype(Vec(x=One())) === Union{Zero,One}
+
+end
+
+@testset "Tensor Constructors" begin
+    @test Array(Ten(xx=1, xy=2, xz=3,
+                    yx=4, yy=5, yz=6,
+                    zx=7, zy=8, zz=9.0)) == [1.0 2.0 3.0; 4.0 5.0 6.0; 7.0 8.0 9.0]
+
+    @test eltype(Ten(xx=1, xy=2, xz=3,
+                     yx=4, yy=5, yz=6,
+                     zx=7, zy=8, zz=9.0)) === Float64
+
+    @test eltype(Ten(xx=1.0)) === Union{Zero,Float64}
+
+    @test eltype(Ten(xx=One())) === Union{Zero,One}
 end
 
 @testset "Size and Length" begin
+    let a = Vec(rand(),rand(),rand()), T = Ten(xx=rand(),yy=rand(),xz=rand())
+        @test size(a) === (3,)
+        @test length(a) === 3
+        @test size(T) === (3,3)
+        @test length(T) === 9
+    end
 end
 
 @testset "getindex" begin
 
     @test all(x->(x===ze),Vec())
 
-    a1 = Vec(x=1.0)
-    @test a1[1] === 1.0
-    @test a1[2] === ze
-    @test a1[3] === ze
+    let a1 = Vec(x=1.0)
+        @test a1[1] === 1.0
+        @test a1[2] === ze
+        @test a1[3] === ze
+    end
 
-    a2 = Vec(y=1.0)
-    @test a2[1] === ze
-    @test a2[2] === 1.0
-    @test a2[3] === ze
+    let a2 = Vec(y=1.0)
+        @test a2[1] === ze
+        @test a2[2] === 1.0
+        @test a2[3] === ze
+    end
 
-    a3 = Vec(z=1.0)
-    @test a3[1] === ze
-    @test a3[2] === ze
-    @test a3[3] === 1.0
+    let a3 = Vec(z=1.0)
+        @test a3[1] === ze
+        @test a3[2] === ze
+        @test a3[3] === 1.0
+    end
+
+    let T = Ten(xx=1, xy=2, xz=3,
+                yx=4, yy=5, yz=6,
+                zx=7, zy=8, zz=9.0)
+        @test T[1,1] === 1.0
+        @test T[1,2] === 2.0
+        @test T[1,3] === 3.0
+        @test T[2,1] === 4.0
+        @test T[2,2] === 5.0
+        @test T[2,3] === 6.0
+        @test T[3,1] === 7.0
+        @test T[3,2] === 8.0
+        @test T[3,3] === 9.0
+    end
+
+end
+
+_rand(T) = rand(T)
+_rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
+@testset "Vector Operations" begin
+        
+    for T1 in (Int64,Float64,ComplexF64)
+        un = (Vec(y=_rand(T1)), Vec(x=_rand(T1), z=_rand(T1)), Vec(_rand(T1),_rand(T1),_rand(T1)))
+        for u in un
+            Au = Array{TensorsLite._my_eltype(u)}(u)
+            for op in (+,-,normalize)
+                @test all(op(u) .≈ op(Au))
+            end
+            @test norm(u) ≈ norm(Au)
+        end
+        for T2 in (Int64,Float64,ComplexF64)
+            vn = (Vec(y=_rand(T2)), Vec(x=_rand(T2), z=_rand(T2)), Vec(_rand(T2),_rand(T2),_rand(T2)))
+            for u in un
+                Au = Array{TensorsLite._my_eltype(u)}(u)
+                for v in vn
+                    Av = Array{TensorsLite._my_eltype(v)}(v)
+                    for op in (+,-,cross)
+                        @test all(op(u,v) .≈ op(Au,Av))
+                    end
+                    @test dot(u,v) ≈ dot(conj(Au),Av) # Use conj here because for complex vectors julia conjugates the first vector automatically and we don't do that.
+                    @test dotadd(u,v,3.0) ≈ dot(conj(Au),Av) + 3.0
+                    @test all(muladd(2.0,u,v) .≈ (2.0*Au + Av))
+                    @test all(muladd(u,2.0,v) .≈ (2.0*Au + Av))
+                end
+            end
+        end
+    end
+end
+
+@testset "Tensor Operations" begin
+    for T1 in (Int64,Float64,ComplexF64)
+        un = (Ten(yy=_rand(T1)),
+              Ten(xx=_rand(T1),xz=_rand(T1), zx=_rand(T1), zz=_rand(T1)),
+              Ten(xx=_rand(T1),xy=_rand(T1),xz=_rand(T1),
+                  yx=_rand(T1),yy=_rand(T1),yz=_rand(T1),
+                  zx=_rand(T1),zy=_rand(T1),zz=_rand(T1)))
+        for u in un
+            Au = Array{TensorsLite._my_eltype(u)}(u)
+            for op in (+,-,normalize)
+            #for op in (+,-)
+                @test all(op(u) .≈ op(Au))
+            end
+            @test norm(u) ≈ norm(Au)
+        end
+        for T2 in (Int64,Float64,ComplexF64)
+            vn = (Ten(yy=_rand(T1)),
+                  Ten(xx=_rand(T1),xz=_rand(T1), zx=_rand(T1), zz=_rand(T1)),
+                  Ten(xx=_rand(T1),xy=_rand(T1),xz=_rand(T1),
+                      yx=_rand(T1),yy=_rand(T1),yz=_rand(T1),
+                      zx=_rand(T1),zy=_rand(T1),zz=_rand(T1)))
+            for u in un
+                Au = Array{TensorsLite._my_eltype(u)}(u)
+                for v in vn
+                    Av = Array{TensorsLite._my_eltype(v)}(v)
+                    for op in (+,-,*)
+                        @test all(op(u,v) .≈ op(Au,Av))
+                    end
+                    @test all(dot(u,v) .≈ Au*Av)
+                    @test all(muladd(2.0,u,v) .≈ (2.0*Au + Av))
+                    @test all(muladd(u,2.0,v) .≈ (2.0*Au + Av))
+
+                    @test all(muladd(u,v,v) .≈ (Au*Av + Av))
+                    @test all(dotadd(u,v,v) .≈ (Au*Av + Av))
+                end
+            end
+        end
+    end
 
 end

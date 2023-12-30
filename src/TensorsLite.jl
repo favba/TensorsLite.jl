@@ -38,7 +38,7 @@ struct Vec{T,N,Tx,Ty,Tz} <: AbstractVec{T,N}
         xf = Vec(_my_convert(Tf,x.x), _my_convert(Tf,x.y), _my_convert(Tf,x.z))
         yf = Vec(_my_convert(Tf,y.x), _my_convert(Tf,y.y), _my_convert(Tf,y.z))
         zf = Vec(_my_convert(Tf,z.x), _my_convert(Tf,z.y), _my_convert(Tf,z.z))
-        return new{eltype(xf),2,typeof(xf),typeof(yf),typeof(zf)}(xf,yf,zf)
+        return new{Union{eltype(xf),eltype(yf),eltype(zf)},2,typeof(xf),typeof(yf),typeof(zf)}(xf,yf,zf)
     end
 end
 
