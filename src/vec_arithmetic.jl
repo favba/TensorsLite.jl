@@ -45,9 +45,9 @@ muladd(x::Integer,::One,y::Zero) = x
 
 @inline conj(u::Vec) = Vec(x=conj(u.x), y=conj(u.y), z=conj(u.z))
 
-@inline inner(u::Vec{T,1},v::Vec{T2,1}) where {T,T2} = real(dot(u,conj(v)))
+@inline inner(u::Vec{T,1},v::Vec{T2,1}) where {T,T2} = dot(conj(u),v)
 
-@inline norm(u::AbstractVec) = fsqrt(inner(u,u))
+@inline norm(u::AbstractVec) = fsqrt(real(inner(u,u)))
 
 @inline norm(u::Vec{T1,1,T2,Zero,Zero},p::Real=2) where {T1,T2} = abs(u.x)
 @inline norm(u::Vec{T1,1,Zero,T2,Zero},p::Real=2) where {T1,T2} = abs(u.y)

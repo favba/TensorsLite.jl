@@ -55,4 +55,4 @@ end
 
 const ⊗ = otimes
 
-@inline inner(A::AbstractTen,B::AbstractTen) = real(dotadd(A.x,conj(B.x),dotadd(A.y,conj(B.y),dot(A.z,conj(B.z)))))
+@inline inner(A::AbstractTen,B::AbstractTen) = dotadd(conj(A.x),B.x,dotadd(conj(A.y),B.y,dot(conj(A.z),B.z)))
