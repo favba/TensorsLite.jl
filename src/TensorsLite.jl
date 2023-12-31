@@ -1,7 +1,6 @@
 module TensorsLite
 
 using Zeros
-using MuladdMacro
 
 export Vec, Ten, AbstractVec, dotadd, otimes, ⊗
 export 𝐢, 𝐣, 𝐤

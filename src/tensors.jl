@@ -32,22 +32,25 @@ end
 
 @inline dot(v::AbstractVec{<:Any,1},T::AbstractTen) = dot(transpose(T),v)
 
-@inline dotadd(u::AbstractVec,v::AbstractVec,a::Number) = @muladd u.x*v.x + u.y*v.y + u.z*v.z + a
+@inline dotadd(u::AbstractVec,v::AbstractVec,a::Number) = _muladd(u.x, v.x, _muladd(u.y, v.y, _muladd(u.z,v.z, a)))
 
-@inline function muladd(T::AbstractTen,v::AbstractVec{<:Any,1},u::AbstractVec{<:Any,1})
+@inline function _muladd(T::AbstractTen,v::AbstractVec{<:Any,1},u::AbstractVec{<:Any,1})
     Tt = transpose(T)
     return Vec(dotadd(Tt.x,v,u.x), dotadd(Tt.y,v,u.y), dotadd(Tt.z,v,u.z))
 end
-@inline dotadd(T::AbstractTen,v::AbstractVec{<:Any,1},u::AbstractVec{<:Any,1}) = muladd(T,v,u)
+@inline muladd(T::AbstractTen,v::AbstractVec{<:Any,1},u::AbstractVec{<:Any,1}) = _muladd(T,v,u)
+@inline dotadd(T::AbstractTen,v::AbstractVec{<:Any,1},u::AbstractVec{<:Any,1}) = _muladd(T,v,u)
 
-@inline muladd(v::AbstractVec{<:Any,1},T::AbstractTen,u::AbstractVec{<:Any,1}) = Vec(dotadd(T.x,v,u.x), dotadd(T.y,v,u.y), dotadd(T.z,v,u.z))
-@inline dotadd(v::AbstractVec{<:Any,1},T::AbstractTen,u::AbstractVec{<:Any,1}) = muladd(v,T,u)
+@inline _muladd(v::AbstractVec{<:Any,1},T::AbstractTen,u::AbstractVec{<:Any,1}) = Vec(dotadd(T.x,v,u.x), dotadd(T.y,v,u.y), dotadd(T.z,v,u.z))
+@inline muladd(v::AbstractVec{<:Any,1},T::AbstractTen,u::AbstractVec{<:Any,1}) = _muladd(v,T,u)
+@inline dotadd(v::AbstractVec{<:Any,1},T::AbstractTen,u::AbstractVec{<:Any,1}) = _muladd(v,T,u)
 
 @inline *(T::AbstractTen,B::AbstractTen) = Vec(T*B.x,T*B.y,T*B.z)
 @inline dot(T::AbstractTen,B::AbstractTen) = T*B
 
-@inline muladd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = Vec(muladd(A,B.x,C.x), muladd(A,B.y,C.y), muladd(A,B.z,C.z))
-@inline dotadd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = muladd(A,B,C)
+@inline _muladd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = Vec(_muladd(A,B.x,C.x), _muladd(A,B.y,C.y), _muladd(A,B.z,C.z))
+@inline muladd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = _muladd(A,B,C)
+@inline dotadd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = _muladd(A,B,C)
 
 @inline otimes(u::AbstractVec,v::AbstractVec) = Ten(xx=u.x*v.x, xy=u.x*v.y, xz=u.x*v.z,
                                                     yx=u.y*v.x, yy=u.y*v.y, yz=u.y*v.z,
@@ -56,3 +59,5 @@ end
 const ⊗ = otimes
 
 @inline inner(A::AbstractTen,B::AbstractTen) = dotadd(conj(A.x),B.x,dotadd(conj(A.y),B.y,dot(conj(A.z),B.z)))
+
+@inline dot(x::AbstractVec,A::AbstractTen,y::AbstractVec) = _muladd(A,y,x)
