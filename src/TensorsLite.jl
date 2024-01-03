@@ -4,6 +4,7 @@ using Zeros
 
 export Vec, Ten, AbstractVec, dotadd, otimes, ⊗
 export 𝐢, 𝐣, 𝐤
+export VecArray
 
 include("type_utils.jl")
 
@@ -102,4 +103,6 @@ end
 
 include("vec_arithmetic.jl")
 include("tensors.jl")
+include("vecarray.jl")
+
 end
