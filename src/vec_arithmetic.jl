@@ -1,5 +1,6 @@
 import Base: +, -, *, /, //, muladd, conj
-import LinearAlgebra: dot, norm, cross, normalize
+import LinearAlgebra: dot, ⋅, norm, cross, ×, normalize
+export dot, ⋅, norm, cross, ×, normalize # Reexport from LinearAlgebra
 
 include("muladd_definitions.jl")
 
