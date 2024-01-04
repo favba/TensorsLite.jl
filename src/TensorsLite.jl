@@ -43,22 +43,30 @@ struct Vec{T,N,Tx,Ty,Tz} <: AbstractVec{T,N}
 end
 
 const AbstractTen{T} = AbstractVec{T,2}
+const Vec3D{T} = Vec{T,1,T,T,T}
+const Vec2Dxy{T} = Vec{Union{Zero,T},1,T,T,Zero}
+const Vec2Dxz{T} = Vec{Union{Zero,T},1,T,Zero,T}
+const Vec2Dyz{T} = Vec{Union{Zero,T},1,Zero,T,T}
+const Vec1Dx{T} = Vec{Union{Zero,T},1,T,Zero,Zero}
+const Vec1Dy{T} = Vec{Union{Zero,T},1,Zero,T,Zero}
+const Vec1Dz{T} = Vec{Union{Zero,T},1,Zero,Zero,T}
+const Vec0D = Vec{Zero,1,Zero,Zero,Zero}
 
 const 𝟎⃗ = Vec(Zero(),Zero(),Zero())
 const 𝐢 = Vec(One(),Zero(),Zero())
 const 𝐣 = Vec(Zero(),One(),Zero())
 const 𝐤 = Vec(Zero(),Zero(),One())
 
-@inline zero_to_zerovec(x::Zero) = 𝟎⃗
-@inline zero_to_zerovec(x::Vec) = x
+@inline if_zero_to_zerovec(x::Zero) = 𝟎⃗
+@inline if_zero_to_zerovec(x::Vec) = x
 
 @inline function Vec(;x::Union{Vec,Number}=𝟎,y::Union{Vec,Number}=𝟎,z::Union{Vec,Number}=𝟎)
     if all_Numbers(x,y,z)
         return Vec(x,y,z)
     else
-        x1 = zero_to_zerovec(x)
-        y1 = zero_to_zerovec(y)
-        z1 = zero_to_zerovec(z)
+        x1 = if_zero_to_zerovec(x)
+        y1 = if_zero_to_zerovec(y)
+        z1 = if_zero_to_zerovec(z)
         return Vec(x1,y1,z1)
     end
 end
@@ -68,7 +76,7 @@ Base.IndexStyle(::Type{T}) where T<:Vec{<:Any,2} = IndexCartesian()
 
 @inline _zero_type(::Type{<:Number}) = Zeros.Zero
 @inline _zero(::Type{<:Number}) = Zeros.Zero()
-@inline _zero_type(::Type{<:AbstractVec{<:Any,1}}) = typeof(𝟎⃗)
+@inline _zero_type(::Type{<:AbstractVec{<:Any,1}}) = Vec0D
 @inline _zero(::Type{<:AbstractVec{<:Any,1}}) = 𝟎⃗
 @inline _zero(::Type{<:AbstractVec{<:Any,2}}) = Vec(x=𝟎⃗,y=𝟎⃗,z=𝟎⃗)
 @inline _zero_type(::Type{<:AbstractVec{<:Any,2}}) = typeof(Vec(x=𝟎⃗,y=𝟎⃗,z=𝟎⃗))

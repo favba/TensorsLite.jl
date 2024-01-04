@@ -29,10 +29,10 @@ include("muladd_definitions.jl")
 
 @inline norm(u::AbstractVec) = fsqrt(real(inner(u,u)))
 
-@inline norm(u::Vec{T1,1,T2,Zero,Zero},p::Real=2) where {T1,T2} = abs(u.x)
-@inline norm(u::Vec{T1,1,Zero,T2,Zero},p::Real=2) where {T1,T2} = abs(u.y)
-@inline norm(u::Vec{T1,1,Zero,Zero,T2},p::Real=2) where {T1,T2} = abs(u.z)
-@inline norm(u::Vec{T1,1,Zero,Zero,Zero},p::Real=2) where {T1} = 𝟎
+@inline norm(u::Vec1Dx,p::Real=2) = abs(u.x)
+@inline norm(u::Vec1Dy,p::Real=2) = abs(u.y)
+@inline norm(u::Vec1Dz,p::Real=2) = abs(u.z)
+@inline norm(u::Vec0D,p::Real=2) = 𝟎
 
 @inline normalize(u::AbstractVec) = u/norm(u)
 @inline normalize(u::AbstractVec{Zero}) = u
