@@ -9,7 +9,7 @@ const ze = Zero()
 
     @test Vec(x=1).x === 1
     @test Vec(y=1.0).y === 1.0
-    @test typeof(Vec(z=1.0)) === Vec{Union{Zero,Float64},1,Zero,Zero,Float64}
+    @test typeof(Vec(z=1.0)) === Vec1Dz{Float64}
 
     @test eltype(Vec(x=1.0,y=2)) === Union{Zero,Float64}
 

@@ -2,7 +2,8 @@ module TensorsLite
 
 using Zeros
 
-export Vec, Ten, AbstractVec, dotadd, otimes, ⊗
+export Vec, Ten, AbstractVec, Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec1Dx, Vec1Dy, Vec1Dz
+export dotadd, inner, otimes, ⊗
 export 𝐢, 𝐣, 𝐤
 export VecArray, ZeroArray
 
