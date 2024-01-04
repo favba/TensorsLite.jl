@@ -141,6 +141,9 @@ _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
                 @test all(op(u) .≈ op(Au))
             end
             @test norm(u) ≈ norm(Au)
+            if T1 === ComplexF64
+                @test all(conj(u) .≈ conj(Au))
+            end
         end
         for T2 in (Int64,Float64,ComplexF64)
             vn = (Vec(y=_rand(T2)), Vec(x=_rand(T2), z=_rand(T2)), Vec(_rand(T2),_rand(T2),_rand(T2)))
@@ -155,6 +158,8 @@ _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
                     @test dotadd(u,v,3.0) ≈ dot(conj(Au),Av) + 3.0
                     @test all(muladd(2.0,u,v) .≈ (2.0*Au + Av))
                     @test all(muladd(u,2.0,v) .≈ (2.0*Au + Av))
+                    @test inner(u,v) ≈ dot(Au,Av)
+                    @test all(u⊗v .≈ Au*transpose(Av))
                 end
             end
         end
@@ -194,6 +199,38 @@ end
 
                     @test all(muladd(u,v,v) .≈ (Au*Av + Av))
                     @test all(dotadd(u,v,v) .≈ (Au*Av + Av))
+                    @test inner(u,v) ≈ dot(Au,Av)
+                end
+            end
+        end
+    end
+end
+
+@testset "Tensor x Vec Operations" begin
+    for T1 in (Int64,Float64,ComplexF64)
+        Tn = (Ten(yy=_rand(T1)),
+              Ten(xx=_rand(T1),xz=_rand(T1), zx=_rand(T1), zz=_rand(T1)),
+              Ten(xx=_rand(T1),xy=_rand(T1),xz=_rand(T1),
+                  yx=_rand(T1),yy=_rand(T1),yz=_rand(T1),
+                  zx=_rand(T1),zy=_rand(T1),zz=_rand(T1)))
+ 
+        for T2 in (Int64,Float64,ComplexF64)
+            vn = (Vec(y=_rand(T2)), Vec(x=_rand(T2), z=_rand(T2)), Vec(_rand(T2),_rand(T2),_rand(T2)))
+            for T in Tn
+                AT = Array{TensorsLite._my_eltype(T)}(T)
+
+                @test all(transpose(T) .== transpose(AT))
+                @test all(T' .== AT')
+
+                for v in vn
+                    Av = Array{TensorsLite._my_eltype(v)}(v)
+
+                    @test all(T*v .≈ AT*Av)
+                    @test all(v*T .≈ transpose(AT)*Av)
+                    @test all(muladd(T,v,v) .≈ (AT*Av + Av))
+                    @test all(dotadd(T,v,v) .≈ (AT*Av + Av))
+                    @test all(muladd(v,T,v) .≈ (transpose(AT)*Av + Av))
+                    @test all(dotadd(v,T,v) .≈ (transpose(AT)*Av + Av))
                 end
             end
         end
