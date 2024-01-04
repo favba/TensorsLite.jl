@@ -1,10 +1,12 @@
-struct ZeroVec{N} <: AbstractArray{Zero,N}
+struct ZeroArray{N} <: AbstractArray{Zero,N}
     size::NTuple{N,Int}
 end
-Base.size(z::ZeroVec) = z.size
-
-@inline Base.getindex(z::ZeroVec{N},I::Vararg{Int,N}) where N = 𝟎
-@inline Base.setindex!(z::ZeroVec{N},x,I::Vararg{Int,N}) where N = begin convert(Zero,x); return nothing end
+ZeroArray(I::Vararg{Int,N}) where N = ZeroArray{N}((I...,))
+Base.size(z::ZeroArray) = z.size
+@inline Base.getindex(z::ZeroArray,i::Int) = 𝟎
+@inline Base.getindex(z::ZeroArray{N},I::Vararg{Int,N}) where N = 𝟎
+@inline Base.setindex!(z::ZeroArray,x,i::Int) = begin convert(Zero,x); return z end
+@inline Base.setindex!(z::ZeroArray{N},x,I::Vararg{Int,N}) where N = begin convert(Zero,x); return z end
 
 struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
     x::Tx
@@ -20,8 +22,8 @@ struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
             if x !== 𝟎
                 s = size(x)
                 xv = x
-                yv = y === 𝟎 ? ZeroVec(s) : y
-                zv = z === 𝟎 ? ZeroVec(s) : z
+                yv = y === 𝟎 ? ZeroArray(s) : y
+                zv = z === 𝟎 ? ZeroArray(s) : z
                 size(yv) === s || throw(DomainError((x,y),"Arrays must have the same size"))
                 size(zv) === s || throw(DomainError((x,z),"Arrays must have the same size"))
 
@@ -32,9 +34,9 @@ struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
 
             elseif y !== 𝟎
                 s = size(y)
-                xv = ZeroVec(s)
+                xv = ZeroArray(s)
                 yv = y
-                zv = z === 𝟎 ? ZeroVec(s) : z
+                zv = z === 𝟎 ? ZeroArray(s) : z
                 size(zv) === s || throw(DomainError((y,z),"Arrays must have the same size"))
 
                 Tx = typeof(xv)
@@ -43,8 +45,8 @@ struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
                 N = ndims(yv)
             else # z must be !== 𝟎
                 s = size(z)
-                xv = ZeroVec(s)
-                yv = ZeroVec(s)
+                xv = ZeroArray(s)
+                yv = ZeroArray(s)
                 zv = z 
 
                 Tx = typeof(xv)
@@ -61,10 +63,28 @@ end
 @inline Base.size(A::VecArray) = size(A.x)
 @inline Base.length(A::VecArray) = length(A.x)
 
+@inline function Base.getindex(A::VecArray,i::Int)
+    @boundscheck checkbounds(A,i)
+    @inbounds r = Vec(x=A.x[i], y=A.y[i], z=A.z[i])
+    return r
+end
+
 @inline function Base.getindex(A::VecArray{T,N},I::Vararg{Int,N}) where {T,N}
     @boundscheck checkbounds(A,I...)
     @inbounds r = Vec(x=A.x[I...], y=A.y[I...], z=A.z[I...])
     return r
+end
+
+@inline function Base.setindex!(A::VecArray, u::AbstractVec, i::Int)
+    @boundscheck checkbounds(A,i)
+
+    @inbounds begin 
+        A.x[i] = u.x
+        A.y[i] = u.y
+        A.z[i] = u.z
+    end
+
+    return A
 end
 
 @inline function Base.setindex!(A::VecArray{T,N}, u::AbstractVec, I::Vararg{Int,N}) where {T,N}
@@ -76,5 +96,5 @@ end
         A.z[I...] = u.z
     end
 
-    return nothing
+    return A
 end

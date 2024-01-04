@@ -5,7 +5,7 @@ using LinearAlgebra
 
 const ze = Zero()
 
-@testset "Vector Constructors" begin
+@testset "Vec Constructors" begin
 
     @test Vec(x=1).x === 1
     @test Vec(y=1.0).y === 1.0
@@ -33,7 +33,7 @@ end
     @test eltype(Ten(xx=One())) === Union{Zero,One}
 end
 
-@testset "Size and Length" begin
+@testset "Vec size and length" begin
     let a = Vec(rand(),rand(),rand()), T = Ten(xx=rand(),yy=rand(),xz=rand())
         @test size(a) === (3,)
         @test length(a) === 3
@@ -42,7 +42,7 @@ end
     end
 end
 
-@testset "getindex" begin
+@testset "Vec getindex" begin
 
     @test all(x->(x===ze),Vec())
 
@@ -79,6 +79,55 @@ end
     end
 
 end
+
+@testset "ZeroArray" begin
+
+    @test size(ZeroArray(16,16,3)) === (16,16,3)
+    zevec = ZeroArray(4,4)
+
+    @test zevec[1] === ze
+    @test zevec[4,4] === ze
+
+    @test_throws InexactError setindex!(zevec,1.0,1)
+    @test_throws InexactError setindex!(zevec,1.0,4,4)
+end
+
+@testset "VecArray" begin
+    @test_throws DomainError VecArray()
+    @test_throws DomainError VecArray(x=rand(1,2), y=rand(2,1))
+    @test_throws DomainError VecArray(x=rand(1,2), z=rand(2,1))
+    @test_throws DomainError VecArray(y=rand(1,2), z=rand(2,1))
+
+    @test size(VecArray{Float32}(4,3)) === (4,3)
+    @test VecArray{Float32}(4,3)[4,3] === Vec(x=0.0f0,y=0.0f0,z=0.0f0)
+
+    @test VecArray(x=ones(1,1))[1] === Vec(x=1.0)
+    @test VecArray(y=ones(1,1))[1] === Vec(y=1.0)
+    @test VecArray(z=ones(1,1))[1] === Vec(z=1.0)
+
+    @test VecArray(x=ones(1,1),y=(ones(1,1) .+ 1))[1] === Vec(x=1.0,y=2.0)
+    @test VecArray(y=ones(1,1),z=(ones(1,1) .+ 1))[1] === Vec(y=1.0,z=2.0)
+    @test VecArray(x=ones(1,1),z=(ones(1,1) .+ 1))[1] === Vec(x=1.0,z=2.0)
+    @test VecArray(x=ones(1,1),y=(ones(1,1) .+ 1),z=(ones(1,1) .+ 2))[1] === Vec(x=1.0,y=2.0,z=3.0)
+
+    @test VecArray(x=ones(1,1))[1,1] === Vec(x=1.0)
+    @test VecArray(y=ones(1,1))[1,1] === Vec(y=1.0)
+    @test VecArray(z=ones(1,1))[1,1] === Vec(z=1.0)
+
+    @test VecArray(x=ones(1,1),y=(ones(1,1) .+ 1))[1,1] === Vec(x=1.0,y=2.0)
+    @test VecArray(y=ones(1,1),z=(ones(1,1) .+ 1))[1,1] === Vec(y=1.0,z=2.0)
+    @test VecArray(x=ones(1,1),z=(ones(1,1) .+ 1))[1,1] === Vec(x=1.0,z=2.0)
+    @test VecArray(x=ones(1,1),y=(ones(1,1) .+ 1),z=(ones(1,1) .+ 2))[1,1] === Vec(x=1.0,y=2.0,z=3.0)
+
+
+    @test setindex!(VecArray{Float64}(4,4),Vec(x=1.0,y=2.0,z=3.0),4,4)[4,4] === Vec(x=1.0,y=2.0,z=3.0)
+    @test setindex!(VecArray{Float64}(4,4),Vec(x=1.0,y=2.0,z=3.0),16)[16] === Vec(x=1.0,y=2.0,z=3.0)
+
+    @test setindex!(VecArray(y=zeros(4,4)),Vec(x=0.0,y=2.0,z=0.0),4,4)[4,4] === Vec(y=2.0)
+    @test setindex!(VecArray(y=zeros(4,4)),Vec(x=0.0,y=2.0,z=0.0),16)[16] === Vec(y=2.0)
+
+end
+
 
 _rand(T) = rand(T)
 _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
@@ -122,7 +171,6 @@ end
         for u in un
             Au = Array{TensorsLite._my_eltype(u)}(u)
             for op in (+,-,normalize)
-            #for op in (+,-)
                 @test all(op(u) .≈ op(Au))
             end
             @test norm(u) ≈ norm(Au)
@@ -150,5 +198,4 @@ end
             end
         end
     end
-
 end

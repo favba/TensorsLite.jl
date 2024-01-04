@@ -4,7 +4,7 @@ using Zeros
 
 export Vec, Ten, AbstractVec, dotadd, otimes, ⊗
 export 𝐢, 𝐣, 𝐤
-export VecArray
+export VecArray, ZeroArray
 
 include("type_utils.jl")
 
