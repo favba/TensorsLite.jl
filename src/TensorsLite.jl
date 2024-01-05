@@ -2,7 +2,9 @@ module TensorsLite
 
 using Zeros
 
-export Vec, Ten, AbstractVec, Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec1Dx, Vec1Dy, Vec1Dz
+export Vec, Ten, AbstractVec
+export Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec1Dx, Vec1Dy, Vec1Dz, Vec0D
+export Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten1Dx, Ten1Dy, Ten1Dz, Ten0D
 export dotadd, inner, otimes, ⊗
 export 𝐢, 𝐣, 𝐤
 export VecArray, ZeroArray
@@ -44,6 +46,7 @@ struct Vec{T,N,Tx,Ty,Tz} <: AbstractVec{T,N}
 end
 
 const AbstractTen{T} = AbstractVec{T,2}
+
 const Vec3D{T} = Vec{T,1,T,T,T}
 const Vec2Dxy{T} = Vec{Union{Zero,T},1,T,T,Zero}
 const Vec2Dxz{T} = Vec{Union{Zero,T},1,T,Zero,T}
@@ -52,6 +55,15 @@ const Vec1Dx{T} = Vec{Union{Zero,T},1,T,Zero,Zero}
 const Vec1Dy{T} = Vec{Union{Zero,T},1,Zero,T,Zero}
 const Vec1Dz{T} = Vec{Union{Zero,T},1,Zero,Zero,T}
 const Vec0D = Vec{Zero,1,Zero,Zero,Zero}
+
+const Ten3D{T} = Vec{T,2,Vec3D{T},Vec3D{T},Vec3D{T}}
+const Ten2Dxy{T} = Vec{Union{Zero,T},2,Vec2Dxy{T},Vec2Dxy{T},Vec0D}
+const Ten2Dxz{T} = Vec{Union{Zero,T},2,Vec2Dxz{T},Vec0D,Vec2Dxz{T}}
+const Ten2Dyz{T} = Vec{Union{Zero,T},2,Vec0D,Vec2Dyz{T},Vec2Dyz{T}}
+const Ten1Dx{T} = Vec{Union{Zero,T},2,Vec1Dx{T},Vec0D,Vec0D}
+const Ten1Dy{T} = Vec{Union{Zero,T},2,Vec0D,Vec1Dy{T},Vec0D}
+const Ten1Dz{T} = Vec{Union{Zero,T},2,Vec0D,Vec0D,Vec1Dz{T}}
+const Ten0D = Vec{Zero,2,Vec0D,Vec0D,Vec0D}
 
 const 𝟎⃗ = Vec(Zero(),Zero(),Zero())
 const 𝐢 = Vec(One(),Zero(),Zero())
