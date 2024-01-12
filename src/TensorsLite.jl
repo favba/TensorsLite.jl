@@ -14,6 +14,11 @@ include("type_utils.jl")
 
 abstract type AbstractVec{T,N} <: AbstractArray{T,N} end
 
+# Treat Vec's as scalar when broadcasting
+Base.BroadcastStyle(::Type{T}) where T<:AbstractVec = Base.Broadcast.DefaultArrayStyle{0}()
+Base.Broadcast.broadcastable(u::AbstractVec) = (u,)
+@inline Base.getindex(V::AbstractVec) = V
+
 struct Vec{T,N,Tx,Ty,Tz} <: AbstractVec{T,N}
     x::Tx
     y::Ty
@@ -45,6 +50,8 @@ struct Vec{T,N,Tx,Ty,Tz} <: AbstractVec{T,N}
         return new{Union{eltype(xf),eltype(yf),eltype(zf)},2,typeof(xf),typeof(yf),typeof(zf)}(xf,yf,zf)
     end
 end
+
+Base.convert(::Type{Vec{T,N,Tx,Ty,Tz}},u::Vec{T2,N}) where {T,N,Tx,Ty,Tz,T2} = Vec(x=convert(Tx,u.x), y=convert(Ty,u.y), z=convert(Tz,u.z))
 
 const AbstractTen{T} = AbstractVec{T,2}
 

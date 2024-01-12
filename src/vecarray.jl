@@ -110,3 +110,50 @@ end
 end
 
 Base.similar(A::VecArray,T::Type{Vec{Tt,N,Tx,Ty,Tz}},dims::Tuple{Int,Vararg{Int,N2}}) where {Tt,N,Tx,Ty,Tz,N2} = VecArray(x=similar(A.x,Tx,dims), y=similar(A.y,Ty,dims), z=similar(A.z,Tz,dims))
+
+#Definitons so broadcast return a VecArray =======================================
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec3D{T}}) where T
+    return VecArray{T}(length.(axes(bc))...)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec2Dxy{T}}) where T
+    size = length.(axes(bc))
+    x = Array{T}(undef,size...)
+    y = Array{T}(undef,size...)
+    return VecArray(x=x,y=y)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec2Dxz{T}}) where T
+    size = length.(axes(bc))
+    x = Array{T}(undef,size...)
+    z = Array{T}(undef,size...)
+    return VecArray(x=x,z=z)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec2Dyz{T}}) where T
+    size = length.(axes(bc))
+    y = Array{T}(undef,size...)
+    z = Array{T}(undef,size...)
+    return VecArray(y=y,z=z)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec1Dx{T}}) where T
+    size = length.(axes(bc))
+    x = Array{T}(undef,size...)
+    return VecArray(x=x)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec1Dy{T}}) where T
+    size = length.(axes(bc))
+    y = Array{T}(undef,size...)
+    return VecArray(y=y)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec1Dz{T}}) where T
+    size = length.(axes(bc))
+    z = Array{T}(undef,size...)
+    return VecArray(z=z)
+end
+
+#Definitons so broadcast return a VecArray =======================================
