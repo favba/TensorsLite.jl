@@ -1,4 +1,4 @@
-import Base: +, -, *, /, //, muladd, conj
+import Base: +, -, *, /, //, muladd, conj, ==
 import LinearAlgebra: dot, ⋅, norm, cross, ×, normalize
 export dot, ⋅, norm, cross, ×, normalize # Reexport from LinearAlgebra
 
@@ -13,6 +13,7 @@ include("muladd_definitions.jl")
 @inline +(a::AbstractVec...) = Vec(x=+(_x.(a)...), y=+(_y.(a)...), z=+(_z.(a)...))
 @inline -(a::AbstractVec, b::AbstractVec) = Vec(x=a.x-b.x, y=a.y-b.y, z=a.z-b.z)
 @inline -(a::AbstractVec) = _zero(a) - a
+@inline ==(a::AbstractVec,b::AbstractVec) = a.x == b.x && a.y == b.y && a.z == b.z
 
 @inline _muladd(a::Number, v::AbstractVec, u::AbstractVec) = Vec(x=_muladd(a,_x(v),_x(u)), y=_muladd(a,_y(v),_y(u)), z=_muladd(a,_z(v),_z(u)))
 @inline _muladd(v::AbstractVec, a::Number, u::AbstractVec) = Vec(x=_muladd(a,_x(v),_x(u)), y=_muladd(a,_y(v),_y(u)), z=_muladd(a,_z(v),_z(u)))
