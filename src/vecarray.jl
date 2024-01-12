@@ -8,6 +8,8 @@ Base.size(z::ZeroArray) = z.size
 @inline Base.setindex!(z::ZeroArray,x,i::Int) = begin convert(Zero,x); return z end
 @inline Base.setindex!(z::ZeroArray{N},x,I::Vararg{Int,N}) where N = begin convert(Zero,x); return z end
 
+Base.similar(::ZeroArray,::Type{Zero},dims::Tuple{Int,Vararg{Int,N}}) where N = ZeroArray(dims...)
+
 struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
     x::Tx
     y::Ty
@@ -106,3 +108,5 @@ end
 
     return A
 end
+
+Base.similar(A::VecArray,T::Type{Vec{Tt,N,Tx,Ty,Tz}},dims::Tuple{Int,Vararg{Int,N2}}) where {Tt,N,Tx,Ty,Tz,N2} = VecArray(x=similar(A.x,Tx,dims), y=similar(A.y,Ty,dims), z=similar(A.z,Tz,dims))
