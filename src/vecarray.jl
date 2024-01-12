@@ -15,7 +15,7 @@ struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
     y::Ty
     z::Tz
 
-    VecArray{T}(I::Vararg{Int,N}) where {T,N} = new{Vec{T,1,T,T,T},N,Array{T,N},Array{T,N},Array{T,N}}(zeros(T,I...),zeros(T,I...),zeros(T,I...))
+    VecArray{T}(I::Vararg{Int,N}) where {T,N} = new{Vec{T,1,T,T,T},N,Array{T,N},Array{T,N},Array{T,N}}(Array{T}(undef,I...),Array{T}(undef,I...),Array{T}(undef,I...))
     
     function VecArray(;x::Union{Zero,AbstractArray}=𝟎,y::Union{Zero,AbstractArray}=𝟎, z::Union{Zero,AbstractArray}=𝟎)
         if (x,y,z) === (𝟎,𝟎,𝟎)
