@@ -8,6 +8,7 @@ export Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten1Dx, Ten1Dy, Ten1Dz, Ten0D
 export dotadd, inner, otimes, ⊗
 export 𝐢, 𝐣, 𝐤
 export VecArray, ZeroArray
+export Vec3DArray, Vec2DxyArray, Vec2DxzArray, Vec2DyzArray, Vec1DxArray, Vec1DyArray, Vec1DzArray
 
 include("type_utils.jl")
 

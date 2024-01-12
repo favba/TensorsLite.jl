@@ -60,6 +60,14 @@ struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
 
 end
 
+const Vec3DArray{T,N} = VecArray{Vec3D{T},N,Array{T,N},Array{T,N},Array{T,N}}
+const Vec2DxyArray{T,N} = VecArray{Vec2Dxy{T},N,Array{T,N},Array{T,N},ZeroArray{N}}
+const Vec2DxzArray{T,N} = VecArray{Vec2Dxz{T},N,Array{T,N},ZeroArray{N},Array{T,N}}
+const Vec2DyzArray{T,N} = VecArray{Vec2Dyz{T},N,ZeroArray{N},Array{T,N},Array{T,N}}
+const Vec1DxArray{T,N} = VecArray{Vec1Dx{T},N,Array{T,N},ZeroArray{N},ZeroArray{N}}
+const Vec1DyArray{T,N} = VecArray{Vec1Dy{T},N,ZeroArray{N},Array{T,N},ZeroArray{N}}
+const Vec1DzArray{T,N} = VecArray{Vec1Dz{T},N,ZeroArray{N},ZeroArray{N},Array{T,N}}
+
 @inline Base.size(A::VecArray) = size(A.x)
 @inline Base.length(A::VecArray) = length(A.x)
 
