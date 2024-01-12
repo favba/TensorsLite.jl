@@ -5,6 +5,9 @@ using LinearAlgebra
 
 const ze = Zero()
 
+# This helps comparing arrays of Union{Zero,Number}
+(::Type{<:Union{Zero,T}})(x::Number) where T<: Number = x == zero(x) ? Zeros.Zero() : T(x)
+
 @testset "Vec Constructors" begin
 
     @test Vec(x=1).x === 1
@@ -99,7 +102,7 @@ end
     @test_throws DomainError VecArray(y=rand(1,2), z=rand(2,1))
 
     @test size(VecArray{Float32}(4,3)) === (4,3)
-    @test VecArray{Float32}(4,3)[4,3] === Vec(x=0.0f0,y=0.0f0,z=0.0f0)
+    @test eltype(VecArray{Float32}(4,3)) === Vec3D{Float32}
 
     @test VecArray(x=ones(1,1))[1] === Vec(x=1.0)
     @test VecArray(y=ones(1,1))[1] === Vec(y=1.0)
@@ -128,6 +131,16 @@ end
 
 end
 
+@testset "VecArray Broadcasting" begin
+    let ux=VecArray(x=rand(3)), uxy=VecArray(x=rand(Float32,3),y=rand(Float32,3)), uxyz=VecArray(x=rand(Float32,3), y=rand(Float32,3), z=rand(Float32,3))
+        @test (ux .+ uxy) == VecArray(x=ux.x .+ uxy.x, y=uxy.y)
+        @test typeof(ux .+ uxy) === Vec2DxyArray{Float64,1}
+        @test (uxy .+ uxyz) == VecArray(x=uxy.x .+ uxyz.x, y=uxy.y .+ uxyz.y, z=uxyz.z)
+        @test typeof(uxy .+ uxyz) === Vec3DArray{Float32,1}
+        @test ux .+ 𝐢 == VecArray(x=ux.x .+ 1)
+        @test (ux .= Vec()) == VecArray(x=zeros(3))
+    end
+end
 
 _rand(T) = rand(T)
 _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
@@ -138,11 +151,11 @@ _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
         for u in un
             Au = Array{TensorsLite._my_eltype(u)}(u)
             for op in (+,-,normalize)
-                @test all(op(u) .≈ op(Au))
+                @test Array(op(u)) ≈ op(Au)
             end
             @test norm(u) ≈ norm(Au)
             if T1 === ComplexF64
-                @test all(conj(u) .≈ conj(Au))
+                @test Array(conj(u)) == conj(Au)
             end
         end
         for T2 in (Int64,Float64,ComplexF64)
@@ -152,14 +165,14 @@ _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
                 for v in vn
                     Av = Array{TensorsLite._my_eltype(v)}(v)
                     for op in (+,-,cross)
-                        @test all(op(u,v) .≈ op(Au,Av))
+                        @test Array(op(u,v)) ≈ op(Au,Av)
                     end
                     @test dot(u,v) ≈ dot(conj(Au),Av) # Use conj here because for complex vectors julia conjugates the first vector automatically and we don't do that.
                     @test dotadd(u,v,3.0) ≈ dot(conj(Au),Av) + 3.0
-                    @test all(muladd(2.0,u,v) .≈ (2.0*Au + Av))
-                    @test all(muladd(u,2.0,v) .≈ (2.0*Au + Av))
+                    @test Array(muladd(2.0,u,v)) ≈ (2.0*Au + Av)
+                    @test Array(muladd(u,2.0,v)) ≈ (2.0*Au + Av)
                     @test inner(u,v) ≈ dot(Au,Av)
-                    @test all(u⊗v .≈ Au*transpose(Av))
+                    @test Array(u⊗v) ≈ Au*transpose(Av)
                 end
             end
         end
@@ -176,7 +189,7 @@ end
         for u in un
             Au = Array{TensorsLite._my_eltype(u)}(u)
             for op in (+,-,normalize)
-                @test all(op(u) .≈ op(Au))
+                @test Array(op(u)) ≈ op(Au)
             end
             @test norm(u) ≈ norm(Au)
         end
@@ -191,14 +204,14 @@ end
                 for v in vn
                     Av = Array{TensorsLite._my_eltype(v)}(v)
                     for op in (+,-,*)
-                        @test all(op(u,v) .≈ op(Au,Av))
+                        @test Array(op(u,v)) ≈ op(Au,Av)
                     end
-                    @test all(dot(u,v) .≈ Au*Av)
-                    @test all(muladd(2.0,u,v) .≈ (2.0*Au + Av))
-                    @test all(muladd(u,2.0,v) .≈ (2.0*Au + Av))
+                    @test Array(dot(u,v)) ≈ Au*Av
+                    @test Array(muladd(2.0,u,v)) ≈ (2.0*Au + Av)
+                    @test Array(muladd(u,2.0,v)) ≈ (2.0*Au + Av)
 
-                    @test all(muladd(u,v,v) .≈ (Au*Av + Av))
-                    @test all(dotadd(u,v,v) .≈ (Au*Av + Av))
+                    @test Array(muladd(u,v,v)) ≈ (Au*Av + Av)
+                    @test Array(dotadd(u,v,v)) ≈ (Au*Av + Av)
                     @test inner(u,v) ≈ dot(Au,Av)
                 end
             end
@@ -219,18 +232,18 @@ end
             for T in Tn
                 AT = Array{TensorsLite._my_eltype(T)}(T)
 
-                @test all(transpose(T) .== transpose(AT))
-                @test all(T' .== AT')
+                @test Array(transpose(T)) == transpose(AT)
+                @test Array(T') == AT'
 
                 for v in vn
                     Av = Array{TensorsLite._my_eltype(v)}(v)
 
-                    @test all(T*v .≈ AT*Av)
-                    @test all(v*T .≈ transpose(AT)*Av)
-                    @test all(muladd(T,v,v) .≈ (AT*Av + Av))
-                    @test all(dotadd(T,v,v) .≈ (AT*Av + Av))
-                    @test all(muladd(v,T,v) .≈ (transpose(AT)*Av + Av))
-                    @test all(dotadd(v,T,v) .≈ (transpose(AT)*Av + Av))
+                    @test Array(T*v) ≈ AT*Av
+                    @test Array(v*T) ≈ transpose(AT)*Av
+                    @test Array(muladd(T,v,v)) ≈ (AT*Av + Av)
+                    @test Array(dotadd(T,v,v)) ≈ (AT*Av + Av)
+                    @test Array(muladd(v,T,v)) ≈ (transpose(AT)*Av + Av)
+                    @test Array(dotadd(v,T,v)) ≈ (transpose(AT)*Av + Av)
                 end
             end
         end
