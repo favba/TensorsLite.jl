@@ -15,7 +15,7 @@ const ze = Zero()
                 if (all(t->typeof(t)===Float64,(x,y,z)))
                     @test TensorsLite._muladd(x,y,z) === muladd(x,y,z)
                 else
-                    @test TensorsLite._muladd(x,y,z) == x*y + z
+                    @test TensorsLite._muladd(x,y,z) ≈ x*y + z
                 end
             end
         end
@@ -118,6 +118,16 @@ _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
     @test zero(1.0𝐢) === Vec(x=0.0)
     @test zero(1𝐣) === Vec(y=0)
     @test zero(Vec(y=1.0,z=im)) === Vec(y=zero(1.0im),z=zero(1.0im))
+
+    @test Vec(1,2,3)//4 === Vec(1//4,1//2,3//4)
+
+    @test +(Vec(1,1,1),Vec(1,1,1),Vec(1,1,1),Vec(1,1,1)) === Vec(4,4,4)
+
+    @test norm(-2.0𝐢) === 2.0
+    @test norm(-2.0𝐤) === 2.0
+    @test norm(Vec()) === Zero()
+
+    @test normalize(Vec()) === Vec()
         
 
     for T1 in (Int64,Float64,ComplexF64)
@@ -218,6 +228,7 @@ end
                     @test dotadd(T,v,v) ≈ (AT*Av + Av)
                     @test muladd(v,T,v) ≈ (transpose(AT)*Av + Av)
                     @test dotadd(v,T,v) ≈ (transpose(AT)*Av + Av)
+                    @test dot(v,T,v) ≈ dot(conj(Av), AT*Av)
                 end
             end
         end

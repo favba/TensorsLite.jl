@@ -8,7 +8,7 @@ import LinearAlgebra: transpose, adjoint
 end
 
 @inline *(T::AbstractTen,v::AbstractVec{<:Any,1}) = dot(T,v)
-@inline *(v::AbstractVec{<:Any,1},T::AbstractTen) = dot(transpose(T),v)
+@inline *(v::AbstractVec{<:Any,1},T::AbstractTen) = dot(v,T)
 
 @inline function transpose(T::AbstractTen)
     x = T.x
