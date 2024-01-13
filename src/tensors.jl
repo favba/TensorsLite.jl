@@ -60,4 +60,4 @@ const ⊗ = otimes
 
 @inline inner(A::AbstractTen,B::AbstractTen) = dotadd(conj(A.x),B.x,dotadd(conj(A.y),B.y,dot(conj(A.z),B.z)))
 
-@inline dot(x::AbstractVec,A::AbstractTen,y::AbstractVec) = _muladd(A,y,x)
+@inline dot(x::AbstractVec,A::AbstractTen,y::AbstractVec) = dot(dot(x,A),y)
