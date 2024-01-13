@@ -15,6 +15,13 @@ include("muladd_definitions.jl")
 @inline -(a::AbstractVec) = _zero(a) - a
 @inline ==(a::AbstractVec,b::AbstractVec) = a.x == b.x && a.y == b.y && a.z == b.z
 
+# We treat Vec's as scalar for broadcasting but the default definition of + and - for AbstractArray's relies
+# on broadcasting to perform addition and subtraction. The method definitons below overcomes this inconsistency
+@inline +(a::AbstractVec, b::AbstractArray) = Array(a) + b
+@inline +(b::AbstractArray, a::AbstractVec) = b + Array(a)
+@inline -(a::AbstractVec, b::AbstractArray) = Array(a) - b
+@inline -(b::AbstractArray, a::AbstractVec) = b - Array(a)
+
 @inline _muladd(a::Number, v::AbstractVec, u::AbstractVec) = Vec(x=_muladd(a,_x(v),_x(u)), y=_muladd(a,_y(v),_y(u)), z=_muladd(a,_z(v),_z(u)))
 @inline _muladd(v::AbstractVec, a::Number, u::AbstractVec) = Vec(x=_muladd(a,_x(v),_x(u)), y=_muladd(a,_y(v),_y(u)), z=_muladd(a,_z(v),_z(u)))
 

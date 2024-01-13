@@ -145,17 +145,23 @@ end
 _rand(T) = rand(T)
 _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
 @testset "Vector Operations" begin
+
+    @test Vec(1,2,3) + [1,2,3] == [2,4,6]
+    @test [1,2,3] + Vec(1,2,3) == [2,4,6]
+    @test Vec(3,2,1) - [1,2,3] == [2,0,-2]
+    @test [1,2,3] - Vec(3,2,1) == [-2,0,2]
         
+
     for T1 in (Int64,Float64,ComplexF64)
         un = (Vec(y=_rand(T1)), Vec(x=_rand(T1), z=_rand(T1)), Vec(_rand(T1),_rand(T1),_rand(T1)))
         for u in un
             Au = Array{TensorsLite._my_eltype(u)}(u)
             for op in (+,-,normalize)
-                @test Array(op(u)) ≈ op(Au)
+                @test op(u) ≈ op(Au)
             end
             @test norm(u) ≈ norm(Au)
             if T1 === ComplexF64
-                @test Array(conj(u)) == conj(Au)
+                @test conj(u) == conj(Au)
             end
         end
         for T2 in (Int64,Float64,ComplexF64)
@@ -165,14 +171,14 @@ _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
                 for v in vn
                     Av = Array{TensorsLite._my_eltype(v)}(v)
                     for op in (+,-,cross)
-                        @test Array(op(u,v)) ≈ op(Au,Av)
+                        @test op(u,v) ≈ op(Au,Av)
                     end
                     @test dot(u,v) ≈ dot(conj(Au),Av) # Use conj here because for complex vectors julia conjugates the first vector automatically and we don't do that.
                     @test dotadd(u,v,3.0) ≈ dot(conj(Au),Av) + 3.0
-                    @test Array(muladd(2.0,u,v)) ≈ (2.0*Au + Av)
-                    @test Array(muladd(u,2.0,v)) ≈ (2.0*Au + Av)
+                    @test muladd(2.0,u,v) ≈ (2.0*Au + Av)
+                    @test muladd(u,2.0,v) ≈ (2.0*Au + Av)
                     @test inner(u,v) ≈ dot(Au,Av)
-                    @test Array(u⊗v) ≈ Au*transpose(Av)
+                    @test u⊗v ≈ Au*transpose(Av)
                 end
             end
         end
@@ -189,7 +195,7 @@ end
         for u in un
             Au = Array{TensorsLite._my_eltype(u)}(u)
             for op in (+,-,normalize)
-                @test Array(op(u)) ≈ op(Au)
+                @test op(u) ≈ op(Au)
             end
             @test norm(u) ≈ norm(Au)
         end
@@ -204,14 +210,14 @@ end
                 for v in vn
                     Av = Array{TensorsLite._my_eltype(v)}(v)
                     for op in (+,-,*)
-                        @test Array(op(u,v)) ≈ op(Au,Av)
+                        @test op(u,v) ≈ op(Au,Av)
                     end
-                    @test Array(dot(u,v)) ≈ Au*Av
-                    @test Array(muladd(2.0,u,v)) ≈ (2.0*Au + Av)
-                    @test Array(muladd(u,2.0,v)) ≈ (2.0*Au + Av)
+                    @test dot(u,v) ≈ Au*Av
+                    @test muladd(2.0,u,v) ≈ (2.0*Au + Av)
+                    @test muladd(u,2.0,v) ≈ (2.0*Au + Av)
 
-                    @test Array(muladd(u,v,v)) ≈ (Au*Av + Av)
-                    @test Array(dotadd(u,v,v)) ≈ (Au*Av + Av)
+                    @test muladd(u,v,v) ≈ (Au*Av + Av)
+                    @test dotadd(u,v,v) ≈ (Au*Av + Av)
                     @test inner(u,v) ≈ dot(Au,Av)
                 end
             end
@@ -232,18 +238,18 @@ end
             for T in Tn
                 AT = Array{TensorsLite._my_eltype(T)}(T)
 
-                @test Array(transpose(T)) == transpose(AT)
-                @test Array(T') == AT'
+                @test transpose(T) == transpose(AT)
+                @test T' == AT'
 
                 for v in vn
                     Av = Array{TensorsLite._my_eltype(v)}(v)
 
-                    @test Array(T*v) ≈ AT*Av
-                    @test Array(v*T) ≈ transpose(AT)*Av
-                    @test Array(muladd(T,v,v)) ≈ (AT*Av + Av)
-                    @test Array(dotadd(T,v,v)) ≈ (AT*Av + Av)
-                    @test Array(muladd(v,T,v)) ≈ (transpose(AT)*Av + Av)
-                    @test Array(dotadd(v,T,v)) ≈ (transpose(AT)*Av + Av)
+                    @test T*v ≈ AT*Av
+                    @test v*T ≈ transpose(AT)*Av
+                    @test muladd(T,v,v) ≈ (AT*Av + Av)
+                    @test dotadd(T,v,v) ≈ (AT*Av + Av)
+                    @test muladd(v,T,v) ≈ (transpose(AT)*Av + Av)
+                    @test dotadd(v,T,v) ≈ (transpose(AT)*Av + Av)
                 end
             end
         end
