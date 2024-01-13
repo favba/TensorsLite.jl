@@ -23,9 +23,9 @@ const ze = Zero()
 end
 
 @testset "Tensor Constructors" begin
-    @test Array(Ten(xx=1, xy=2, xz=3,
-                    yx=4, yy=5, yz=6,
-                    zx=7, zy=8, zz=9.0)) == [1.0 2.0 3.0; 4.0 5.0 6.0; 7.0 8.0 9.0]
+    @test Ten(xx=1, xy=2, xz=3,
+              yx=4, yy=5, yz=6,
+              zx=7, zy=8, zz=9.0) == [1.0 2.0 3.0; 4.0 5.0 6.0; 7.0 8.0 9.0]
 
     @test eltype(Ten(xx=1, xy=2, xz=3,
                      yx=4, yy=5, yz=6,
@@ -34,6 +34,8 @@ end
     @test eltype(Ten(xx=1.0)) === Union{Zero,Float64}
 
     @test eltype(Ten(xx=One())) === Union{Zero,One}
+
+    @test Vec(x=Vec(x=1.0,y=2.0),y=Vec(x=3.0,y=4.0)).z === Vec()
 end
 
 @testset "Vec size and length" begin
@@ -83,65 +85,6 @@ end
 
 end
 
-@testset "ZeroArray" begin
-
-    @test size(ZeroArray(16,16,3)) === (16,16,3)
-    zevec = ZeroArray(4,4)
-
-    @test zevec[1] === ze
-    @test zevec[4,4] === ze
-
-    @test_throws InexactError setindex!(zevec,1.0,1)
-    @test_throws InexactError setindex!(zevec,1.0,4,4)
-end
-
-@testset "VecArray" begin
-    @test_throws DomainError VecArray()
-    @test_throws DomainError VecArray(x=rand(1,2), y=rand(2,1))
-    @test_throws DomainError VecArray(x=rand(1,2), z=rand(2,1))
-    @test_throws DomainError VecArray(y=rand(1,2), z=rand(2,1))
-
-    @test size(VecArray{Float32}(4,3)) === (4,3)
-    @test eltype(VecArray{Float32}(4,3)) === Vec3D{Float32}
-
-    @test VecArray(x=ones(1,1))[1] === Vec(x=1.0)
-    @test VecArray(y=ones(1,1))[1] === Vec(y=1.0)
-    @test VecArray(z=ones(1,1))[1] === Vec(z=1.0)
-
-    @test VecArray(x=ones(1,1),y=(ones(1,1) .+ 1))[1] === Vec(x=1.0,y=2.0)
-    @test VecArray(y=ones(1,1),z=(ones(1,1) .+ 1))[1] === Vec(y=1.0,z=2.0)
-    @test VecArray(x=ones(1,1),z=(ones(1,1) .+ 1))[1] === Vec(x=1.0,z=2.0)
-    @test VecArray(x=ones(1,1),y=(ones(1,1) .+ 1),z=(ones(1,1) .+ 2))[1] === Vec(x=1.0,y=2.0,z=3.0)
-
-    @test VecArray(x=ones(1,1))[1,1] === Vec(x=1.0)
-    @test VecArray(y=ones(1,1))[1,1] === Vec(y=1.0)
-    @test VecArray(z=ones(1,1))[1,1] === Vec(z=1.0)
-
-    @test VecArray(x=ones(1,1),y=(ones(1,1) .+ 1))[1,1] === Vec(x=1.0,y=2.0)
-    @test VecArray(y=ones(1,1),z=(ones(1,1) .+ 1))[1,1] === Vec(y=1.0,z=2.0)
-    @test VecArray(x=ones(1,1),z=(ones(1,1) .+ 1))[1,1] === Vec(x=1.0,z=2.0)
-    @test VecArray(x=ones(1,1),y=(ones(1,1) .+ 1),z=(ones(1,1) .+ 2))[1,1] === Vec(x=1.0,y=2.0,z=3.0)
-
-
-    @test setindex!(VecArray{Float64}(4,4),Vec(x=1.0,y=2.0,z=3.0),4,4)[4,4] === Vec(x=1.0,y=2.0,z=3.0)
-    @test setindex!(VecArray{Float64}(4,4),Vec(x=1.0,y=2.0,z=3.0),16)[16] === Vec(x=1.0,y=2.0,z=3.0)
-
-    @test setindex!(VecArray(y=zeros(4,4)),Vec(x=0.0,y=2.0,z=0.0),4,4)[4,4] === Vec(y=2.0)
-    @test setindex!(VecArray(y=zeros(4,4)),Vec(x=0.0,y=2.0,z=0.0),16)[16] === Vec(y=2.0)
-
-end
-
-@testset "VecArray Broadcasting" begin
-    let ux=VecArray(x=rand(3)), uxy=VecArray(x=rand(Float32,3),y=rand(Float32,3)), uxyz=VecArray(x=rand(Float32,3), y=rand(Float32,3), z=rand(Float32,3))
-        @test (ux .+ uxy) == VecArray(x=ux.x .+ uxy.x, y=uxy.y)
-        @test typeof(ux .+ uxy) === Vec2DxyArray{Float64,1}
-        @test (uxy .+ uxyz) == VecArray(x=uxy.x .+ uxyz.x, y=uxy.y .+ uxyz.y, z=uxyz.z)
-        @test typeof(uxy .+ uxyz) === Vec3DArray{Float32,1}
-        @test ux .+ 𝐢 == VecArray(x=ux.x .+ 1)
-        @test (ux .= Vec()) == VecArray(x=zeros(3))
-    end
-end
-
 _rand(T) = rand(T)
 _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
 @testset "Vector Operations" begin
@@ -150,6 +93,15 @@ _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
     @test [1,2,3] + Vec(1,2,3) == [2,4,6]
     @test Vec(3,2,1) - [1,2,3] == [2,0,-2]
     @test [1,2,3] - Vec(3,2,1) == [-2,0,2]
+
+    @test convert(Vec3D{Float64}, 𝐢) === Vec(1.0,0.0,0.0)
+    @test convert(Vec3D{Float64}, 𝐤) === Vec(0.0,0.0,1.0)
+    @test convert(Vec2Dxy{Float64}, 𝐢) === Vec(x=1.0,y=0.0)
+    @test convert(Vec2Dxz{Float64}, 𝐤) === Vec(x=0.0,z=1.0)
+
+    @test zero(1.0𝐢) === Vec(x=0.0)
+    @test zero(1𝐣) === Vec(y=0)
+    @test zero(Vec(y=1.0,z=im)) === Vec(y=zero(1.0im),z=zero(1.0im))
         
 
     for T1 in (Int64,Float64,ComplexF64)
@@ -253,5 +205,64 @@ end
                 end
             end
         end
+    end
+end
+
+@testset "ZeroArray" begin
+
+    @test size(ZeroArray(16,16,3)) === (16,16,3)
+    zevec = ZeroArray(4,4)
+
+    @test zevec[1] === ze
+    @test zevec[4,4] === ze
+
+    @test_throws InexactError setindex!(zevec,1.0,1)
+    @test_throws InexactError setindex!(zevec,1.0,4,4)
+end
+
+@testset "VecArray" begin
+    @test_throws DomainError VecArray()
+    @test_throws DomainError VecArray(x=rand(1,2), y=rand(2,1))
+    @test_throws DomainError VecArray(x=rand(1,2), z=rand(2,1))
+    @test_throws DomainError VecArray(y=rand(1,2), z=rand(2,1))
+
+    @test size(VecArray{Float32}(4,3)) === (4,3)
+    @test eltype(VecArray{Float32}(4,3)) === Vec3D{Float32}
+
+    @test VecArray(x=ones(1,1))[1] === Vec(x=1.0)
+    @test VecArray(y=ones(1,1))[1] === Vec(y=1.0)
+    @test VecArray(z=ones(1,1))[1] === Vec(z=1.0)
+
+    @test VecArray(x=ones(1,1),y=(ones(1,1) .+ 1))[1] === Vec(x=1.0,y=2.0)
+    @test VecArray(y=ones(1,1),z=(ones(1,1) .+ 1))[1] === Vec(y=1.0,z=2.0)
+    @test VecArray(x=ones(1,1),z=(ones(1,1) .+ 1))[1] === Vec(x=1.0,z=2.0)
+    @test VecArray(x=ones(1,1),y=(ones(1,1) .+ 1),z=(ones(1,1) .+ 2))[1] === Vec(x=1.0,y=2.0,z=3.0)
+
+    @test VecArray(x=ones(1,1))[1,1] === Vec(x=1.0)
+    @test VecArray(y=ones(1,1))[1,1] === Vec(y=1.0)
+    @test VecArray(z=ones(1,1))[1,1] === Vec(z=1.0)
+
+    @test VecArray(x=ones(1,1),y=(ones(1,1) .+ 1))[1,1] === Vec(x=1.0,y=2.0)
+    @test VecArray(y=ones(1,1),z=(ones(1,1) .+ 1))[1,1] === Vec(y=1.0,z=2.0)
+    @test VecArray(x=ones(1,1),z=(ones(1,1) .+ 1))[1,1] === Vec(x=1.0,z=2.0)
+    @test VecArray(x=ones(1,1),y=(ones(1,1) .+ 1),z=(ones(1,1) .+ 2))[1,1] === Vec(x=1.0,y=2.0,z=3.0)
+
+
+    @test setindex!(VecArray{Float64}(4,4),Vec(x=1.0,y=2.0,z=3.0),4,4)[4,4] === Vec(x=1.0,y=2.0,z=3.0)
+    @test setindex!(VecArray{Float64}(4,4),Vec(x=1.0,y=2.0,z=3.0),16)[16] === Vec(x=1.0,y=2.0,z=3.0)
+
+    @test setindex!(VecArray(y=zeros(4,4)),Vec(x=0.0,y=2.0,z=0.0),4,4)[4,4] === Vec(y=2.0)
+    @test setindex!(VecArray(y=zeros(4,4)),Vec(x=0.0,y=2.0,z=0.0),16)[16] === Vec(y=2.0)
+
+end
+
+@testset "VecArray Broadcasting" begin
+    let ux=VecArray(x=rand(3)), uxy=VecArray(x=rand(Float32,3),y=rand(Float32,3)), uxyz=VecArray(x=rand(Float32,3), y=rand(Float32,3), z=rand(Float32,3))
+        @test (ux .+ uxy) == VecArray(x=ux.x .+ uxy.x, y=uxy.y)
+        @test typeof(ux .+ uxy) === Vec2DxyArray{Float64,1}
+        @test (uxy .+ uxyz) == VecArray(x=uxy.x .+ uxyz.x, y=uxy.y .+ uxyz.y, z=uxyz.z)
+        @test typeof(uxy .+ uxyz) === Vec3DArray{Float32,1}
+        @test ux .+ 𝐢 == VecArray(x=ux.x .+ 1)
+        @test (ux .= Vec()) == VecArray(x=zeros(3))
     end
 end

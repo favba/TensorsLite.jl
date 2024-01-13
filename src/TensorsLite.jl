@@ -93,12 +93,8 @@ end
 Base.IndexStyle(::Type{T}) where T<:Vec{<:Any,1} = IndexLinear()
 Base.IndexStyle(::Type{T}) where T<:Vec{<:Any,2} = IndexCartesian()
 
-@inline _zero_type(::Type{<:Number}) = Zeros.Zero
-@inline _zero(::Type{<:Number}) = Zeros.Zero()
-@inline _zero_type(::Type{<:AbstractVec{<:Any,1}}) = Vec0D
 @inline _zero(::Type{<:AbstractVec{<:Any,1}}) = 𝟎⃗
 @inline _zero(::Type{<:AbstractVec{<:Any,2}}) = Vec(x=𝟎⃗,y=𝟎⃗,z=𝟎⃗)
-@inline _zero_type(::Type{<:AbstractVec{<:Any,2}}) = typeof(Vec(x=𝟎⃗,y=𝟎⃗,z=𝟎⃗))
 
 @inline _zero(x) = _zero(typeof(x))
 
