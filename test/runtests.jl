@@ -8,6 +8,22 @@ const ze = Zero()
 # This helps comparing arrays of Union{Zero,Number}
 (::Type{<:Union{Zero,T}})(x::Number) where T<: Number = x == zero(x) ? Zeros.Zero() : T(x)
 
+@testset "_muladd definitions" begin
+    for x in (One(),Zero(),rand())
+        for y in (One(),Zero(),rand())
+            for z in (One(),Zero(),rand())
+                if (all(t->typeof(t)===Float64,(x,y,z)))
+                    @test TensorsLite._muladd(x,y,z) === muladd(x,y,z)
+                else
+                    @test TensorsLite._muladd(x,y,z) == x*y + z
+                end
+            end
+        end
+    end
+    @test TensorsLite._muladd(Zero(),1.0im,2.0) === 2.0 + 0.0im
+    @test TensorsLite._muladd(1.0im,Zero(),2.0) === 2.0 + 0.0im
+end
+
 @testset "Vec Constructors" begin
 
     @test Vec(x=1).x === 1
