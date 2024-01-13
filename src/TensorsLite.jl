@@ -15,9 +15,7 @@ include("type_utils.jl")
 abstract type AbstractVec{T,N} <: AbstractArray{T,N} end
 
 # Treat Vec's as scalar when broadcasting
-Base.BroadcastStyle(::Type{T}) where T<:AbstractVec = Base.Broadcast.DefaultArrayStyle{0}()
 Base.Broadcast.broadcastable(u::AbstractVec) = (u,)
-@inline Base.getindex(V::AbstractVec) = V
 
 struct Vec{T,N,Tx,Ty,Tz} <: AbstractVec{T,N}
     x::Tx
