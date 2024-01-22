@@ -245,6 +245,8 @@ end
 
     @test_throws InexactError setindex!(zevec,1.0,1)
     @test_throws InexactError setindex!(zevec,1.0,4,4)
+
+    @test similar(ZeroArray(2,2),3,3) === ZeroArray(3,3)
 end
 
 @testset "VecArray" begin
