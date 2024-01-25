@@ -60,7 +60,7 @@ const Vec2Dyz{T} = Vec{Union{Zero,T},1,Zero,T,T}
 const Vec1Dx{T} = Vec{Union{Zero,T},1,T,Zero,Zero}
 const Vec1Dy{T} = Vec{Union{Zero,T},1,Zero,T,Zero}
 const Vec1Dz{T} = Vec{Union{Zero,T},1,Zero,Zero,T}
-const Vec0D = Vec{Zero,1,Zero,Zero,Zero}
+const Vec0D = Vec3D{Zero}
 
 const Ten3D{T} = Vec{T,2,Vec3D{T},Vec3D{T},Vec3D{T}}
 const Ten2Dxy{T} = Vec{Union{Zero,T},2,Vec2Dxy{T},Vec2Dxy{T},Vec0D}
@@ -69,7 +69,7 @@ const Ten2Dyz{T} = Vec{Union{Zero,T},2,Vec0D,Vec2Dyz{T},Vec2Dyz{T}}
 const Ten1Dx{T} = Vec{Union{Zero,T},2,Vec1Dx{T},Vec0D,Vec0D}
 const Ten1Dy{T} = Vec{Union{Zero,T},2,Vec0D,Vec1Dy{T},Vec0D}
 const Ten1Dz{T} = Vec{Union{Zero,T},2,Vec0D,Vec0D,Vec1Dz{T}}
-const Ten0D = Vec{Zero,2,Vec0D,Vec0D,Vec0D}
+const Ten0D = Ten3D{Zero}
 
 const 𝟎⃗ = Vec(Zero(),Zero(),Zero())
 const 𝐢 = Vec(One(),Zero(),Zero())
@@ -112,15 +112,15 @@ Base.length(u::AbstractTen) = length(typeof(u))
 Base.size(::Type{<:AbstractTen}) = (3,3)
 Base.size(u::AbstractTen) = size(typeof(u))
 
-@inline _x(u::Vec) = getfield(u,1)
-@inline _y(u::Vec) = getfield(u,2)
-@inline _z(u::Vec) = getfield(u,3)
+@inline _x(u::AbstractVec) = u.x
+@inline _y(u::AbstractVec) = u.y
+@inline _z(u::AbstractVec) = u.z
 
-@inline function Base.getindex(u::AbstractVec{<:Any,1},i::Integer)
+@inline function Base.getindex(u::Vec{<:Any,1},i::Integer)
     return getfield(u,i)
 end
 
-@inline function Base.getindex(u::AbstractTen,i::Integer,j::Integer)
+@inline function Base.getindex(u::Vec{<:Any,2},i::Integer,j::Integer)
     return getfield(getfield(u,j),i)
 end
 
