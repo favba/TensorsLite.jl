@@ -9,6 +9,10 @@ export dotadd, inner, otimes, ⊗
 export 𝐢, 𝐣, 𝐤
 export VecArray, ZeroArray
 export Vec3DArray, Vec2DxyArray, Vec2DxzArray, Vec2DyzArray, Vec1DxArray, Vec1DyArray, Vec1DzArray
+export SymTen
+export SymTen3D, SymTen2Dxy, SymTen2Dxz, SymTen2Dyz, SymTen1Dx, SymTen1Dy, SymTen1Dz
+export AntiSymTen
+export AntiSymTen3D, AntiSymTen2Dxy, AntiSymTen2Dxz, AntiSymTen2Dyz
 
 include("type_utils.jl")
 
@@ -49,7 +53,9 @@ struct Vec{T,N,Tx,Ty,Tz} <: AbstractVec{T,N}
     end
 end
 
-Base.convert(::Type{Vec{T,N,Tx,Ty,Tz}},u::Vec{T2,N}) where {T,N,Tx,Ty,Tz,T2} = Vec(x=convert(Tx,u.x), y=convert(Ty,u.y), z=convert(Tz,u.z))
+Base.convert(::Type{Vec{T,N,Tx,Ty,Tz}},u::AbstractVec{T2,N}) where {T,N,Tx,Ty,Tz,T2} = Vec(convert(Tx,u.x), convert(Ty,u.y), convert(Tz,u.z))
+
+@inline constructor(::Type{T}) where T<:Vec = Vec
 
 const AbstractTen{T} = AbstractVec{T,2}
 
@@ -93,13 +99,6 @@ end
 Base.IndexStyle(::Type{T}) where T<:Vec{<:Any,1} = IndexLinear()
 Base.IndexStyle(::Type{T}) where T<:Vec{<:Any,2} = IndexCartesian()
 
-@inline _zero(::Type{<:AbstractVec{<:Any,1}}) = 𝟎⃗
-@inline _zero(::Type{<:AbstractVec{<:Any,2}}) = Vec(x=𝟎⃗,y=𝟎⃗,z=𝟎⃗)
-
-@inline _zero(x) = _zero(typeof(x))
-
-@inline Base.zero(u::Vec) = Vec(x=zero(u.x),y=zero(u.y),z=zero(u.z))
-
 Base.length(::Type{<:Vec{<:Any,1}}) = 3
 Base.length(u::Vec{<:Any,1}) = length(typeof(u))
 
@@ -126,6 +125,8 @@ end
 
 include("vec_arithmetic.jl")
 include("tensors.jl")
+include("symmetric_tensors.jl")
+include("antisym_tensors.jl")
 include("vecarray.jl")
 
 end
