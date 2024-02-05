@@ -259,6 +259,31 @@ end
 
 end
 
+@testset "AntiSymTen" begin
+    @test typeof(AntiSymTen(yx=1.0,zx=2,zy=3)) === AntiSymTen3D{Float64}
+    @test typeof(AntiSymTen(yx=1.0)) === AntiSymTen2Dxy{Float64}
+    @test typeof(AntiSymTen(zy=2)) === AntiSymTen2Dyz{Int}
+    @test typeof(AntiSymTen(zx=2.0)) === AntiSymTen2Dxz{Float64}
+
+    @test AntiSymTen(1,2,3) == [0 -1 -2;
+                                1  0 -3;
+                                2  3  0]
+
+    @test AntiSymTen(3,2,1) == AntiSymTen(3.0,2.0,1.0)
+
+    @test (AntiSymTen(yx=1) + AntiSymTen(yx=2.0, zx=5.0)) === AntiSymTen(yx=3.0,zx=5.0)
+    @test (AntiSymTen(yx=1) - AntiSymTen(yx=2.0, zx=5.0)) === AntiSymTen(yx=-1.0,zx=-5.0)
+    @test muladd(3.0,AntiSymTen(yx=4.0),AntiSymTen(yx=5.0)) === AntiSymTen(yx=17.0)
+
+    let S = AntiSymTen(1,2,3)
+        @test S.x === Vec(y=1,z=2)
+        @test S.y === Vec(x=-1,z=3)
+        @test S.z === Vec(x=-2,y=-3)
+    end
+
+end
+
+
 @testset "ZeroArray" begin
 
     @test size(ZeroArray(16,16,3)) === (16,16,3)
