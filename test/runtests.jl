@@ -235,6 +235,29 @@ end
     end
 end
 
+@testset "SymTen" begin
+    @test typeof(SymTen(xx=1.0,yx=2,yy=3)) === SymTen2Dxy{Float64}
+    @test typeof(SymTen(xx=1.0,zx=2,zz=3)) === SymTen2Dxz{Float64}
+    @test typeof(SymTen(yy=1.0,zy=2,zz=3)) === SymTen2Dyz{Float64}
+
+    @test SymTen(1,2,3,4,5,6) == [1 2 3;
+                                  2 4 5;
+                                  3 5 6]
+
+    @test SymTen(6,5,4,3,2,0) == SymTen(6.0,5.0,4.0,3.0,2.0,0.0)
+
+    @test (SymTen(xx=1) + SymTen(xx=2.0, yy=5.0)) === SymTen(xx=3.0,yy=5.0)
+    @test (SymTen(xx=1) - SymTen(xx=2.0, yy=5.0)) === SymTen(xx=-1.0,yy=-5.0)
+    @test muladd(3.0,SymTen(xx=4.0),SymTen(xx=5.0)) === SymTen(xx=17.0)
+
+    let S = SymTen(1,2,3,4,5,6)
+        @test S.x === Vec(1,2,3)
+        @test S.y === Vec(2,4,5)
+        @test S.z === Vec(3,5,6)
+    end
+
+end
+
 @testset "ZeroArray" begin
 
     @test size(ZeroArray(16,16,3)) === (16,16,3)
