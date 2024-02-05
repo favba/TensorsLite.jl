@@ -236,6 +236,7 @@ end
 end
 
 @testset "SymTen" begin
+    @test typeof(SymTen(1,2,3,4,5,6)) === SymTen3D{Int}
     @test typeof(SymTen(xx=1.0,yx=2,yy=3)) === SymTen2Dxy{Float64}
     @test typeof(SymTen(xx=1.0,zx=2,zz=3)) === SymTen2Dxz{Float64}
     @test typeof(SymTen(yy=1.0,zy=2,zz=3)) === SymTen2Dyz{Float64}
