@@ -94,3 +94,6 @@ end
         return getfield(S,s)
     end
 end
+
+@inline transpose(S::SymTen) = S
+@inline adjoint(S::SymTen) = conj(transpose(S))

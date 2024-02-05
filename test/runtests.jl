@@ -241,6 +241,8 @@ end
     @test typeof(SymTen(xx=1.0,zx=2,zz=3)) === SymTen2Dxz{Float64}
     @test typeof(SymTen(yy=1.0,zy=2,zz=3)) === SymTen2Dyz{Float64}
 
+    @test -SymTen(1,2,3,4,5,6) === SymTen(-1,-2,-3,-4,-5,-6)
+
     @test SymTen(1,2,3,4,5,6) == [1 2 3;
                                   2 4 5;
                                   3 5 6]
@@ -251,10 +253,13 @@ end
     @test (SymTen(xx=1) - SymTen(xx=2.0, yy=5.0)) === SymTen(xx=-1.0,yy=-5.0)
     @test muladd(3.0,SymTen(xx=4.0),SymTen(xx=5.0)) === SymTen(xx=17.0)
 
-    let S = SymTen(1,2,3,4,5,6)
-        @test S.x === Vec(1,2,3)
-        @test S.y === Vec(2,4,5)
-        @test S.z === Vec(3,5,6)
+    let xx=rand(ComplexF64),yx = rand(ComplexF64),zx=rand(ComplexF64),yy=rand(ComplexF64),zy=rand(ComplexF64),zz=rand(ComplexF64)
+        S = SymTen(xx,yx,zx,yy,zy,zz)
+        @test S.x === Vec(xx,yx,zx)
+        @test S.y === Vec(yx,yy,zy)
+        @test S.z === Vec(zx,zy,zz)
+        @test transpose(S) === S
+        @test S' === SymTen(conj(xx),conj(yx),conj(zx),conj(yy),conj(zy),conj(zz))
     end
 
 end
@@ -264,6 +269,8 @@ end
     @test typeof(AntiSymTen(yx=1.0)) === AntiSymTen2Dxy{Float64}
     @test typeof(AntiSymTen(zy=2)) === AntiSymTen2Dyz{Int}
     @test typeof(AntiSymTen(zx=2.0)) === AntiSymTen2Dxz{Float64}
+
+    @test -AntiSymTen(1,2,3) === AntiSymTen(-1,-2,-3)
 
     @test AntiSymTen(1,2,3) == [0 -1 -2;
                                 1  0 -3;
@@ -275,10 +282,13 @@ end
     @test (AntiSymTen(yx=1) - AntiSymTen(yx=2.0, zx=5.0)) === AntiSymTen(yx=-1.0,zx=-5.0)
     @test muladd(3.0,AntiSymTen(yx=4.0),AntiSymTen(yx=5.0)) === AntiSymTen(yx=17.0)
 
-    let S = AntiSymTen(1,2,3)
-        @test S.x === Vec(y=1,z=2)
-        @test S.y === Vec(x=-1,z=3)
-        @test S.z === Vec(x=-2,y=-3)
+    let yx=rand(ComplexF64),zx=rand(ComplexF64),zy=rand(ComplexF64)
+        W = AntiSymTen(yx,zx,zy)
+        @test W.x === Vec(y=yx,z=zx)
+        @test W.y === Vec(x=-yx,z=zy)
+        @test W.z === Vec(x=-zx,y=-zy)
+        @test transpose(W) === -W
+        @test W' === AntiSymTen(-conj(yx),-conj(zx),-conj(zy))
     end
 
 end

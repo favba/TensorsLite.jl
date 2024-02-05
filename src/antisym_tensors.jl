@@ -75,3 +75,6 @@ end
         return getfield(S,s)
     end
 end
+
+@inline transpose(W::AntiSymTen) = -W
+@inline adjoint(W::AntiSymTen) = -conj(W)
