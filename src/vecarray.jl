@@ -17,51 +17,94 @@ struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
 
     VecArray{T}(I::Vararg{Int,N}) where {T,N} = new{Vec{T,1,T,T,T},N,Array{T,N},Array{T,N},Array{T,N}}(Array{T}(undef,I...),Array{T}(undef,I...),Array{T}(undef,I...))
     
-    function VecArray(;x::Union{Zero,AbstractArray}=𝟎,y::Union{Zero,AbstractArray}=𝟎, z::Union{Zero,AbstractArray}=𝟎)
-        if (x,y,z) === (𝟎,𝟎,𝟎)
-            throw(DomainError((x,y,z),"At least one entry must be a valid array"))
-        else
-            if x !== 𝟎
-                s = size(x)
-                xv = x
-                yv = y === 𝟎 ? ZeroArray(s) : y
-                zv = z === 𝟎 ? ZeroArray(s) : z
-                size(yv) === s || throw(DomainError((x,y),"Arrays must have the same size"))
-                size(zv) === s || throw(DomainError((x,z),"Arrays must have the same size"))
+    function VecArray(x::AbstractArray{<:Number},y::AbstractArray{<:Number}, z::AbstractArray{<:Number})
 
-                Tx = typeof(xv)
-                Ty = typeof(yv)
-                Tz = typeof(zv)
-                N = ndims(xv)
+        s = size(x)
+        size(y) === s || throw(DomainError((x,y),"Arrays must have the same size"))
+        size(z) === s || throw(DomainError((x,z),"Arrays must have the same size"))
 
-            elseif y !== 𝟎
-                s = size(y)
-                xv = ZeroArray(s)
-                yv = y
-                zv = z === 𝟎 ? ZeroArray(s) : z
-                size(zv) === s || throw(DomainError((y,z),"Arrays must have the same size"))
+        Tx = typeof(x)
+        Ty = typeof(y)
+        Tz = typeof(z)
+        N = ndims(x)
 
-                Tx = typeof(xv)
-                Ty = typeof(yv)
-                Tz = typeof(zv)
-                N = ndims(yv)
-            else # z must be !== 𝟎
-                s = size(z)
-                xv = ZeroArray(s)
-                yv = ZeroArray(s)
-                zv = z 
+        return new{_vec_type(eltype(x),eltype(y),eltype(z)),N,Tx,Ty,Tz}(x,y,z)
+    end
 
-                Tx = typeof(xv)
-                Ty = typeof(yv)
-                Tz = typeof(zv)
-                N = ndims(zv)
-            end
-            return new{_vec_type(eltype(xv),eltype(yv),eltype(zv)),N,Tx,Ty,Tz}(xv,yv,zv)
-        end
+    function VecArray(x::AbstractArray{<:AbstractVec},y::AbstractArray{<:AbstractVec}, z::AbstractArray{<:AbstractVec})
+
+        s = size(x)
+        size(y) === s || throw(DomainError((x,y),"Arrays must have the same size"))
+        size(z) === s || throw(DomainError((x,z),"Arrays must have the same size"))
+
+        Tx = eltype(x)
+        Ty = eltype(y)
+        Tz = eltype(z)
+
+        N = ndims(x)
+
+        return new{_ten_type(Tx,Ty,Tz),N,typeof(x),typeof(y),typeof(z)}(x,y,z)
     end
 
 end
 
+function VecArray(;x::Union{Zero,<:AbstractArray{<:Number}}=𝟎,y::Union{Zero,AbstractArray{<:Number}}=𝟎, z::Union{Zero,AbstractArray{<:Number}}=𝟎)
+    if (x,y,z) === (𝟎,𝟎,𝟎)
+        throw(DomainError((x,y,z),"At least one entry must be a valid array"))
+    else
+        if x !== 𝟎
+            s = size(x)
+            xv = x
+            yv = y === 𝟎 ? ZeroArray(s) : y
+            zv = z === 𝟎 ? ZeroArray(s) : z
+            size(yv) === s || throw(DomainError((x,y),"Arrays must have the same size"))
+            size(zv) === s || throw(DomainError((x,z),"Arrays must have the same size"))
+        elseif y !== 𝟎
+            s = size(y)
+            xv = ZeroArray(s)
+            yv = y
+            zv = z === 𝟎 ? ZeroArray(s) : z
+            size(zv) === s || throw(DomainError((y,z),"Arrays must have the same size"))
+        else # z must be !== 𝟎
+            s = size(z)
+            xv = ZeroArray(s)
+            yv = ZeroArray(s)
+            zv = z 
+        end
+    end
+    return VecArray(xv,yv,zv)
+end
+
+_if_zero_to_ZeroArray(s::NTuple{N,Int},::Zero) where N = ZeroArray(s)
+_if_zero_to_ZeroArray(s::NTuple{N,Int},x::AbstractArray) where N = x
+
+function TenArray(;xx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zx::Union{Zero,<:AbstractArray{<:Number}}=𝟎,
+                   xy::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yy::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zy::Union{Zero,<:AbstractArray{<:Number}}=𝟎,
+                   xz::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yz::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zz::Union{Zero,<:AbstractArray{<:Number}}=𝟎)
+
+    vals = (xx,yx,zx,
+            xy,yy,zy,
+            xz,yz,zz)
+
+    vals === (𝟎,𝟎,𝟎,
+              𝟎,𝟎,𝟎,
+              𝟎,𝟎,𝟎) && throw(DomainError( vals,"At least one entry must be a valid VecArray"))
+
+    non_zero_vals = _filter_zeros(vals...)
+    s = size(non_zero_vals[1])
+
+    all(x->(size(x)===s),non_zero_vals) || throw(DimensionMismatch())
+
+    sizes = (s,s,s,s,s,s,s,s,s)
+    final_vals = map(_if_zero_to_ZeroArray,sizes,vals)
+
+    xv = VecArray(final_vals[1],final_vals[2],final_vals[3])
+    yv = VecArray(final_vals[4],final_vals[5],final_vals[6])
+    zv = VecArray(final_vals[7],final_vals[8],final_vals[9])
+
+    return VecArray(xv,yv,zv)
+end
+ 
 const Vec3DArray{T,N} = VecArray{Vec3D{T},N,Array{T,N},Array{T,N},Array{T,N}}
 const Vec2DxyArray{T,N} = VecArray{Vec2Dxy{T},N,Array{T,N},Array{T,N},ZeroArray{N}}
 const Vec2DxzArray{T,N} = VecArray{Vec2Dxz{T},N,Array{T,N},ZeroArray{N},Array{T,N}}
@@ -69,6 +112,15 @@ const Vec2DyzArray{T,N} = VecArray{Vec2Dyz{T},N,ZeroArray{N},Array{T,N},Array{T,
 const Vec1DxArray{T,N} = VecArray{Vec1Dx{T},N,Array{T,N},ZeroArray{N},ZeroArray{N}}
 const Vec1DyArray{T,N} = VecArray{Vec1Dy{T},N,ZeroArray{N},Array{T,N},ZeroArray{N}}
 const Vec1DzArray{T,N} = VecArray{Vec1Dz{T},N,ZeroArray{N},ZeroArray{N},Array{T,N}}
+const Vec0DArray{N} = VecArray{Vec0D,N,ZeroArray{N},ZeroArray{N},ZeroArray{N}}
+
+const Ten3DArray{T,N} = VecArray{Ten3D{T},N,Vec3DArray{T,N},Vec3DArray{T,N},Vec3DArray{T,N}}
+const Ten2DxyArray{T,N} = VecArray{Ten2Dxy{T},N,Vec2DxyArray{T,N},Vec2DxyArray{T,N},Vec0DArray{N}}
+const Ten2DxzArray{T,N} = VecArray{Ten2Dxz{T},N,Vec2DxzArray{T,N},Vec0DArray{N},Vec2DxzArray{T,N}}
+const Ten2DyzArray{T,N} = VecArray{Ten2Dyz{T},N,Vec0DArray{N},Vec2DyzArray{T,N},Vec2DyzArray{T,N}}
+const Ten1DxArray{T,N} = VecArray{Ten1Dx{T},N,Vec1DxArray{T,N},Vec0DArray{N},Vec0DArray{N}}
+const Ten1DyArray{T,N} = VecArray{Ten1Dy{T},N,Vec0DArray{N},Vec1DyArray{T,N},Vec0DArray{N}}
+const Ten1DzArray{T,N} = VecArray{Ten1Dz{T},N,Vec0DArray{N},Vec0DArray{N},Vec1DzArray{T,N}}
 
 @inline Base.size(A::VecArray) = size(A.x)
 @inline Base.length(A::VecArray) = length(A.x)
@@ -109,7 +161,7 @@ end
     return A
 end
 
-Base.similar(A::VecArray,T::Type{Vec{Tt,N,Tx,Ty,Tz}},dims::Tuple{Int,Vararg{Int,N2}}) where {Tt,N,Tx,Ty,Tz,N2} = VecArray(x=similar(A.x,Tx,dims), y=similar(A.y,Ty,dims), z=similar(A.z,Tz,dims))
+Base.similar(A::VecArray,T::Type{Vec{Tt,N,Tx,Ty,Tz}},dims::Tuple{Int,Vararg{Int,N2}}) where {Tt,N,Tx,Ty,Tz,N2} = VecArray(similar(A.x,Tx,dims), similar(A.y,Ty,dims), similar(A.z,Tz,dims))
 
 #Definitons so broadcast return a VecArray =======================================
 
@@ -154,6 +206,59 @@ function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec1Dz{T}}) where T
     size = length.(axes(bc))
     z = Array{T}(undef,size...)
     return VecArray(z=z)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten3D{T}}) where T
+    s = length.(axes(bc))
+    xv = VecArray{T}(s...)
+    yv = VecArray{T}(s...)
+    zv = VecArray{T}(s...)
+    return VecArray(xv,yv,zv)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten2Dxy{T}}) where T
+    s = length.(axes(bc))
+    xx = Array{T}(undef,s)
+    xy = Array{T}(undef,s)
+    yx = Array{T}(undef,s)
+    yy = Array{T}(undef,s)
+    return TenArray(xx=xx, xy=xy, yx=yx, yy=yy)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten2Dxz{T}}) where T
+    s = length.(axes(bc))
+    xx = Array{T}(undef,s)
+    xz = Array{T}(undef,s)
+    zx = Array{T}(undef,s)
+    zz = Array{T}(undef,s)
+    return TenArray(xx=xx, xz=xz, zx=zx, zz=zz)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten2Dyz{T}}) where T
+    s = length.(axes(bc))
+    yy = Array{T}(undef,s)
+    yz = Array{T}(undef,s)
+    zy = Array{T}(undef,s)
+    zz = Array{T}(undef,s)
+    return TenArray(yy=yy, yz=yz, zy=zy, zz=zz)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten1Dx{T}}) where T
+    s = length.(axes(bc))
+    xx = Array{T}(undef,s)
+    return TenArray(xx=xx)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten1Dy{T}}) where T
+    s = length.(axes(bc))
+    yy = Array{T}(undef,s)
+    return TenArray(yy=yy)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten1Dz{T}}) where T
+    s = length.(axes(bc))
+    zz = Array{T}(undef,s)
+    return TenArray(zz=zz)
 end
 
 #Definitons so broadcast return a VecArray =======================================

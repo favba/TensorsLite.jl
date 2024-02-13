@@ -48,15 +48,9 @@ end
 end
 @inline _my_eltype(x::T) where T<:AbstractArray = _my_eltype(T)
 
-
-@inline function _vec_type(Tx::Type,Ty::Type,Tz::Type)
-    Tf = promote_type(Tx,Ty,Tz)
-    Txf = _my_promote_type(Tf,Tx)
-    Tyf = _my_promote_type(Tf,Ty)
-    Tzf = _my_promote_type(Tf,Tz)
-    Tff = _final_type(Txf,Tyf,Tzf)
-    return Vec{Tff,1,Txf,Tyf,Tzf}
-end
-
 @inline _zero_for_tuple() = ()
 @inline _zero_for_tuple(::Type{T},types::Vararg{T2,N}) where {T,T2,N} = (zero(T),_zero_for_tuple(types...)...)
+
+@inline _filter_zeros() = ()
+@inline _filter_zeros(::Zero,rest::Vararg{Any,N}) where N = (_filter_zeros(rest...)...,)
+@inline _filter_zeros(x::Any,rest::Vararg{Any,N}) where N = (x,_filter_zeros(rest...)...,)

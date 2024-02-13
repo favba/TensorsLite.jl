@@ -7,12 +7,13 @@ export Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec1Dx, Vec1Dy, Vec1Dz, Vec0D
 export Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten1Dx, Ten1Dy, Ten1Dz, Ten0D
 export dotadd, inner, otimes, ⊗
 export 𝐢, 𝐣, 𝐤
-export VecArray, ZeroArray
-export Vec3DArray, Vec2DxyArray, Vec2DxzArray, Vec2DyzArray, Vec1DxArray, Vec1DyArray, Vec1DzArray
 export SymTen
 export SymTen3D, SymTen2Dxy, SymTen2Dxz, SymTen2Dyz, SymTen1Dx, SymTen1Dy, SymTen1Dz
 export AntiSymTen
 export AntiSymTen3D, AntiSymTen2Dxy, AntiSymTen2Dxz, AntiSymTen2Dyz
+export VecArray, ZeroArray, TenArray
+export Vec3DArray, Vec2DxyArray, Vec2DxzArray, Vec2DyzArray, Vec1DxArray, Vec1DyArray, Vec1DzArray
+export Ten3DArray, Ten2DxyArray, Ten2DxzArray, Ten2DyzArray, Ten1DxArray, Ten1DyArray, Ten1DzArray
 
 include("type_utils.jl")
 
@@ -53,6 +54,8 @@ struct Vec{T,N,Tx,Ty,Tz} <: AbstractVec{T,N}
     end
 end
 
+include("vec_type_utils.jl")
+
 Base.convert(::Type{Vec{T,N,Tx,Ty,Tz}},u::AbstractVec{T2,N}) where {T,N,Tx,Ty,Tz,T2} = Vec(convert(Tx,u.x), convert(Ty,u.y), convert(Tz,u.z))
 
 @inline constructor(::Type{T}) where T<:Vec = Vec
@@ -77,12 +80,11 @@ const Ten1Dy{T} = Vec{Union{Zero,T},2,Vec0D,Vec1Dy{T},Vec0D}
 const Ten1Dz{T} = Vec{Union{Zero,T},2,Vec0D,Vec0D,Vec1Dz{T}}
 const Ten0D = Ten3D{Zero}
 
-const 𝟎⃗ = Vec(Zero(),Zero(),Zero())
 const 𝐢 = Vec(One(),Zero(),Zero())
 const 𝐣 = Vec(Zero(),One(),Zero())
 const 𝐤 = Vec(Zero(),Zero(),One())
 
-@inline if_zero_to_zerovec(x::Zero) = 𝟎⃗
+@inline if_zero_to_zerovec(x::Zero) = Vec(𝟎,𝟎,𝟎)
 @inline if_zero_to_zerovec(x::Vec) = x
 
 @inline function Vec(;x::Union{Vec,Number}=𝟎,y::Union{Vec,Number}=𝟎,z::Union{Vec,Number}=𝟎)
