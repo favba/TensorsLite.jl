@@ -3,8 +3,8 @@ module TensorsLite
 using Zeros
 
 export Vec, Ten, AbstractVec
-export Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec1Dx, Vec1Dy, Vec1Dz, Vec0D
-export Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten1Dx, Ten1Dy, Ten1Dz, Ten0D
+export Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec2D, Vec1Dx, Vec1Dy, Vec1Dz, Vec1D, VecND, Vec0D
+export Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten2D, Ten1Dx, Ten1Dy, Ten1Dz, Ten1D, TenND, Ten0D
 export dotadd, inner, otimes, ⊗
 export 𝐢, 𝐣, 𝐤
 export SymTen
@@ -66,19 +66,25 @@ const Vec3D{T} = Vec{T,1,T,T,T}
 const Vec2Dxy{T} = Vec{Union{Zero,T},1,T,T,Zero}
 const Vec2Dxz{T} = Vec{Union{Zero,T},1,T,Zero,T}
 const Vec2Dyz{T} = Vec{Union{Zero,T},1,Zero,T,T}
+const Vec2D{T} = Union{Vec2Dxy{T},Vec2Dxz{T},Vec2Dyz{T}}
 const Vec1Dx{T} = Vec{Union{Zero,T},1,T,Zero,Zero}
 const Vec1Dy{T} = Vec{Union{Zero,T},1,Zero,T,Zero}
 const Vec1Dz{T} = Vec{Union{Zero,T},1,Zero,Zero,T}
-const Vec0D = Vec3D{Zero}
+const Vec1D{T} = Union{Vec1Dx{T},Vec1Dy{T},Vec1Dz{T}}
+const VecND{T} = Union{Vec3D{T},Vec2D{T},Vec1D{T}}
+const Vec0D = VecND{Zero}
 
 const Ten3D{T} = Vec{T,2,Vec3D{T},Vec3D{T},Vec3D{T}}
 const Ten2Dxy{T} = Vec{Union{Zero,T},2,Vec2Dxy{T},Vec2Dxy{T},Vec0D}
 const Ten2Dxz{T} = Vec{Union{Zero,T},2,Vec2Dxz{T},Vec0D,Vec2Dxz{T}}
 const Ten2Dyz{T} = Vec{Union{Zero,T},2,Vec0D,Vec2Dyz{T},Vec2Dyz{T}}
+const Ten2D{T} = Union{Ten2Dxy{T},Ten2Dxz{T},Ten2Dyz{T}}
 const Ten1Dx{T} = Vec{Union{Zero,T},2,Vec1Dx{T},Vec0D,Vec0D}
 const Ten1Dy{T} = Vec{Union{Zero,T},2,Vec0D,Vec1Dy{T},Vec0D}
 const Ten1Dz{T} = Vec{Union{Zero,T},2,Vec0D,Vec0D,Vec1Dz{T}}
-const Ten0D = Ten3D{Zero}
+const Ten1D{T} = Union{Ten1Dx{T},Ten1Dy{T},Ten1Dz{T}}
+const TenND{T} = Union{Ten3D{T},Ten2D{T},Ten1D{T}}
+const Ten0D = TenND{Zero}
 
 const 𝐢 = Vec(One(),Zero(),Zero())
 const 𝐣 = Vec(Zero(),One(),Zero())
