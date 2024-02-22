@@ -66,9 +66,9 @@ end
 _if_zero_to_Array(s::NTuple{N,Int},::Zero) where N = Array{Zero}(undef,s)
 _if_zero_to_Array(s::NTuple{N,Int},x::AbstractArray) where N = x
 
-function TenArray(;xx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zx::Union{Zero,<:AbstractArray{<:Number}}=𝟎,
-                   xy::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yy::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zy::Union{Zero,<:AbstractArray{<:Number}}=𝟎,
-                   xz::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yz::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zz::Union{Zero,<:AbstractArray{<:Number}}=𝟎)
+function TenArray(xx, yx, zx,
+                  xy, yy, zy,
+                  xz, yz, zz)
 
     vals = (xx,yx,zx,
             xy,yy,zy,
@@ -84,7 +84,7 @@ function TenArray(;xx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yx::Union{Zer
     all(x->(size(x)===s),non_zero_vals) || throw(DimensionMismatch())
 
     sizes = (s,s,s,s,s,s,s,s,s)
-    final_vals = map(_if_zero_to_ZeroArray,sizes,vals)
+    final_vals = map(_if_zero_to_Array,sizes,vals)
 
     xv = VecArray(final_vals[1],final_vals[2],final_vals[3])
     yv = VecArray(final_vals[4],final_vals[5],final_vals[6])
@@ -93,6 +93,12 @@ function TenArray(;xx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yx::Union{Zer
     return VecArray(xv,yv,zv)
 end
  
+TenArray(;xx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zx::Union{Zero,<:AbstractArray{<:Number}}=𝟎,
+          xy::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yy::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zy::Union{Zero,<:AbstractArray{<:Number}}=𝟎,
+          xz::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yz::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zz::Union{Zero,<:AbstractArray{<:Number}}=𝟎) = TenArray(xx,yx,zx,
+                                                                                                                                                            xy,yy,zy,
+                                                                                                                                                            xz,yz,zz)
+
 const Vec3DArray{T,N} = VecArray{Vec3D{T},N,Array{T,N},Array{T,N},Array{T,N}}
 const Vec2DxyArray{T,N} = VecArray{Vec2Dxy{T},N,Array{T,N},Array{T,N},Array{Zero,N}}
 const Vec2DxzArray{T,N} = VecArray{Vec2Dxz{T},N,Array{T,N},Array{Zero,N},Array{T,N}}
@@ -115,13 +121,13 @@ const Ten1DzArray{T,N} = VecArray{Ten1Dz{T},N,Vec0DArray{N},Vec0DArray{N},Vec1Dz
 
 @inline function Base.getindex(A::VecArray,i::Int)
     @boundscheck checkbounds(A,i)
-    @inbounds r = Vec(x=A.x[i], y=A.y[i], z=A.z[i])
+    @inbounds r = Vec(A.x[i], A.y[i], A.z[i])
     return r
 end
 
 @inline function Base.getindex(A::VecArray{T,N},I::Vararg{Int,N}) where {T,N}
     @boundscheck checkbounds(A,I...)
-    @inbounds r = Vec(x=A.x[I...], y=A.y[I...], z=A.z[I...])
+    @inbounds r = Vec(A.x[I...], A.y[I...], A.z[I...])
     return r
 end
 
@@ -153,100 +159,19 @@ Base.similar(A::VecArray,T::Type{Vec{Tt,N,Tx,Ty,Tz}},dims::Tuple{Int,Vararg{Int,
 
 #Definitons so broadcast return a VecArray =======================================
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec3D{T}}) where T
-    return VecArray{T}(length.(axes(bc))...)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec2Dxy{T}}) where T
-    size = length.(axes(bc))
-    x = Array{T}(undef,size...)
-    y = Array{T}(undef,size...)
-    return VecArray(x=x,y=y)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec2Dxz{T}}) where T
-    size = length.(axes(bc))
-    x = Array{T}(undef,size...)
-    z = Array{T}(undef,size...)
-    return VecArray(x=x,z=z)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec2Dyz{T}}) where T
-    size = length.(axes(bc))
-    y = Array{T}(undef,size...)
-    z = Array{T}(undef,size...)
-    return VecArray(y=y,z=z)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec1Dx{T}}) where T
-    size = length.(axes(bc))
-    x = Array{T}(undef,size...)
-    return VecArray(x=x)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec1Dy{T}}) where T
-    size = length.(axes(bc))
-    y = Array{T}(undef,size...)
-    return VecArray(y=y)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec1Dz{T}}) where T
-    size = length.(axes(bc))
-    z = Array{T}(undef,size...)
-    return VecArray(z=z)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten3D{T}}) where T
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec{T,1,Tx,Ty,Tz}}) where {T,Tx,Ty,Tz}
     s = length.(axes(bc))
-    xv = VecArray{T}(s...)
-    yv = VecArray{T}(s...)
-    zv = VecArray{T}(s...)
+    x = Array{Tx}(undef,s...)
+    y = Array{Ty}(undef,s...)
+    z = Array{Tz}(undef,s...)
+    return VecArray(x,y,z)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec{T,2,Tx,Ty,Tz}}) where {T,Tx,Ty,Tz}
+    xv = similar(bc,Tx)
+    yv = similar(bc,Ty)
+    zv = similar(bc,Tz)
     return VecArray(xv,yv,zv)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten2Dxy{T}}) where T
-    s = length.(axes(bc))
-    xx = Array{T}(undef,s)
-    xy = Array{T}(undef,s)
-    yx = Array{T}(undef,s)
-    yy = Array{T}(undef,s)
-    return TenArray(xx=xx, xy=xy, yx=yx, yy=yy)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten2Dxz{T}}) where T
-    s = length.(axes(bc))
-    xx = Array{T}(undef,s)
-    xz = Array{T}(undef,s)
-    zx = Array{T}(undef,s)
-    zz = Array{T}(undef,s)
-    return TenArray(xx=xx, xz=xz, zx=zx, zz=zz)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten2Dyz{T}}) where T
-    s = length.(axes(bc))
-    yy = Array{T}(undef,s)
-    yz = Array{T}(undef,s)
-    zy = Array{T}(undef,s)
-    zz = Array{T}(undef,s)
-    return TenArray(yy=yy, yz=yz, zy=zy, zz=zz)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten1Dx{T}}) where T
-    s = length.(axes(bc))
-    xx = Array{T}(undef,s)
-    return TenArray(xx=xx)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten1Dy{T}}) where T
-    s = length.(axes(bc))
-    yy = Array{T}(undef,s)
-    return TenArray(yy=yy)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Ten1Dz{T}}) where T
-    s = length.(axes(bc))
-    zz = Array{T}(undef,s)
-    return TenArray(zz=zz)
 end
 
 #Definitons so broadcast return a VecArray =======================================
