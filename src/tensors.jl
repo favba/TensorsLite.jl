@@ -1,11 +1,12 @@
 import LinearAlgebra: transpose, adjoint
 
-@inline function Ten(;xx=𝟎, yx=𝟎, zx=𝟎, xy=𝟎, yy=𝟎, zy=𝟎, xz=𝟎, yz=𝟎, zz=𝟎)
+@inline function Ten(xx, yx, zx, xy, yy, zy, xz, yz, zz)
     x = Vec(xx,yx,zx)
     y = Vec(xy,yy,zy)
     z = Vec(xz,yz,zz)
     return Vec(x,y,z)
 end
+@inline Ten(;xx=𝟎, yx=𝟎, zx=𝟎, xy=𝟎, yy=𝟎, zy=𝟎, xz=𝟎, yz=𝟎, zz=𝟎) = Ten(xx,yx,zx,xy,yy,zy,xz,yz,zz)
 
 @inline *(T::AbstractTen,v::AbstractVec{<:Any,1}) = dot(T,v)
 @inline *(v::AbstractVec{<:Any,1},T::AbstractTen) = dot(v,T)

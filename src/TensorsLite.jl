@@ -56,7 +56,7 @@ end
 
 include("vec_type_utils.jl")
 
-Base.convert(::Type{Vec{T,N,Tx,Ty,Tz}},u::AbstractVec{T2,N}) where {T,N,Tx,Ty,Tz,T2} = Vec(convert(Tx,u.x), convert(Ty,u.y), convert(Tz,u.z))
+@inline Base.convert(::Type{Vec{T,N,Tx,Ty,Tz}},u::AbstractVec{T2,N}) where {T,N,Tx,Ty,Tz,T2} = Vec(convert(Tx,u.x), convert(Ty,u.y), convert(Tz,u.z))
 
 @inline constructor(::Type{T}) where T<:Vec = Vec
 

@@ -1,4 +1,4 @@
-struct SymTen{T,Txx,Tyx,Tzx,Tyy,Tzy,Tzz} <: AbstractVec{T,2}
+struct SymTen{T,Txx,Tyx,Tzx,Tyy,Tzy,Tzz} <: AbstractTen{T}
     xx::Txx
     yx::Tyx
     zx::Tzx
@@ -39,6 +39,11 @@ struct SymTen{T,Txx,Tyx,Tzx,Tyy,Tzy,Tzz} <: AbstractVec{T,2}
 end
 
 @inline SymTen(;xx=𝟎, yx=𝟎, zx=𝟎, yy=𝟎, zy=𝟎, zz=𝟎) = SymTen(xx,yx,zx,yy,zy,zz)
+
+@inline function Base.convert(::Type{SymTen{T,Txx,Tyx,Tzx,Tyy,Tzy,Tzz}},v::SymTen) where {T,Txx,Tyx,Tzx,Tyy,Tzy,Tzz}
+    @inline nfields = map(convert,(Txx,Tyx,Tzx,Tyy,Tzy,Tzz),fields(v))
+    return SymTen(nfields...)
+end
 
 @inline constructor(::Type{T}) where T<:SymTen = SymTen
 @inline +(a::SymTen, b::SymTen) = @inline SymTen(map(+,fields(a),fields(b))...)
