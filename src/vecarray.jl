@@ -1,15 +1,3 @@
-struct ZeroArray{N} <: AbstractArray{Zero,N}
-    size::NTuple{N,Int}
-end
-ZeroArray(I::Vararg{Int,N}) where N = ZeroArray{N}((I...,))
-Base.size(z::ZeroArray) = z.size
-@inline Base.getindex(z::ZeroArray,i::Int) = 𝟎
-@inline Base.getindex(z::ZeroArray{N},I::Vararg{Int,N}) where N = 𝟎
-@inline Base.setindex!(z::ZeroArray,x,i::Int) = begin convert(Zero,x); return z end
-@inline Base.setindex!(z::ZeroArray{N},x,I::Vararg{Int,N}) where N = begin convert(Zero,x); return z end
-
-Base.similar(::ZeroArray,::Type{Zero},dims::Tuple{Int,Vararg{Int,N}}) where N = ZeroArray(dims...)
-
 struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
     x::Tx
     y::Ty
@@ -55,28 +43,28 @@ function VecArray(;x::Union{Zero,<:AbstractArray{<:Number}}=𝟎,y::Union{Zero,A
         if x !== 𝟎
             s = size(x)
             xv = x
-            yv = y === 𝟎 ? ZeroArray(s) : y
-            zv = z === 𝟎 ? ZeroArray(s) : z
+            yv = y === 𝟎 ? Array{Zero}(undef,s) : y
+            zv = z === 𝟎 ? Array{Zero}(undef,s) : z
             size(yv) === s || throw(DomainError((x,y),"Arrays must have the same size"))
             size(zv) === s || throw(DomainError((x,z),"Arrays must have the same size"))
         elseif y !== 𝟎
             s = size(y)
-            xv = ZeroArray(s)
+            xv = Array{Zero}(undef,s)
             yv = y
-            zv = z === 𝟎 ? ZeroArray(s) : z
+            zv = z === 𝟎 ? Array{Zero}(undef,s) : z
             size(zv) === s || throw(DomainError((y,z),"Arrays must have the same size"))
         else # z must be !== 𝟎
             s = size(z)
-            xv = ZeroArray(s)
-            yv = ZeroArray(s)
+            xv = Array{Zero}(undef,s)
+            yv = Array{Zero}(undef,s)
             zv = z 
         end
     end
     return VecArray(xv,yv,zv)
 end
 
-_if_zero_to_ZeroArray(s::NTuple{N,Int},::Zero) where N = ZeroArray(s)
-_if_zero_to_ZeroArray(s::NTuple{N,Int},x::AbstractArray) where N = x
+_if_zero_to_Array(s::NTuple{N,Int},::Zero) where N = Array{Zero}(undef,s)
+_if_zero_to_Array(s::NTuple{N,Int},x::AbstractArray) where N = x
 
 function TenArray(;xx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zx::Union{Zero,<:AbstractArray{<:Number}}=𝟎,
                    xy::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yy::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zy::Union{Zero,<:AbstractArray{<:Number}}=𝟎,
@@ -88,7 +76,7 @@ function TenArray(;xx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yx::Union{Zer
 
     vals === (𝟎,𝟎,𝟎,
               𝟎,𝟎,𝟎,
-              𝟎,𝟎,𝟎) && throw(DomainError( vals,"At least one entry must be a valid VecArray"))
+              𝟎,𝟎,𝟎) && throw(DomainError( vals,"At least one entry must be a valid Array"))
 
     non_zero_vals = _filter_zeros(vals...)
     s = size(non_zero_vals[1])
@@ -106,13 +94,13 @@ function TenArray(;xx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yx::Union{Zer
 end
  
 const Vec3DArray{T,N} = VecArray{Vec3D{T},N,Array{T,N},Array{T,N},Array{T,N}}
-const Vec2DxyArray{T,N} = VecArray{Vec2Dxy{T},N,Array{T,N},Array{T,N},ZeroArray{N}}
-const Vec2DxzArray{T,N} = VecArray{Vec2Dxz{T},N,Array{T,N},ZeroArray{N},Array{T,N}}
-const Vec2DyzArray{T,N} = VecArray{Vec2Dyz{T},N,ZeroArray{N},Array{T,N},Array{T,N}}
-const Vec1DxArray{T,N} = VecArray{Vec1Dx{T},N,Array{T,N},ZeroArray{N},ZeroArray{N}}
-const Vec1DyArray{T,N} = VecArray{Vec1Dy{T},N,ZeroArray{N},Array{T,N},ZeroArray{N}}
-const Vec1DzArray{T,N} = VecArray{Vec1Dz{T},N,ZeroArray{N},ZeroArray{N},Array{T,N}}
-const Vec0DArray{N} = VecArray{Vec0D,N,ZeroArray{N},ZeroArray{N},ZeroArray{N}}
+const Vec2DxyArray{T,N} = VecArray{Vec2Dxy{T},N,Array{T,N},Array{T,N},Array{Zero,N}}
+const Vec2DxzArray{T,N} = VecArray{Vec2Dxz{T},N,Array{T,N},Array{Zero,N},Array{T,N}}
+const Vec2DyzArray{T,N} = VecArray{Vec2Dyz{T},N,Array{Zero,N},Array{T,N},Array{T,N}}
+const Vec1DxArray{T,N} = VecArray{Vec1Dx{T},N,Array{T,N},Array{Zero,N},Array{Zero,N}}
+const Vec1DyArray{T,N} = VecArray{Vec1Dy{T},N,Array{Zero,N},Array{T,N},Array{Zero,N}}
+const Vec1DzArray{T,N} = VecArray{Vec1Dz{T},N,Array{Zero,N},Array{Zero,N},Array{T,N}}
+const Vec0DArray{N} = VecArray{Vec0D,N,Array{Zero,N},Array{Zero,N},Array{Zero,N}}
 
 const Ten3DArray{T,N} = VecArray{Ten3D{T},N,Vec3DArray{T,N},Vec3DArray{T,N},Vec3DArray{T,N}}
 const Ten2DxyArray{T,N} = VecArray{Ten2Dxy{T},N,Vec2DxyArray{T,N},Vec2DxyArray{T,N},Vec0DArray{N}}

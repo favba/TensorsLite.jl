@@ -293,21 +293,6 @@ end
 
 end
 
-
-@testset "ZeroArray" begin
-
-    @test size(ZeroArray(16,16,3)) === (16,16,3)
-    zevec = ZeroArray(4,4)
-
-    @test zevec[1] === ze
-    @test zevec[4,4] === ze
-
-    @test_throws InexactError setindex!(zevec,1.0,1)
-    @test_throws InexactError setindex!(zevec,1.0,4,4)
-
-    @test similar(ZeroArray(2,2),3,3) === ZeroArray(3,3)
-end
-
 @testset "VecArray" begin
     @test_throws DomainError VecArray()
     @test_throws DomainError VecArray(x=rand(1,2), y=rand(2,1))
