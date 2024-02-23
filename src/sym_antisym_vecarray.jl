@@ -177,7 +177,7 @@ Base.similar(A::SymTenArray,T::Type{SymTen{Tt,N,Tx,Ty,Tz}},dims::Tuple{Int,Varar
     end
 end
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:SymTen{T,Txx,Txy,Txz,Tyy,Tyz,Tzz}}) where {T,Txx,Txy,Txz,Tyy,Tyz,Tzz}
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{SymTen{T,Txx,Txy,Txz,Tyy,Tyz,Tzz}}) where {T,Txx,Txy,Txz,Tyy,Tyz,Tzz}
     s = length.(axes(bc))
     xx = Array{Txx}(undef,s...)
     xy = Array{Txy}(undef,s...)

@@ -159,7 +159,7 @@ Base.similar(A::VecArray,T::Type{Vec{Tt,N,Tx,Ty,Tz}},dims::Tuple{Int,Vararg{Int,
 
 #Definitons so broadcast return a VecArray =======================================
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec{T,1,Tx,Ty,Tz}}) where {T,Tx,Ty,Tz}
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{Vec{T,1,Tx,Ty,Tz}}) where {T,Tx,Ty,Tz}
     s = length.(axes(bc))
     x = Array{Tx}(undef,s...)
     y = Array{Ty}(undef,s...)
@@ -167,7 +167,7 @@ function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec{T,1,Tx,Ty,Tz}}) wh
     return VecArray(x,y,z)
 end
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{<:Vec{T,2,Tx,Ty,Tz}}) where {T,Tx,Ty,Tz}
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{Vec{T,2,Tx,Ty,Tz}}) where {T,Tx,Ty,Tz}
     xv = similar(bc,Tx)
     yv = similar(bc,Ty)
     zv = similar(bc,Tz)
