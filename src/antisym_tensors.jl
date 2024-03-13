@@ -28,7 +28,7 @@ end
 @inline ==(a::AntiSymTen,b::AntiSymTen) = @inline reduce(&,map(==,fields(a),fields(b)))
 @inline function _muladd(a::Number, v::AntiSymTen, u::AntiSymTen)
     @inline begin
-        at = promote_type(typeof(a),_my_eltype(v),_my_eltype(u))(a)
+        at = promote_type(typeof(a),nonzero_eltype(v),nonzero_eltype(u))(a)
         W = AntiSymTen(map(_muladd,ntuple(i->at,Val(3)),fields(v),fields(u))...)
     end
     return W

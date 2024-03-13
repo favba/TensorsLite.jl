@@ -15,6 +15,7 @@ export VecArray, TenArray, SymTenArray
 export Vec3DArray, Vec2DxyArray, Vec2DxzArray, Vec2DyzArray, Vec1DxArray, Vec1DyArray, Vec1DzArray
 export Ten3DArray, Ten2DxyArray, Ten2DxzArray, Ten2DyzArray, Ten1DxArray, Ten1DyArray, Ten1DzArray
 export SymTen3DArray, SymTen2DxyArray, SymTen2DxzArray, SymTen2DyzArray, SymTen1DxArray, SymTen1DyArray, SymTen1DzArray
+export nonzero_eltype
 
 include("type_utils.jl")
 
@@ -44,9 +45,9 @@ struct Vec{T,N,Tx,Ty,Tz} <: AbstractVec{T,N}
     end
 
     @inline function Vec(x::Vec, y::Vec, z::Vec)
-        _Tx = _my_eltype(x) 
-        _Ty = _my_eltype(y) 
-        _Tz = _my_eltype(z) 
+        _Tx = nonzero_eltype(x) 
+        _Ty = nonzero_eltype(y) 
+        _Tz = nonzero_eltype(z) 
         Tf = promote_type(_Tx,_Ty,_Tz)
         xf = Vec(_my_convert(Tf,x.x), _my_convert(Tf,x.y), _my_convert(Tf,x.z))
         yf = Vec(_my_convert(Tf,y.x), _my_convert(Tf,y.y), _my_convert(Tf,y.z))

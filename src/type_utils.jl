@@ -42,11 +42,11 @@ end
     end
 end
 
-@inline function _my_eltype(::Type{TA}) where TA<:AbstractArray
+@inline function nonzero_eltype(::Type{TA}) where TA<:AbstractArray
     T = eltype(TA)
     return _non_zero_type(T)
 end
-@inline _my_eltype(x::T) where T<:AbstractArray = _my_eltype(T)
+@inline nonzero_eltype(x::T) where T<:AbstractArray = nonzero_eltype(T)
 
 @inline _zero_for_tuple() = ()
 @inline _zero_for_tuple(::Type{T},types::Vararg{T2,N}) where {T,T2,N} = (zero(T),_zero_for_tuple(types...)...)

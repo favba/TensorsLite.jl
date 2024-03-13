@@ -51,7 +51,7 @@ end
 @inline ==(a::SymTen,b::SymTen) = @inline reduce(&,map(==,fields(a),fields(b)))
 @inline function _muladd(a::Number, v::SymTen, u::SymTen)
     @inline begin
-        at = promote_type(typeof(a),_my_eltype(v),_my_eltype(u))(a)
+        at = promote_type(typeof(a),nonzero_eltype(v),nonzero_eltype(u))(a)
         S = SymTen(map(_muladd,ntuple(i->at,Val(6)),fields(v),fields(u))...)
     end
     return S

@@ -133,7 +133,7 @@ _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
     for T1 in (Int64,Float64,ComplexF64)
         un = (Vec(y=_rand(T1)), Vec(x=_rand(T1), z=_rand(T1)), Vec(_rand(T1),_rand(T1),_rand(T1)))
         for u in un
-            Au = Array{TensorsLite._my_eltype(u)}(u)
+            Au = Array{nonzero_eltype(u)}(u)
             for op in (+,-,normalize)
                 @test op(u) ≈ op(Au)
             end
@@ -145,9 +145,9 @@ _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
         for T2 in (Int64,Float64,ComplexF64)
             vn = (Vec(y=_rand(T2)), Vec(x=_rand(T2), z=_rand(T2)), Vec(_rand(T2),_rand(T2),_rand(T2)))
             for u in un
-                Au = Array{TensorsLite._my_eltype(u)}(u)
+                Au = Array{nonzero_eltype(u)}(u)
                 for v in vn
-                    Av = Array{TensorsLite._my_eltype(v)}(v)
+                    Av = Array{nonzero_eltype(v)}(v)
                     for op in (+,-,cross)
                         @test op(u,v) ≈ op(Au,Av)
                     end
@@ -171,7 +171,7 @@ end
                   yx=_rand(T1),yy=_rand(T1),yz=_rand(T1),
                   zx=_rand(T1),zy=_rand(T1),zz=_rand(T1)))
         for u in un
-            Au = Array{TensorsLite._my_eltype(u)}(u)
+            Au = Array{nonzero_eltype(u)}(u)
             for op in (+,-,normalize)
                 @test op(u) ≈ op(Au)
             end
@@ -184,9 +184,9 @@ end
                       yx=_rand(T1),yy=_rand(T1),yz=_rand(T1),
                       zx=_rand(T1),zy=_rand(T1),zz=_rand(T1)))
             for u in un
-                Au = Array{TensorsLite._my_eltype(u)}(u)
+                Au = Array{nonzero_eltype(u)}(u)
                 for v in vn
-                    Av = Array{TensorsLite._my_eltype(v)}(v)
+                    Av = Array{nonzero_eltype(v)}(v)
                     for op in (+,-,*)
                         @test op(u,v) ≈ op(Au,Av)
                     end
@@ -214,13 +214,13 @@ end
         for T2 in (Int64,Float64,ComplexF64)
             vn = (Vec(y=_rand(T2)), Vec(x=_rand(T2), z=_rand(T2)), Vec(_rand(T2),_rand(T2),_rand(T2)))
             for T in Tn
-                AT = Array{TensorsLite._my_eltype(T)}(T)
+                AT = Array{nonzero_eltype(T)}(T)
 
                 @test transpose(T) == transpose(AT)
                 @test T' == AT'
 
                 for v in vn
-                    Av = Array{TensorsLite._my_eltype(v)}(v)
+                    Av = Array{nonzero_eltype(v)}(v)
 
                     @test T*v ≈ AT*Av
                     @test v*T ≈ transpose(AT)*Av

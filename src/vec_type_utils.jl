@@ -12,9 +12,9 @@
 end
 
 @inline function _ten_type(Tx::Type,Ty::Type,Tz::Type)
-    _Tx = _my_eltype(Tx) 
-    _Ty = _my_eltype(Ty) 
-    _Tz = _my_eltype(Tz) 
+    _Tx = nonzero_eltype(Tx) 
+    _Ty = nonzero_eltype(Ty) 
+    _Tz = nonzero_eltype(Tz) 
     Tf = promote_type(_Tx,_Ty,_Tz)
     VTx = _vec_type(_my_promote_type(Tf,_x_type(Tx)), _my_promote_type(Tf,_y_type(Tx)), _my_promote_type(Tf,_z_type(Tx)))
     VTy = _vec_type(_my_promote_type(Tf,_x_type(Ty)), _my_promote_type(Tf,_y_type(Ty)), _my_promote_type(Tf,_z_type(Ty)))
