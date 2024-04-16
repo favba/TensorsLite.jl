@@ -128,7 +128,9 @@ _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
     @test norm(Vec()) === Zero()
 
     @test normalize(Vec()) === Vec()
-        
+
+    @test Vec(x=1.0) ≈ Vec(x=1.0,y=eps())
+    @test isapprox(Vec(x=1.0), Vec(x=1.0,y=eps()); rtol=sqrt(eps()))
 
     for T1 in (Int64,Float64,ComplexF64)
         un = (Vec(y=_rand(T1)), Vec(x=_rand(T1), z=_rand(T1)), Vec(_rand(T1),_rand(T1),_rand(T1)))
@@ -164,6 +166,10 @@ _rand(T::Type{Int64}) = rand((1,2,3,4,5,6,7,8,9,10))
 end
 
 @testset "Tensor Operations" begin
+
+    @test Ten(xx=1.0) ≈ Ten(xx=1.0,xy=eps())
+    @test isapprox(Ten(xx=1.0), Ten(xx=1.0,xy=eps()); rtol=sqrt(eps()))
+
     for T1 in (Int64,Float64,ComplexF64)
         un = (Ten(yy=_rand(T1)),
               Ten(xx=_rand(T1),xz=_rand(T1), zx=_rand(T1), zz=_rand(T1)),

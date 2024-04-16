@@ -1,5 +1,5 @@
 import Base: +, -, *, /, //, muladd, conj, ==, zero
-import LinearAlgebra: dot, ⋅, norm, cross, ×, normalize
+import LinearAlgebra: dot, ⋅, norm, cross, ×, normalize, isapprox
 export dot, ⋅, norm, cross, ×, normalize # Reexport from LinearAlgebra
 
 include("muladd_definitions.jl")
@@ -23,6 +23,8 @@ end
 @inline +(a::AbstractVec...) = Vec(+(map(_x,a)...), +(map(_y,a)...), +(map(_z,a)...))
 @inline -(a::AbstractVec, b::AbstractVec) = Vec(a.x-b.x, a.y-b.y, a.z-b.z)
 @inline ==(a::AbstractVec,b::AbstractVec) = (a.x == b.x) & (a.y == b.y) & (a.z == b.z)
+
+@inline isapprox(x::AbstractVec,y::AbstractVec) = norm(x-y) <= max(Base.rtoldefault(nonzero_eltype(x)), Base.rtoldefault(nonzero_eltype(y)))*max(norm(x),norm(y))
 
 # We treat Vec's as scalar for broadcasting but the default definition of + and - for AbstractArray's relies
 # on broadcasting to perform addition and subtraction. The method definitons below overcomes this inconsistency
