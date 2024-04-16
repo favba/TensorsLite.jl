@@ -108,6 +108,8 @@ const Vec1DyArray{T,N} = VecArray{Vec1Dy{T},N,Array{Zero,N},Array{T,N},Array{Zer
 const Vec1DzArray{T,N} = VecArray{Vec1Dz{T},N,Array{Zero,N},Array{Zero,N},Array{T,N}}
 const Vec0DArray{N} = VecArray{Vec0D,N,Array{Zero,N},Array{Zero,N},Array{Zero,N}}
 
+const VecMaybe2DxyArray{T,Tz,N} = VecArray{VecMaybe2Dxy{T,Tz},N,Array{T,N},Array{T,N},Array{Tz,N}}
+
 const Ten3DArray{T,N} = VecArray{Ten3D{T},N,Vec3DArray{T,N},Vec3DArray{T,N},Vec3DArray{T,N}}
 const Ten2DxyArray{T,N} = VecArray{Ten2Dxy{T},N,Vec2DxyArray{T,N},Vec2DxyArray{T,N},Vec0DArray{N}}
 const Ten2DxzArray{T,N} = VecArray{Ten2Dxz{T},N,Vec2DxzArray{T,N},Vec0DArray{N},Vec2DxzArray{T,N}}
@@ -115,6 +117,8 @@ const Ten2DyzArray{T,N} = VecArray{Ten2Dyz{T},N,Vec0DArray{N},Vec2DyzArray{T,N},
 const Ten1DxArray{T,N} = VecArray{Ten1Dx{T},N,Vec1DxArray{T,N},Vec0DArray{N},Vec0DArray{N}}
 const Ten1DyArray{T,N} = VecArray{Ten1Dy{T},N,Vec0DArray{N},Vec1DyArray{T,N},Vec0DArray{N}}
 const Ten1DzArray{T,N} = VecArray{Ten1Dz{T},N,Vec0DArray{N},Vec0DArray{N},Vec1DzArray{T,N}}
+
+const TenMaybe2DxyArray{T,Tz,N} = VecArray{TenMaybe2Dxy{T,Tz},N,VecMaybe2DxyArray{T,Tz,N},VecMaybe2DxyArray{T,Tz,N},Vec3DArray{Tz,N}}
 
 @inline Base.size(A::VecArray) = size(A.x)
 @inline Base.length(A::VecArray) = length(A.x)

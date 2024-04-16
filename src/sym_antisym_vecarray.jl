@@ -89,19 +89,23 @@ const SymTen2DxyArray{T,N} = SymTenArray{SymTen2Dxy{T},N,Array{T,N},Array{T,N},A
                                                                                Array{Zero,N}}
 const SymTen2DxzArray{T,N} = SymTenArray{SymTen2Dxz{T},N,Array{T,N},Array{Zero,N},Array{T,N},
                                                                     Array{Zero,N},Array{Zero,N},
-                                                                                 Array{T,N}}
+                                                                                  Array{T,N}}
 const SymTen2DyzArray{T,N} = SymTenArray{SymTen2Dyz{T},N,Array{Zero,N},Array{Zero,N},Array{Zero,N},
-                                                                      Array{T,N},  Array{T,N},
-                                                                                   Array{T,N}}
+                                                                       Array{T,N},   Array{T,N},
+                                                                                     Array{T,N}}
 const SymTen1DxArray{T,N} = SymTenArray{SymTen1Dx{T},N,Array{T,N},Array{Zero,N},Array{Zero,N},
                                                                   Array{Zero,N},Array{Zero,N},
-                                                                               Array{Zero,N}}
+                                                                                Array{Zero,N}}
 const SymTen1DyArray{T,N} = SymTenArray{SymTen1Dx{T},N,Array{Zero,N},Array{Zero,N},Array{Zero,N},
-                                                                    Array{T,N},Array{Zero,N},
-                                                                               Array{Zero,N}}
+                                                                     Array{T,N},Array{Zero,N},
+                                                                                Array{Zero,N}}
 const SymTen1DzArray{T,N} = SymTenArray{SymTen1Dx{T},N,Array{Zero,N},Array{Zero,N},Array{Zero,N},
-                                                                    Array{Zero,N},Array{Zero,N},
-                                                                                 Array{T,N}}
+                                                                     Array{Zero,N},Array{Zero,N},
+                                                                                   Array{T,N}}
+
+const SymTenMaybe2DxyArray{T,Tz,N} = SymTenArray{SymTenMaybe2Dxy{T,Tz},N,Array{T,N},Array{T,N},Array{Tz,N},
+                                                                                    Array{T,N},Array{Tz,N},
+                                                                                               Array{Tz,N}}
 
 @inline Base.size(A::SymTenArray) = size(A.xx)
 @inline Base.length(A::SymTenArray) = length(A.xx)

@@ -67,6 +67,8 @@ const SymTen1Dy{T} = SymTen{Union{Zero,T},Zero,Zero,Zero,T,Zero,Zero}
 const SymTen1Dz{T} = SymTen{Union{Zero,T},Zero,Zero,Zero,Zero,Zero,T}
 const SymTen1D{T} = Union{SymTen1Dx{T},SymTen1Dy{T},SymTen1Dz{T}}
 
+const SymTenMaybe2Dxy{T,Tz} = SymTen{Union{T,Tz},T,T,Tz,T,Tz,Tz}
+
 Base.IndexStyle(::Type{SymTen}) = IndexCartesian()
 @inline function Base.getindex(S::SymTen,i::Integer,j::Integer)
     t = (Int(i),Int(j))

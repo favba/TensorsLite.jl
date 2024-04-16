@@ -40,6 +40,8 @@ const AntiSymTen2Dxy{T} = AntiSymTen{Union{Zero,T},T,Zero,Zero}
 const AntiSymTen2Dxz{T} = AntiSymTen{Union{Zero,T},Zero,T,Zero}
 const AntiSymTen2Dyz{T} = AntiSymTen{Union{Zero,T},Zero,Zero,T}
 
+const AntiSymTenMaybe2Dxy{T,Tz} = AntiSymTen{Union{T,Tz},T,Tz,Tz}
+
 Base.IndexStyle(::Type{AntiSymTen}) = IndexCartesian()
 @inline function Base.getindex(S::AntiSymTen,i::Integer,j::Integer)
     t = (Int(i),Int(j))
