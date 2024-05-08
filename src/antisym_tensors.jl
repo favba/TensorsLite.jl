@@ -33,7 +33,12 @@ end
     end
     return W
 end
-
+@inline function _muladd(a::Union{Zero,One}, v::AntiSymTen, u::AntiSymTen)
+    @inline begin
+        W = AntiSymTen(map(_muladd,ntuple(i->a,Val(3)),fields(v),fields(u))...)
+    end
+    return W
+end
 
 const AntiSymTen3D{T} = AntiSymTen{T,T,T,T}
 const AntiSymTen2Dxy{T} = AntiSymTen{Union{Zero,T},T,Zero,Zero}

@@ -56,6 +56,12 @@ end
     end
     return S
 end
+@inline function _muladd(a::Union{One,Zero}, v::SymTen, u::SymTen)
+    @inline begin
+        S = SymTen(map(_muladd,ntuple(i->a,Val(6)),fields(v),fields(u))...)
+    end
+    return S
+end
 
 const SymTen3D{T} = SymTen{T,T,T,T,T,T,T}
 const SymTen2Dxy{T} = SymTen{Union{Zero,T},T,T,Zero,T,Zero,Zero}

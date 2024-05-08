@@ -10,6 +10,7 @@ include("muladd_definitions.jl")
     bt = promote_type(typeof(b),nonzero_eltype(T))(b)
     constructor(T)(map(*,ntuple(i->bt,Val(fieldcount(T))), fields(v))...)
 end
+@inline *(b::Union{Zero,One},v::T) where T<:AbstractVec = constructor(T)(map(*,ntuple(i->b,Val(fieldcount(T))), fields(v))...)
 @inline *(v::AbstractVec, b::Number) = b*v
 @inline /(v::AbstractVec,b::Number) = inv(b)*v
 @inline //(v::AbstractVec,b::Number) = (One()//b)*v
@@ -37,6 +38,7 @@ end
     at = promote_type(typeof(a),nonzero_eltype(v),nonzero_eltype(u))(a)
     return Vec(_muladd(at,v.x,u.x), _muladd(at,v.y,u.y), _muladd(at,v.z,u.z))
 end
+@inline _muladd(a::Union{Zero,One}, v::AbstractVec, u::AbstractVec) = Vec(_muladd(a,v.x,u.x), _muladd(a,v.y,u.y), _muladd(a,v.z,u.z))
 
 @inline _muladd(v::AbstractVec, a::Number, u::AbstractVec) = _muladd(a,v,u)
 
@@ -66,5 +68,5 @@ end
     bx = b.x
     by = b.y
     bz = b.z
-    return  Vec(_muladd(ay, bz, -az*by), _muladd(az,bx, -ax*bz), _muladd(ax,by, -ay*bx))
+    return  Vec(_muladd(ay, bz, -(az*by)), _muladd(az,bx, -(ax*bz)), _muladd(ax,by, -(ay*bx)))
 end
