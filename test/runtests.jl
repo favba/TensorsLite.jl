@@ -258,6 +258,7 @@ end
     @test (SymTen(xx=1) + SymTen(xx=2.0, yy=5.0)) === SymTen(xx=3.0,yy=5.0)
     @test (SymTen(xx=1) - SymTen(xx=2.0, yy=5.0)) === SymTen(xx=-1.0,yy=-5.0)
     @test muladd(3.0,SymTen(xx=4.0),SymTen(xx=5.0)) === SymTen(xx=17.0)
+    @test muladd(One(),SymTen(1,2,3,4,5,6),SymTen()) === SymTen(1,2,3,4,5,6)
 
     let xx=rand(ComplexF64),yx = rand(ComplexF64),zx=rand(ComplexF64),yy=rand(ComplexF64),zy=rand(ComplexF64),zz=rand(ComplexF64)
         S = SymTen(xx,yx,zx,yy,zy,zz)
@@ -287,6 +288,7 @@ end
     @test (AntiSymTen(yx=1) + AntiSymTen(yx=2.0, zx=5.0)) === AntiSymTen(yx=3.0,zx=5.0)
     @test (AntiSymTen(yx=1) - AntiSymTen(yx=2.0, zx=5.0)) === AntiSymTen(yx=-1.0,zx=-5.0)
     @test muladd(3.0,AntiSymTen(yx=4.0),AntiSymTen(yx=5.0)) === AntiSymTen(yx=17.0)
+    @test muladd(One(),AntiSymTen(1,2,3),AntiSymTen()) === AntiSymTen(1,2,3)
 
     let yx=rand(ComplexF64),zx=rand(ComplexF64),zy=rand(ComplexF64)
         W = AntiSymTen(yx,zx,zy)
