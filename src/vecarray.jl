@@ -103,10 +103,13 @@ const Vec3DArray{T,N} = VecArray{Vec3D{T},N,Array{T,N},Array{T,N},Array{T,N}}
 const Vec2DxyArray{T,N} = VecArray{Vec2Dxy{T},N,Array{T,N},Array{T,N},Array{Zero,N}}
 const Vec2DxzArray{T,N} = VecArray{Vec2Dxz{T},N,Array{T,N},Array{Zero,N},Array{T,N}}
 const Vec2DyzArray{T,N} = VecArray{Vec2Dyz{T},N,Array{Zero,N},Array{T,N},Array{T,N}}
+const Vec2DArray{T,N} = Union{Vec2DxyArray{T,N},Vec2DxzArray{T,N},Vec2DyzArray{T,N}}
 const Vec1DxArray{T,N} = VecArray{Vec1Dx{T},N,Array{T,N},Array{Zero,N},Array{Zero,N}}
 const Vec1DyArray{T,N} = VecArray{Vec1Dy{T},N,Array{Zero,N},Array{T,N},Array{Zero,N}}
 const Vec1DzArray{T,N} = VecArray{Vec1Dz{T},N,Array{Zero,N},Array{Zero,N},Array{T,N}}
+const Vec1DArray{T,N} = Union{Vec1DxArray{T,N},Vec1DyArray{T,N},Vec1DzArray{T,N}}
 const Vec0DArray{N} = VecArray{Vec0D,N,Array{Zero,N},Array{Zero,N},Array{Zero,N}}
+const VecNDArray{T,N} = Union{Vec3DArray{T,N},Vec2DArray{T,N},Vec1DArray{T,N}}
 
 const VecMaybe2DxyArray{T,Tz,N} = VecArray{VecMaybe2Dxy{T,Tz},N,Array{T,N},Array{T,N},Array{Tz,N}}
 
@@ -114,9 +117,12 @@ const Ten3DArray{T,N} = VecArray{Ten3D{T},N,Vec3DArray{T,N},Vec3DArray{T,N},Vec3
 const Ten2DxyArray{T,N} = VecArray{Ten2Dxy{T},N,Vec2DxyArray{T,N},Vec2DxyArray{T,N},Vec0DArray{N}}
 const Ten2DxzArray{T,N} = VecArray{Ten2Dxz{T},N,Vec2DxzArray{T,N},Vec0DArray{N},Vec2DxzArray{T,N}}
 const Ten2DyzArray{T,N} = VecArray{Ten2Dyz{T},N,Vec0DArray{N},Vec2DyzArray{T,N},Vec2DyzArray{T,N}}
+const Ten2DArray{T,N} = Union{Ten2DxyArray{T,N},Ten2DxzArray{T,N},Ten2DyzArray{T,N}}
 const Ten1DxArray{T,N} = VecArray{Ten1Dx{T},N,Vec1DxArray{T,N},Vec0DArray{N},Vec0DArray{N}}
 const Ten1DyArray{T,N} = VecArray{Ten1Dy{T},N,Vec0DArray{N},Vec1DyArray{T,N},Vec0DArray{N}}
 const Ten1DzArray{T,N} = VecArray{Ten1Dz{T},N,Vec0DArray{N},Vec0DArray{N},Vec1DzArray{T,N}}
+const Ten1DArray{T,N} = Union{Ten1DxArray{T,N},Ten1DyArray{T,N},Ten1DzArray{T,N}}
+const TenNDArray{T,N} = Union{Ten3DArray{T,N},Ten2DArray{T,N},Ten1DArray{T,N}}
 
 const TenMaybe2DxyArray{T,Tz,N} = VecArray{TenMaybe2Dxy{T,Tz},N,VecMaybe2DxyArray{T,Tz,N},VecMaybe2DxyArray{T,Tz,N},Vec3DArray{Tz,N}}
 
