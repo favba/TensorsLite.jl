@@ -93,3 +93,13 @@ end
 
 @inline transpose(W::AntiSymTen) = -W
 @inline adjoint(W::AntiSymTen) = -conj(W)
+
+@inline function Base.convert(::Type{AntiSymTen{T,Tyx,Tzx,Tzy}},v::AntiSymTen) where {T,Tyx,Tzx,Tzy}
+    @inline nfields = map(convert,(Tyx,Tzx,Tzy),fields(v))
+    return AntiSymTen(nfields...)
+end
+
+@inline function Base.convert(::Type{Vec{T,2,Vec{_Tx,1,Txx,Tyx,Tzx},Vec{_Ty,1,Txy,Tyy,Tzy},Vec{_Tz,1,Txz,Tyz,Tzz}}},v::AntiSymTen) where {T,_Tx,_Ty,_Tz,Txx,Tyx,Tzx,Txy,Tyy,Tzy,Txz,Tyz,Tzz}
+    @inline xx,yx,zx,xy,yy,zy,xz,yz,zz = map(convert,(Txx,Tyx,Tzx,Txy,Tyy,Tzy,Txz,Tyz,Tzz),map(getproperty,(v,v,v,v,v,v,v,v,v),(:xx,:yx,:zx,:xy,:yy,:zy,:xz,:yz,:zz)))
+    return Ten(xx,yx,zx,xy,yy,zy,xz,yz,zz)
+end

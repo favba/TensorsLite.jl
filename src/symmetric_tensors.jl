@@ -45,6 +45,14 @@ end
     return SymTen(nfields...)
 end
 
+@inline function Base.convert(::Type{Vec{T,2,Vec{_Tx,1,Txx,Tyx,Tzx},Vec{_Ty,1,Tyx,Tyy,Tzy},Vec{_Tz,1,Tzx,Tzy,Tzz}}},v::SymTen) where {T,_Tx,_Ty,_Tz,Txx,Tyx,Tzx,Tyy,Tzy,Tzz}
+    @inline xx,yx,zx,yy,zy,zz = map(convert,(Txx,Tyx,Tzx,Tyy,Tzy,Tzz),fields(v))
+    
+    return Ten(xx=xx,xy=yx,xz=zx,
+               yx=yx,yy=yy,yz=zy,
+               zx=zx,zy=zy,zz=zz)
+end
+
 @inline constructor(::Type{T}) where T<:SymTen = SymTen
 @inline +(a::SymTen, b::SymTen) = @inline SymTen(map(+,fields(a),fields(b))...)
 @inline -(a::SymTen, b::SymTen) = @inline SymTen(map(-,fields(a),fields(b))...)

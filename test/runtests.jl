@@ -272,6 +272,9 @@ end
         @test S.zx === S.xz
     end
 
+    @test convert(SymTen2Dxy{Float64},SymTen(xx=1)) === SymTen(xx=1.0,yx=0.0,yy=0.0)
+    @test convert(Ten2Dxz{Float64},SymTen(zx=1)) === Ten(xx=0.0,zx=1.0,xz =1.0,zz=0.0)
+
 end
 
 @testset "AntiSymTen" begin
@@ -301,6 +304,9 @@ end
         @test transpose(W) === -W
         @test W' === AntiSymTen(-conj(yx),-conj(zx),-conj(zy))
     end
+
+    @test convert(AntiSymTen3D{Float64},AntiSymTen(yx=1)) === AntiSymTen(yx=1.0,zx=0.0,zy=0.0)
+    @test convert(Ten2Dxz{Float64},AntiSymTen(zx=1)) === Ten(xx=0.0,zx=1.0,xz =-1.0,zz=0.0)
 
 end
 
@@ -338,6 +344,13 @@ end
     @test setindex!(VecArray(y=zeros(4,4)),Vec(x=0.0,y=2.0,z=0.0),4,4)[4,4] === Vec(y=2.0)
     @test setindex!(VecArray(y=zeros(4,4)),Vec(x=0.0,y=2.0,z=0.0),16)[16] === Vec(y=2.0)
 
+    let a = VecArray(x=rand(Float32,2),y=rand(Float32,2))
+        @test typeof(similar(a,Vec2Dyz{Int},(4,4,4))) === Vec2DyzArray{Int,3}
+    end
+
+    let a = TenArray(xx=rand(2),xz=rand(2),zx=rand(2),zz=rand(2))
+        typeof(similar(a,Ten3D{Float16},(1,1,1))) === Ten3DArray{Float16,3}
+    end
 
     let a1=[1],a2=[2],a3=[3],a4=[4],a5=[5],a6=[6],a7=[7],a8=[8],a9=[9],T=TenArray(a1,a2,a3,a4,a5,a6,a7,a8,a9)
         @test T.xx === a1
@@ -361,5 +374,14 @@ end
         @test typeof(uxy .+ uxyz) === Vec3DArray{Float32,1}
         @test ux .+ 𝐢 == VecArray(x=ux.x .+ 1)
         @test (ux .= Vec()) == VecArray(x=zeros(3))
+    end
+end
+
+@testset "TenArray Broadcasting" begin
+    let ux=TenArray(xx=rand(3)), uxy=TenArray(xx=rand(Float32,3),yx=rand(Float32,3),xy=rand(Float32,3),yy=rand(Float32,3))
+        @test (ux .+ uxy) == TenArray(xx=ux.x.x .+ uxy.x.x, xy=uxy.y.x, yx=uxy.x.y, yy=uxy.y.y)
+        @test typeof(ux .+ uxy) === Ten2DxyArray{Float64,1}
+        @test ux .+ (𝐢 ⊗ 𝐢) == TenArray(xx=ux.x.x .+ 1)
+        @test (ux .= Ten()) == TenArray(xx=zeros(3))
     end
 end
