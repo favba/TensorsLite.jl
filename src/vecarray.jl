@@ -185,3 +185,27 @@ function Base.similar(bc::Broadcast.Broadcasted, ::Type{Vec{T,2,Tx,Ty,Tz}}) wher
 end
 
 #Definitons so broadcast return a VecArray =======================================
+
+@inline function Base.getproperty(T::TenNDArray,s::Symbol)
+    if s === :xx
+        return getfield(getfield(T,:x),:x)
+    elseif s === :xy
+        return getfield(getfield(T,:y),:x)
+    elseif s === :xz
+        return getfield(getfield(T,:z),:x)
+    elseif s === :yx
+        return getfield(getfield(T,:x),:y)
+    elseif s === :yy
+        return getfield(getfield(T,:y),:y)
+    elseif s === :yz
+        return getfield(getfield(T,:z),:y)
+    elseif s === :zx
+        return getfield(getfield(T,:x),:z)
+    elseif s === :zy
+        return getfield(getfield(T,:y),:z)
+    elseif s === :zz
+        return getfield(getfield(T,:z),:z)
+    else
+        return getfield(T,s)
+    end
+end

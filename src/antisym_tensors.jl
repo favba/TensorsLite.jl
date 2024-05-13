@@ -78,6 +78,14 @@ end
         yz = -getfield(S,:zy)
         zz = 𝟎
         return Vec(xz,yz,zz)
+    elseif s === :xy
+        return -getfield(S,:yx)
+    elseif s === :xz
+        return -getfield(S,:zx)
+    elseif s === :yz
+        return -getfield(S,:zy)
+    elseif s === :xx || s === :yy || s === :zz
+        return 𝟎
     else
         return getfield(S,s)
     end

@@ -267,6 +267,9 @@ end
         @test S.z === Vec(zx,zy,zz)
         @test transpose(S) === S
         @test S' === SymTen(conj(xx),conj(yx),conj(zx),conj(yy),conj(zy),conj(zz))
+        @test S.xy === S.yx
+        @test S.zy === S.yz
+        @test S.zx === S.xz
     end
 
 end
@@ -334,6 +337,19 @@ end
 
     @test setindex!(VecArray(y=zeros(4,4)),Vec(x=0.0,y=2.0,z=0.0),4,4)[4,4] === Vec(y=2.0)
     @test setindex!(VecArray(y=zeros(4,4)),Vec(x=0.0,y=2.0,z=0.0),16)[16] === Vec(y=2.0)
+
+
+    let a1=[1],a2=[2],a3=[3],a4=[4],a5=[5],a6=[6],a7=[7],a8=[8],a9=[9],T=TenArray(a1,a2,a3,a4,a5,a6,a7,a8,a9)
+        @test T.xx === a1
+        @test T.yx === a2
+        @test T.zx === a3
+        @test T.xy === a4
+        @test T.yy === a5
+        @test T.zy === a6
+        @test T.xz === a7
+        @test T.yz === a8
+        @test T.zz === a9
+    end
 
 end
 

@@ -103,6 +103,12 @@ end
         yz = getfield(S,:zy)
         zz = getfield(S,:zz)
         return Vec(xz,yz,zz)
+    elseif s === :xy
+        return getfield(S,:yx)
+    elseif s === :xz
+        return getfield(S,:zx)
+    elseif s === :yz
+        return getfield(S,:zy)
     else
         return getfield(S,s)
     end
