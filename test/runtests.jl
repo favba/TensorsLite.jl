@@ -312,9 +312,9 @@ end
 
 @testset "VecArray" begin
     @test_throws DomainError VecArray()
-    @test_throws DomainError VecArray(x=rand(1,2), y=rand(2,1))
-    @test_throws DomainError VecArray(x=rand(1,2), z=rand(2,1))
-    @test_throws DomainError VecArray(y=rand(1,2), z=rand(2,1))
+    @test_throws DimensionMismatch VecArray(x=rand(1,2), y=rand(2,1))
+    @test_throws DimensionMismatch VecArray(x=rand(1,2), z=rand(2,1))
+    @test_throws DimensionMismatch VecArray(y=rand(1,2), z=rand(2,1))
 
     @test size(VecArray{Float32}(4,3)) === (4,3)
     @test eltype(VecArray{Float32}(4,3)) === Vec3D{Float32}

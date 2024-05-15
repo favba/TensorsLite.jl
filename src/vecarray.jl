@@ -8,8 +8,8 @@ struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
     function VecArray(x::AbstractArray{<:Number},y::AbstractArray{<:Number}, z::AbstractArray{<:Number})
 
         s = size(x)
-        size(y) === s || throw(DomainError((x,y),"Arrays must have the same size"))
-        size(z) === s || throw(DomainError((x,z),"Arrays must have the same size"))
+        size(y) === s || throw(DimensionMismatch("Arrays must have the same size"))
+        size(z) === s || throw(DimensionMismatch("Arrays must have the same size"))
 
         Tx = typeof(x)
         Ty = typeof(y)
@@ -22,8 +22,8 @@ struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
     function VecArray(x::AbstractArray{<:AbstractVec},y::AbstractArray{<:AbstractVec}, z::AbstractArray{<:AbstractVec})
 
         s = size(x)
-        size(y) === s || throw(DomainError((x,y),"Arrays must have the same size"))
-        size(z) === s || throw(DomainError((x,z),"Arrays must have the same size"))
+        size(y) === s || throw(DimensionMismatch("Arrays must have the same size"))
+        size(z) === s || throw(DimensionMismatch("Arrays must have the same size"))
 
         Tx = eltype(x)
         Ty = eltype(y)
@@ -45,14 +45,14 @@ function VecArray(;x::Union{Zero,<:AbstractArray{<:Number}}=𝟎,y::Union{Zero,A
             xv = x
             yv = y === 𝟎 ? Array{Zero}(undef,s) : y
             zv = z === 𝟎 ? Array{Zero}(undef,s) : z
-            size(yv) === s || throw(DomainError((x,y),"Arrays must have the same size"))
-            size(zv) === s || throw(DomainError((x,z),"Arrays must have the same size"))
+            size(yv) === s || throw(DimensionMismatch("Arrays must have the same size"))
+            size(zv) === s || throw(DimensionMismatch("Arrays must have the same size"))
         elseif y !== 𝟎
             s = size(y)
             xv = Array{Zero}(undef,s)
             yv = y
             zv = z === 𝟎 ? Array{Zero}(undef,s) : z
-            size(zv) === s || throw(DomainError((y,z),"Arrays must have the same size"))
+            size(zv) === s || throw(DimensionMismatch("Arrays must have the same size"))
         else # z must be !== 𝟎
             s = size(z)
             xv = Array{Zero}(undef,s)
