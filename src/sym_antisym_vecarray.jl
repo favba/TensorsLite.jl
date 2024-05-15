@@ -158,7 +158,7 @@ end
     return A
 end
 
-Base.similar(A::SymTenArray,T::Type{SymTen{Tt,N,Tx,Ty,Tz}},dims::Tuple{Int,Vararg{Int,N2}}) where {Tt,N,Tx,Ty,Tz,N2} = SymTenArray(similar(A.x,Tx,dims), similar(A.y,Ty,dims), similar(A.z,Tz,dims))
+Base.similar(A::SymTenArray,T::Type{SymTen{Tt,Txx,Tyx,Tzx,Tyy,Tzy,Tzz}},dims::Tuple{Int,Vararg{Int,N2}}) where {Tt,Txx,Tyx,Tzx,Tyy,Tzy,Tzz,N2} = SymTenArray(similar(A.xx,Txx,dims), similar(A.yx,Tyx,dims), similar(A.zx,Tzx,dims), similar(A.yy,Tyy,dims), similar(A.zy,Tzy,dims), similar(A.zz,Tzz,dims))
 
 @inline function Base.getproperty(S::SymTenArray,s::Symbol)
     if s === :x
@@ -176,6 +176,12 @@ Base.similar(A::SymTenArray,T::Type{SymTen{Tt,N,Tx,Ty,Tz}},dims::Tuple{Int,Varar
         yz = getfield(S,:zy)
         zz = getfield(S,:zz)
         return VecArray(xz,yz,zz)
+    elseif s === :xy
+        return getfield(S,:yx)
+    elseif s === :xz
+        return getfield(S,:zx)
+    elseif s === :yz
+        return getfield(S,:zy)
     else
         return getfield(S,s)
     end

@@ -385,3 +385,44 @@ end
         @test (ux .= Ten()) == TenArray(xx=zeros(3))
     end
 end
+
+@testset "SymTenArray" begin
+    @test_throws DomainError SymTenArray()
+    @test_throws DimensionMismatch SymTenArray(xx=rand(1,2), yx=rand(2,1))
+    @test_throws DimensionMismatch SymTenArray(xx=rand(1,2), zx=rand(2,1))
+    @test_throws DimensionMismatch SymTenArray(xx=rand(1,2), yy=rand(2,1))
+    @test_throws DimensionMismatch SymTenArray(xx=rand(1,2), zz=rand(2,1))
+
+    @test size(SymTenArray{Float32}(4,3)) === (4,3)
+    @test eltype(SymTenArray{Float32}(4,3)) === SymTen3D{Float32}
+
+    @test eltype(SymTenArray(yy=rand(Int,3),zy=rand(Int,3),zz=rand(Int,3))) === SymTen2Dyz{Int}
+
+    @test typeof(similar(SymTenArray(yy=rand(Int,3),zy=rand(Int,3),zz=rand(Int,3)), SymTen2Dxy{Float32})) === SymTen2DxyArray{Float32,1}
+    @test eltype(similar(SymTenArray(yy=rand(Int,3),zy=rand(Int,3),zz=rand(Int,3)), SymTen2Dxy{Float32})) === SymTen2Dxy{Float32}
+    @test size(similar(SymTenArray(yy=rand(Int,3),zy=rand(Int,3),zz=rand(Int,3)), SymTen2Dxy{Float32},3,4)) === (3,4)
+
+    let a1=rand(3,3),a2=rand(3,3),a3=rand(3,3),a4=rand(3,3),a5=rand(3,3),a6=rand(3,3),T=SymTenArray(a1,a2,a3,a4,a5,a6)
+        @test T.xx === a1
+        @test T.yx === a2
+        @test T.zx === a3
+        @test T.xy === a2
+        @test T.yy === a4
+        @test T.zy === a5
+        @test T.xz === a3
+        @test T.yz === a5
+        @test T.zz === a6
+
+        @test T.x === VecArray(a1,a2,a3)
+        @test T.y === VecArray(a2,a4,a5)
+        @test T.z === VecArray(a3,a5,a6)
+
+        @test T[5] === SymTen(a1[5],a2[5],a3[5],a4[5],a5[5],a6[5])
+        @test T[2,3] === SymTen(a1[2,3],a2[2,3],a3[2,3],a4[2,3],a5[2,3],a6[2,3])
+
+        @test setindex!(T,SymTen(xx=1,zy=3),3)[3] === SymTen(1.0,0.0,0.0,0.0,3.0,0.0)
+        @test setindex!(T,SymTen(yx=1,yy=3),3,3)[3,3] === SymTen(0.0,1.0,0.0,3.0,0.0,0.0)
+
+        @test typeof(T .+ SymTen()) === typeof(T)
+    end
+end
