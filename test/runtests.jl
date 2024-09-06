@@ -2,16 +2,19 @@ using TensorsLite
 using Zeros
 using Test
 using LinearAlgebra
+import SIMD
 
 const ze = Zero()
 
 # This helps comparing arrays of Union{Zero,Number}
 (::Type{<:Union{Zero, T}})(x::Number) where {T <: Number} = x == zero(x) ? Zeros.Zero() : T(x)
 
+Base.isapprox(a::SIMD.Vec{N},b::SIMD.Vec{N}) where N = reduce(&,ntuple(i->isapprox(a[i],b[i]),Val{N}(),))
+
 @testset "_muladd definitions" begin
-    for x in (One(), Zero(), rand())
-        for y in (One(), Zero(), rand())
-            for z in (One(), Zero(), rand())
+    for x in (One(), Zero(), rand(), SIMD.Vec(rand(), rand(), rand(), rand()))
+        for y in (One(), Zero(), rand(), SIMD.Vec(rand(), rand(), rand(), rand()))
+            for z in (One(), Zero(), rand(), SIMD.Vec(rand(), rand(), rand(), rand()))
                 if (all(t -> typeof(t) === Float64, (x, y, z)))
                     @test TensorsLite._muladd(x, y, z) === muladd(x, y, z)
                 else
@@ -24,6 +27,10 @@ const ze = Zero()
     @test TensorsLite._muladd(1.0im, Zero(), 2.0) === 2.0 + 0.0im
 end
 
+const sx = SIMD.Vec(1.0,2.0)
+const sy = SIMD.Vec(2.0,1.0)
+const sz = SIMD.Vec(3.0,4.0)
+
 @testset "Vec Constructors" begin
 
     @test Vec(x = 1).x === 1
@@ -35,6 +42,12 @@ end
     @test eltype(Vec(x = 1, y = 3, z = 4.0im)) === ComplexF64
 
     @test eltype(Vec(x = One())) === Union{Zero, One}
+
+    @test Vec(x = sx).x === sx
+    @test Vec(y = sy).y === sy
+    @test typeof(Vec(z = sz)) === Vec1Dz{SIMD.Vec{2, Float64}}
+
+    @test eltype(Vec(x = sx, y = sy)) === Union{Zero, SIMD.Vec{2, Float64}}
 
 end
 
@@ -54,6 +67,8 @@ end
     ) === Float64
 
     @test eltype(Ten(xx = 1.0)) === Union{Zero, Float64}
+
+    @test eltype(Ten(xx = sx)) === Union{Zero, SIMD.Vec{2,Float64}}
 
     @test eltype(Ten(xx = One())) === Union{Zero, One}
 
@@ -111,6 +126,8 @@ end
 
 _rand(T) = rand(T)
 _rand(T::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+_rand(T::Type{SIMD.Vec{2,Float64}}) = SIMD.Vec(rand(),rand())
+
 @testset "Vector Operations" begin
 
     @test Vec(1, 2, 3) + [1, 2, 3] == [2, 4, 6]
