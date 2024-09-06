@@ -10,9 +10,9 @@ struct SymTenArray{T,N,Txx,Tyx,Tzx,Tyy,Tzy,Tzz} <: AbstractArray{T,N}
                               Array{T}(undef,I...),Array{T}(undef,I...),Array{T}(undef,I...),
                               Array{T}(undef,I...),Array{T}(undef,I...),Array{T}(undef,I...))
 
-    function SymTenArray(xx::AbstractArray{<:Number},yx::AbstractArray{<:Number},zx::AbstractArray{<:Number},
-                                                     yy::AbstractArray{<:Number},zy::AbstractArray{<:Number},
-                                                                                 zz::AbstractArray{<:Number})
+    function SymTenArray(xx::AbstractArray, yx::AbstractArray, zx::AbstractArray,
+                                            yy::AbstractArray, zy::AbstractArray,
+                                                               zz::AbstractArray)
 
         s = size(xx)
         N = ndims(xx)
@@ -29,7 +29,7 @@ struct SymTenArray{T,N,Txx,Tyx,Tzx,Tyy,Tzy,Tzz} <: AbstractArray{T,N}
         Tyy = eltype(yy)
         Tzy = eltype(zy)
         Tzz = eltype(zz)
-        Tf = promote_type(Txx,Tyx,Tzx,
+        Tf = promote_type_ignoring_Zero(Txx,Tyx,Tzx,
                               Tyy,Tzy,
                                   Tzz)
 
@@ -75,11 +75,11 @@ function SymTenArray(xx, yx, zx,
     return SymTenArray(final_vals...)
 end
  
-SymTenArray(;xx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zx::Union{Zero,<:AbstractArray{<:Number}}=𝟎,
-             yy::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zy::Union{Zero,<:AbstractArray{<:Number}}=𝟎,
-             zz::Union{Zero,<:AbstractArray{<:Number}}=𝟎) = SymTenArray(xx, yx, zx,
-                                                                            yy, zy,
-                                                                                zz)
+SymTenArray(;xx::Union{Zero,<:AbstractArray}=𝟎, yx::Union{Zero,<:AbstractArray}=𝟎, zx::Union{Zero,<:AbstractArray}=𝟎,
+             yy::Union{Zero,<:AbstractArray}=𝟎, zy::Union{Zero,<:AbstractArray}=𝟎,
+             zz::Union{Zero,<:AbstractArray}=𝟎) = SymTenArray(xx, yx, zx,
+                                                                  yy, zy,
+                                                                      zz)
 
 const SymTen3DArray{T,N} = SymTenArray{SymTen3D{T},N,Array{T,N},Array{T,N},Array{T,N},
                                                                 Array{T,N},Array{T,N},

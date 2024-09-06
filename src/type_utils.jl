@@ -1,13 +1,13 @@
 @inline fields(v::T) where T = ntuple(i->getfield(v,i),Val(fieldcount(T)))
 
-@inline all_Numbers(a::T1,y::T2,z::T3) where {T1,T2,T3} = T1 <: Number && T2 <: Number && T3 <: Number
+@inline no_Vecs(a::T1,y::T2,z::T3) where {T1,T2,T3} = !(T1 <: Vec) && !(T2 <: Vec) && !(T3 <: Vec)
 
 _my_promote_type(T::Type,Tx::Type) = (Tx === Zero || Tx === One) ? Tx : promote_type(T,Tx)
 
 @inline function _final_type(types::Vararg{DataType,N})  where N
     _all_zeros(types...) && return Zero
     _all_zeros_and_ones(types...) && return Union{Zero,One}
-    Tff = promote_type(types...)
+    Tff = promote_type_ignoring_Zero(types...)
     _is_there_any_zeros(types...) ? Union{Zero,Tff} : Tff
 end 
 
@@ -54,3 +54,13 @@ end
 @inline _filter_zeros() = ()
 @inline _filter_zeros(::Zero,rest::Vararg{Any,N}) where N = (_filter_zeros(rest...)...,)
 @inline _filter_zeros(x::Any,rest::Vararg{Any,N}) where N = (x,_filter_zeros(rest...)...,)
+
+@inline _filter_type_zero() = ()
+@inline _filter_type_zero(::Type{Zero}) = ()
+@inline _filter_type_zero(t::Type) = (t,)
+@inline _filter_type_zero(::Type{Zero},rest::Vararg{Type,N}) where N = (_filter_type_zero(rest...)...,)
+@inline _filter_type_zero(x::Type,rest::Vararg{Type,N}) where N = (x,_filter_type_zero(rest...)...)
+
+@inline _promote_type() = Zero
+@inline _promote_type(types::Vararg{Any,N}) where N = promote_type(types...)
+@inline promote_type_ignoring_Zero(types::Vararg{Any,N}) where N = _promote_type(_filter_type_zero(types...)...)

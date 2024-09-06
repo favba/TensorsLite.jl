@@ -7,7 +7,7 @@ include("muladd_definitions.jl")
 # Definitions for abstract Tensors
 @inline +(a::AbstractVec) = a
 @inline *(b::Number, v::T) where T<:AbstractVec = @inline  begin 
-    bt = promote_type(typeof(b),nonzero_eltype(T))(b)
+    bt = convert(promote_type(typeof(b), nonzero_eltype(T)), b)
     constructor(T)(map(*,ntuple(i->bt,Val(fieldcount(T))), fields(v))...)
 end
 @inline *(b::Union{Zero,One},v::T) where T<:AbstractVec = constructor(T)(map(*,ntuple(i->b,Val(fieldcount(T))), fields(v))...)
@@ -35,7 +35,7 @@ end
 @inline -(b::AbstractArray, a::AbstractVec) = b - Array(a)
 
 @inline function _muladd(a::Number, v::AbstractVec, u::AbstractVec)
-    at = promote_type(typeof(a),nonzero_eltype(v),nonzero_eltype(u))(a)
+    at = convert(promote_type(typeof(a),nonzero_eltype(v),nonzero_eltype(u)),a)
     return Vec(_muladd(at,v.x,u.x), _muladd(at,v.y,u.y), _muladd(at,v.z,u.z))
 end
 @inline _muladd(a::Union{Zero,One}, v::AbstractVec, u::AbstractVec) = Vec(_muladd(a,v.x,u.x), _muladd(a,v.y,u.y), _muladd(a,v.z,u.z))

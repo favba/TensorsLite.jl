@@ -5,7 +5,7 @@ struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
 
     VecArray{T}(I::Vararg{Int,N}) where {T,N} = new{Vec{T,1,T,T,T},N,Array{T,N},Array{T,N},Array{T,N}}(Array{T}(undef,I...),Array{T}(undef,I...),Array{T}(undef,I...))
     
-    function VecArray(x::AbstractArray{<:Number},y::AbstractArray{<:Number}, z::AbstractArray{<:Number})
+    function VecArray(x::AbstractArray,y::AbstractArray, z::AbstractArray)
 
         s = size(x)
         size(y) === s || throw(DimensionMismatch("Arrays must have the same size"))
@@ -36,7 +36,7 @@ struct VecArray{T,N,Tx,Ty,Tz} <: AbstractArray{T,N}
 
 end
 
-function VecArray(;x::Union{Zero,<:AbstractArray{<:Number}}=𝟎,y::Union{Zero,AbstractArray{<:Number}}=𝟎, z::Union{Zero,AbstractArray{<:Number}}=𝟎)
+function VecArray(;x=𝟎,y=𝟎, z=𝟎)
     if (x,y,z) === (𝟎,𝟎,𝟎)
         throw(DomainError((x,y,z),"At least one entry must be a valid array"))
     else
@@ -93,11 +93,11 @@ function TenArray(xx, yx, zx,
     return VecArray(xv,yv,zv)
 end
  
-TenArray(;xx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yx::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zx::Union{Zero,<:AbstractArray{<:Number}}=𝟎,
-          xy::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yy::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zy::Union{Zero,<:AbstractArray{<:Number}}=𝟎,
-          xz::Union{Zero,<:AbstractArray{<:Number}}=𝟎, yz::Union{Zero,<:AbstractArray{<:Number}}=𝟎, zz::Union{Zero,<:AbstractArray{<:Number}}=𝟎) = TenArray(xx,yx,zx,
-                                                                                                                                                            xy,yy,zy,
-                                                                                                                                                            xz,yz,zz)
+TenArray(;xx=𝟎, yx=𝟎, zx=𝟎,
+          xy=𝟎, yy=𝟎, zy=𝟎,
+          xz=𝟎, yz=𝟎, zz=𝟎) = TenArray(xx, yx, zx,
+                                       xy, yy, zy,
+                                       xz, yz, zz)
 
 const Vec3DArray{T,N} = VecArray{Vec3D{T},N,Array{T,N},Array{T,N},Array{T,N}}
 const Vec2DxyArray{T,N} = VecArray{Vec2Dxy{T},N,Array{T,N},Array{T,N},Array{Zero,N}}

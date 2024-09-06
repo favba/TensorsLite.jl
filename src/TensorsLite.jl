@@ -29,11 +29,11 @@ struct Vec{T,N,Tx,Ty,Tz} <: AbstractVec{T,N}
     y::Ty
     z::Tz
 
-   @inline function Vec(x::Number,y::Number,z::Number)
+   @inline function Vec(x,y,z)
         Tx = typeof(x)
         Ty = typeof(y)
         Tz = typeof(z)
-        Tf = promote_type(Tx,Ty,Tz)
+        Tf = promote_type_ignoring_Zero(Tx,Ty,Tz)
         xn = _my_convert(Tf,x)
         yn = _my_convert(Tf,y)
         zn = _my_convert(Tf,z)
@@ -48,7 +48,7 @@ struct Vec{T,N,Tx,Ty,Tz} <: AbstractVec{T,N}
         _Tx = nonzero_eltype(x) 
         _Ty = nonzero_eltype(y) 
         _Tz = nonzero_eltype(z) 
-        Tf = promote_type(_Tx,_Ty,_Tz)
+        Tf = promote_type_ignoring_Zero(_Tx,_Ty,_Tz)
         xf = Vec(_my_convert(Tf,x.x), _my_convert(Tf,x.y), _my_convert(Tf,x.z))
         yf = Vec(_my_convert(Tf,y.x), _my_convert(Tf,y.y), _my_convert(Tf,y.z))
         zf = Vec(_my_convert(Tf,z.x), _my_convert(Tf,z.y), _my_convert(Tf,z.z))
@@ -99,8 +99,8 @@ const 𝐤 = Vec(Zero(),Zero(),One())
 @inline if_zero_to_zerovec(x::Zero) = Vec(𝟎,𝟎,𝟎)
 @inline if_zero_to_zerovec(x::Vec) = x
 
-@inline function Vec(;x::Union{Vec,Number}=𝟎,y::Union{Vec,Number}=𝟎,z::Union{Vec,Number}=𝟎)
-    if all_Numbers(x,y,z)
+@inline function Vec(;x=𝟎,y=𝟎,z=𝟎)
+    if no_Vecs(x,y,z)
         return Vec(x,y,z)
     else
         x1 = if_zero_to_zerovec(x)

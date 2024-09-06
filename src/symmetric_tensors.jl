@@ -6,16 +6,16 @@ struct SymTen{T,Txx,Tyx,Tzx,Tyy,Tzy,Tzz} <: AbstractTen{T}
     zy::Tzy
     zz::Tzz
 
-    @inline function SymTen(xx::Number,yx::Number,zx::Number,
-                                       yy::Number,zy::Number,
-                                                  zz::Number)
+    @inline function SymTen(xx, yx, zx,
+                                yy, zy,
+                                    zz)
         Txx = typeof(xx)
         Tyx = typeof(yx)
         Tzx = typeof(zx)
         Tyy = typeof(yy)
         Tzy = typeof(zy)
         Tzz = typeof(zz)
-        Tf = promote_type(Txx,Tyx,Tzx,
+        Tf = promote_type_ignoring_Zero(Txx,Tyx,Tzx,
                               Tyy,Tzy,
                                   Tzz)
         xxn = _my_convert(Tf,xx)
@@ -59,7 +59,7 @@ end
 @inline ==(a::SymTen,b::SymTen) = @inline reduce(&,map(==,fields(a),fields(b)))
 @inline function _muladd(a::Number, v::SymTen, u::SymTen)
     @inline begin
-        at = promote_type(typeof(a),nonzero_eltype(v),nonzero_eltype(u))(a)
+        at = convert(promote_type(typeof(a),nonzero_eltype(v),nonzero_eltype(u)), a)
         S = SymTen(map(_muladd,ntuple(i->at,Val(6)),fields(v),fields(u))...)
     end
     return S
@@ -70,7 +70,7 @@ end
     end
     return S
 end
-
+    
 const SymTen3D{T} = SymTen{T,T,T,T,T,T,T}
 const SymTen2Dxy{T} = SymTen{Union{Zero,T},T,T,Zero,T,Zero,Zero}
 const SymTen2Dxz{T} = SymTen{Union{Zero,T},T,Zero,T,Zero,Zero,T}

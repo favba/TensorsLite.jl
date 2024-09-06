@@ -3,11 +3,11 @@ struct AntiSymTen{T,Tyx,Tzx,Tzy} <: AbstractVec{T,2}
     zx::Tzx
     zy::Tzy
 
-    @inline function AntiSymTen(yx::Number,zx::Number,zy::Number)
+    @inline function AntiSymTen(yx,zx,zy)
         Tyx = typeof(yx)
         Tzx = typeof(zx)
         Tzy = typeof(zy)
-        Tf = promote_type(Tyx,Tzx,Tzy)
+        Tf = promote_type_ignoring_Zero(Tyx,Tzx,Tzy)
         yxn = _my_convert(Tf,yx)
         zxn = _my_convert(Tf,zx)
         zyn = _my_convert(Tf,zy)
@@ -28,7 +28,7 @@ end
 @inline ==(a::AntiSymTen,b::AntiSymTen) = @inline reduce(&,map(==,fields(a),fields(b)))
 @inline function _muladd(a::Number, v::AntiSymTen, u::AntiSymTen)
     @inline begin
-        at = promote_type(typeof(a),nonzero_eltype(v),nonzero_eltype(u))(a)
+        at = convert(promote_type(typeof(a),nonzero_eltype(v),nonzero_eltype(u)), a)
         W = AntiSymTen(map(_muladd,ntuple(i->at,Val(3)),fields(v),fields(u))...)
     end
     return W
