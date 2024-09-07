@@ -128,7 +128,6 @@ end
 
 _rand(T) = rand(T)
 _rand(T::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
-_rand(T::Type{SIMD.Vec{2, Float64}}) = SIMD.Vec(rand(), rand())
 
 @testset "Vector Operations" begin
 
@@ -550,4 +549,41 @@ end
         u3D[I, 2] = Ten(xx = zeroSIMD, yx = zeroSIMD, zx = zeroSIMD, xy = zeroSIMD, yy = zeroSIMD, zy = zeroSIMD, xz = zeroSIMD, yz = zeroSIMD, zz = zeroSIMD)
         u3D[1:4, 2] == TenArray(xx = zeros(4), yx = zeros(4), zx = zeros(4), xy = zeros(4), yy = zeros(4), zy = zeros(4), xz = zeros(4), yz = zeros(4), zz = zeros(4))
     end
+end
+
+function apply_simd_op(out, op::F, args::Vararg{Any, N}) where {F, N}
+    l = length(out)
+    @assert rem(l, 8) == 0
+    lane = SIMD.VecRange{8}(0)
+    @inbounds for i in 1:8:l
+        lpi = lane + i
+        out[lpi] = op(map(x -> getindex(x, lpi), args)...)
+    end
+    return out
+end
+
+@testset "SIMD Vec operations" begin
+
+    for u in (VecArray(x = rand(16)), VecArray(x = rand(16), y = rand(16)), VecArray(x = rand(16), y = rand(16), z = rand(16)))
+
+        for op in (+, -, norm, normalize, x -> (2 * x), x -> (x / 2))
+            @test begin
+                r = op.(u)
+                rout = similar(r)
+                all(map(isapprox, apply_simd_op(rout, op, u), r))
+            end
+        end
+
+        for v in (VecArray(x = rand(16)), VecArray(x = rand(16), y = rand(16)), VecArray(x = rand(16), y = rand(16), z = rand(16)))
+
+            for op in (+, -, cross, dot, inner, (x, y) -> dotadd(x, y, 3.0), (x, y) -> muladd(2.0, x, y), (x, y) -> muladd(x, 2.0, y), ⊗)
+                @test begin
+                    r = op.(u, v)
+                    rout = similar(r)
+                    all(map(isapprox, apply_simd_op(rout, op, u, v), r))
+                end
+            end
+        end
+    end
+
 end
