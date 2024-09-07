@@ -7,6 +7,7 @@ Base.conj(x::SIMD.Vec{N, T}) where {N, T} = x
 Base.real(x::SIMD.Vec{N, T}) where {N, T} = x
 
 Base.convert(::Type{SIMD.Vec{N, T}}, ::Zero) where {N, T} = SIMD.Vec(ntuple(i -> zero(T), Val{N}())...)
+Base.convert(::Type{SIMD.Vec{N, T}}, ::One) where {N, T} = SIMD.Vec(ntuple(i -> one(T), Val{N}())...)
 Base.isapprox(::Zero, v::SIMD.Vec{N, T}) where {N, T} = SIMD.Vec(ntuple(i -> zero(T), Val{N}())...) == v
 Base.isapprox(v::SIMD.Vec{N, T}, ::Zero) where {N, T} = SIMD.Vec(ntuple(i -> zero(T), Val{N}())...) == v
 
@@ -58,5 +59,28 @@ end
 
 
 @inline TensorsLite.dotadd(u::AbstractVec, v::AbstractVec, a::SIMD.Vec) = TensorsLite._muladd(u.x, v.x, TensorsLite._muladd(u.y, v.y, TensorsLite._muladd(u.z, v.z, a)))
+
+@inline _getindex(::Type{Zero}, x, idx, rest::Vararg) = Zeros.Zero()
+Base.@propagate_inbounds _getindex(::Type, x, idx, rest::Vararg) = Base.getindex(x, idx, rest...)
+
+Base.@propagate_inbounds function Base.getindex(arr::VecArray{T, N, Tx, Ty, Tz}, idx::SIMD.VecRange, rest::Vararg) where {T, N, Tx, Ty, Tz}
+    return @inline Vec(
+        _getindex(eltype(Tx), arr.x, idx, rest...),
+        _getindex(eltype(Ty), arr.y, idx, rest...),
+        _getindex(eltype(Tz), arr.z, idx, rest...),
+    )
+end
+
+@inline _setindex!(::Type{Zero}, x, v, idx, rest::Vararg) = v
+Base.@propagate_inbounds _setindex!(::Type, x, v, idx, rest::Vararg) = Base.setindex!(x, v, idx, rest...)
+
+Base.@propagate_inbounds function Base.setindex!(arr::VecArray{T, N, Tx, Ty, Tz}, v::Vec, idx::SIMD.VecRange, rest::Vararg) where {T, N, Tx, Ty, Tz}
+    @inline begin
+        _setindex!(eltype(Tx), arr.x, v.x, idx, rest...)
+        _setindex!(eltype(Ty), arr.y, v.y, idx, rest...)
+        _setindex!(eltype(Tz), arr.z, v.z, idx, rest...)
+    end
+    return v
+end
 
 end

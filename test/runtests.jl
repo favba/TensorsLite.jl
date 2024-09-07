@@ -9,7 +9,9 @@ const ze = Zero()
 # This helps comparing arrays of Union{Zero,Number}
 (::Type{<:Union{Zero, T}})(x::Number) where {T <: Number} = x == zero(x) ? Zeros.Zero() : T(x)
 
-Base.isapprox(a::SIMD.Vec{N},b::SIMD.Vec{N}) where N = reduce(&,ntuple(i->isapprox(a[i],b[i]),Val{N}(),))
+Base.isapprox(a::SIMD.Vec{N}, b::SIMD.Vec{N}) where {N} = reduce(&, ntuple(i -> isapprox(a[i], b[i]), Val{N}()))
+
+const zeroSIMD = SIMD.Vec(0.0, 0.0, 0.0, 0.0)
 
 @testset "_muladd definitions" begin
     for x in (One(), Zero(), rand(), SIMD.Vec(rand(), rand(), rand(), rand()))
@@ -27,9 +29,9 @@ Base.isapprox(a::SIMD.Vec{N},b::SIMD.Vec{N}) where N = reduce(&,ntuple(i->isappr
     @test TensorsLite._muladd(1.0im, Zero(), 2.0) === 2.0 + 0.0im
 end
 
-const sx = SIMD.Vec(1.0,2.0)
-const sy = SIMD.Vec(2.0,1.0)
-const sz = SIMD.Vec(3.0,4.0)
+const sx = SIMD.Vec(1.0, 2.0)
+const sy = SIMD.Vec(2.0, 1.0)
+const sz = SIMD.Vec(3.0, 4.0)
 
 @testset "Vec Constructors" begin
 
@@ -68,7 +70,7 @@ end
 
     @test eltype(Ten(xx = 1.0)) === Union{Zero, Float64}
 
-    @test eltype(Ten(xx = sx)) === Union{Zero, SIMD.Vec{2,Float64}}
+    @test eltype(Ten(xx = sx)) === Union{Zero, SIMD.Vec{2, Float64}}
 
     @test eltype(Ten(xx = One())) === Union{Zero, One}
 
@@ -126,7 +128,7 @@ end
 
 _rand(T) = rand(T)
 _rand(T::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
-_rand(T::Type{SIMD.Vec{2,Float64}}) = SIMD.Vec(rand(),rand())
+_rand(T::Type{SIMD.Vec{2, Float64}}) = SIMD.Vec(rand(), rand())
 
 @testset "Vector Operations" begin
 
@@ -465,5 +467,87 @@ end
         @test setindex!(T, SymTen(yx = 1, yy = 3), 3, 3)[3, 3] === SymTen(0.0, 1.0, 0.0, 3.0, 0.0, 0.0)
 
         @test typeof(T .+ SymTen()) === typeof(T)
+    end
+end
+
+@testset "VecArray SIMD" begin
+    I = SIMD.VecRange{4}(1)
+    u1D = VecArray(x = rand(4))
+    @test u1D[I] === Vec(x = u1D.x[I])
+    @test begin
+        u1D[I] = Vec(x = zeroSIMD)
+        u1D[1:4] == VecArray(x = zeros(4))
+    end
+    u2D = VecArray(x = rand(4), y = rand(4))
+    @test u2D[I] === Vec(x = u2D.x[I], y = u2D.y[I])
+    @test begin
+        u2D[I] = Vec(x = zeroSIMD, y = zeroSIMD)
+        u2D[1:4] == VecArray(x = zeros(4), y = zeros(4))
+    end
+    u3D = VecArray(x = rand(4), y = rand(4), z = rand(4))
+    @test u3D[I] === Vec(x = u3D.x[I], y = u3D.y[I], z = u3D.z[I])
+    @test begin
+        u3D[I] = Vec(x = zeroSIMD, y = zeroSIMD, z = zeroSIMD)
+        u3D[1:4] == VecArray(x = zeros(4), y = zeros(4), z = zeros(4))
+    end
+
+    u1D2 = VecArray(x = rand(4, 2))
+    @test u1D2[I, 2] === Vec(x = u1D2.x[I, 2])
+    @test begin
+        u1D2[I, 2] = Vec(x = zeroSIMD)
+        u1D2[1:4, 2] == VecArray(x = zeros(4))
+    end
+    u2D2 = VecArray(x = rand(4, 2), y = rand(4, 2))
+    @test u2D2[I, 2] === Vec(x = u2D2.x[I, 2], y = u2D2.y[I, 2])
+    @test begin
+        u2D2[I, 2] = Vec(x = zeroSIMD, y = zeroSIMD)
+        u2D2[1:4, 2] == VecArray(x = zeros(4), y = zeros(4))
+    end
+    u3D2 = VecArray(x = rand(4, 2), y = rand(4, 2), z = rand(4, 2))
+    @test u3D2[I, 2] === Vec(x = u3D2.x[I, 2], y = u3D2.y[I, 2], z = u3D2.z[I, 2])
+    @test begin
+        u3D2[I, 2] = Vec(x = zeroSIMD, y = zeroSIMD, z = zeroSIMD)
+        u3D2[1:4, 2] == VecArray(x = zeros(4), y = zeros(4), z = zeros(4))
+    end
+end
+
+@testset "TenArray SIMD" begin
+    I = SIMD.VecRange{4}(1)
+    u1D = TenArray(xx = rand(4))
+    @test u1D[I] === Ten(xx = u1D.xx[I])
+    @test begin
+        u1D[I] = Ten(xx = zeroSIMD)
+        u1D[1:4] == TenArray(xx = zeros(4))
+    end
+    u2D = TenArray(xx = rand(4), yx = rand(4), xy = rand(4), yy = rand(4))
+    @test u2D[I] === Ten(xx = u2D.xx[I], yx = u2D.yx[I], xy = u2D.xy[I], yy = u2D.yy[I])
+    @test begin
+        u2D[I] = Ten(xx = zeroSIMD, yx = zeroSIMD, xy = zeroSIMD, yy = zeroSIMD)
+        u2D[1:4] == TenArray(xx = zeros(4), yx = zeros(4), xy = zeros(4), yy = zeros(4))
+    end
+    u3D = TenArray(xx = rand(4), yx = rand(4), zx = rand(4), xy = rand(4), yy = rand(4), zy = rand(4), xz = rand(4), yz = rand(4), zz = rand(4))
+    @test u3D[I] === Ten(xx = u3D.xx[I], yx = u3D.yx[I], zx = u3D.zx[I], xy = u3D.xy[I], yy = u3D.yy[I], zy = u3D.zy[I], xz = u3D.xz[I], yz = u3D.yz[I], zz = u3D.zz[I])
+    @test begin
+        u3D[I] = Ten(xx = zeroSIMD, yx = zeroSIMD, zx = zeroSIMD, xy = zeroSIMD, yy = zeroSIMD, zy = zeroSIMD, xz = zeroSIMD, yz = zeroSIMD, zz = zeroSIMD)
+        u3D[1:4] == TenArray(xx = zeros(4), yx = zeros(4), zx = zeros(4), xy = zeros(4), yy = zeros(4), zy = zeros(4), xz = zeros(4), yz = zeros(4), zz = zeros(4))
+    end
+
+    u1D = TenArray(xx = rand(4, 2))
+    @test u1D[I, 2] === Ten(xx = u1D.xx[I, 2])
+    @test begin
+        u1D[I, 2] = Ten(xx = zeroSIMD)
+        u1D[1:4, 2] == TenArray(xx = zeros(4))
+    end
+    u2D = TenArray(xx = rand(4, 2), yx = rand(4, 2), xy = rand(4, 2), yy = rand(4, 2))
+    @test u2D[I, 2] === Ten(xx = u2D.xx[I, 2], yx = u2D.yx[I, 2], xy = u2D.xy[I, 2], yy = u2D.yy[I, 2])
+    @test begin
+        u2D[I, 2] = Ten(xx = zeroSIMD, yx = zeroSIMD, xy = zeroSIMD, yy = zeroSIMD)
+        u2D[1:4, 2] == TenArray(xx = zeros(4), yx = zeros(4), xy = zeros(4), yy = zeros(4))
+    end
+    u3D = TenArray(xx = rand(4, 2), yx = rand(4, 2), zx = rand(4, 2), xy = rand(4, 2), yy = rand(4, 2), zy = rand(4, 2), xz = rand(4, 2), yz = rand(4, 2), zz = rand(4, 2))
+    @test u3D[I, 2] === Ten(xx = u3D.xx[I, 2], yx = u3D.yx[I, 2], zx = u3D.zx[I, 2], xy = u3D.xy[I, 2], yy = u3D.yy[I, 2], zy = u3D.zy[I, 2], xz = u3D.xz[I, 2], yz = u3D.yz[I, 2], zz = u3D.zz[I, 2])
+    @test begin
+        u3D[I, 2] = Ten(xx = zeroSIMD, yx = zeroSIMD, zx = zeroSIMD, xy = zeroSIMD, yy = zeroSIMD, zy = zeroSIMD, xz = zeroSIMD, yz = zeroSIMD, zz = zeroSIMD)
+        u3D[1:4, 2] == TenArray(xx = zeros(4), yx = zeros(4), zx = zeros(4), xy = zeros(4), yy = zeros(4), zy = zeros(4), xz = zeros(4), yz = zeros(4), zz = zeros(4))
     end
 end
