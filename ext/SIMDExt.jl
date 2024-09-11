@@ -63,7 +63,9 @@ end
 @inline _getindex(::Type{Zero}, x, idx, rest::Vararg) = Zeros.Zero()
 Base.@propagate_inbounds _getindex(::Type, x, idx, rest::Vararg) = Base.getindex(x, idx, rest...)
 
-Base.@propagate_inbounds function Base.getindex(arr::VecArray{T, N, Tx, Ty, Tz}, idx::SIMD.VecRange, rest::Vararg) where {T, N, Tx, Ty, Tz}
+const SIMDIndex = Union{<:SIMD.VecRange, <:(SIMD.Vec{N, Int} where {N})}
+
+Base.@propagate_inbounds function Base.getindex(arr::VecArray{T, N, Tx, Ty, Tz}, idx::SIMDIndex, rest::Vararg) where {T, N, Tx, Ty, Tz}
     return @inline Vec(
         _getindex(eltype(Tx), arr.x, idx, rest...),
         _getindex(eltype(Ty), arr.y, idx, rest...),
@@ -74,7 +76,7 @@ end
 @inline _setindex!(::Type{Zero}, x, v, idx, rest::Vararg) = v
 Base.@propagate_inbounds _setindex!(::Type, x, v, idx, rest::Vararg) = Base.setindex!(x, v, idx, rest...)
 
-Base.@propagate_inbounds function Base.setindex!(arr::VecArray{T, N, Tx, Ty, Tz}, v::Vec, idx::SIMD.VecRange, rest::Vararg) where {T, N, Tx, Ty, Tz}
+Base.@propagate_inbounds function Base.setindex!(arr::VecArray{T, N, Tx, Ty, Tz}, v::Vec, idx::SIMDIndex, rest::Vararg) where {T, N, Tx, Ty, Tz}
     @inline begin
         _setindex!(eltype(Tx), arr.x, v.x, idx, rest...)
         _setindex!(eltype(Ty), arr.y, v.y, idx, rest...)

@@ -471,23 +471,34 @@ end
 
 @testset "VecArray SIMD" begin
     I = SIMD.VecRange{4}(1)
+    J = SIMD.Vec(2, 1, 4, 3)
+    JF = SIMD.Vec(2.0, 1.0, 4.0, 3.0)
     u1D = VecArray(x = rand(4))
     @test u1D[I] === Vec(x = u1D.x[I])
+    @test u1D[J] === Vec(x = u1D.x[J])
     @test begin
         u1D[I] = Vec(x = zeroSIMD)
         u1D[1:4] == VecArray(x = zeros(4))
+        u1D[J] = Vec(x = JF)
+        u1D[1:4] == VecArray(x = collect(1:4))
     end
     u2D = VecArray(x = rand(4), y = rand(4))
     @test u2D[I] === Vec(x = u2D.x[I], y = u2D.y[I])
+    @test u2D[J] === Vec(x = u2D.x[J], y = u2D.y[J])
     @test begin
         u2D[I] = Vec(x = zeroSIMD, y = zeroSIMD)
         u2D[1:4] == VecArray(x = zeros(4), y = zeros(4))
+        u2D[J] = Vec(x = JF, y = JF)
+        u2D[1:4] == VecArray(x = collect(1:4), y = collect(1:4))
     end
     u3D = VecArray(x = rand(4), y = rand(4), z = rand(4))
     @test u3D[I] === Vec(x = u3D.x[I], y = u3D.y[I], z = u3D.z[I])
+    @test u3D[J] === Vec(x = u3D.x[J], y = u3D.y[J], z = u3D.z[J])
     @test begin
         u3D[I] = Vec(x = zeroSIMD, y = zeroSIMD, z = zeroSIMD)
         u3D[1:4] == VecArray(x = zeros(4), y = zeros(4), z = zeros(4))
+        u3D[J] = Vec(x = JF, y = JF, z = JF)
+        u3D[1:4] == VecArray(x = collect(1:4), y = collect(1:4), z = collect(1:4))
     end
 
     u1D2 = VecArray(x = rand(4, 2))
