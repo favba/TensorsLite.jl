@@ -23,8 +23,8 @@ end
 @inline AntiSymTen(; yx = 𝟎, zx = 𝟎, zy = 𝟎) = AntiSymTen(yx, zx, zy)
 
 @inline constructor(::Type{T}) where {T <: AntiSymTen} = AntiSymTen
-@inline +(a::AntiSymTen, b::AntiSymTen) = @inline AntiSymTen(map(+, fields(a), fields(b))...)
-@inline -(a::AntiSymTen, b::AntiSymTen) = @inline AntiSymTen(map(-, fields(a), fields(b))...)
+@inline Base.:+(a::AntiSymTen, b::AntiSymTen) = @inline AntiSymTen(map(+, fields(a), fields(b))...)
+@inline Base.:-(a::AntiSymTen, b::AntiSymTen) = @inline AntiSymTen(map(-, fields(a), fields(b))...)
 @inline ==(a::AntiSymTen, b::AntiSymTen) = @inline reduce(&, map(==, fields(a), fields(b)))
 @inline function _muladd(a::Number, v::AntiSymTen, u::AntiSymTen)
     @inline begin

@@ -8,8 +8,8 @@ import LinearAlgebra: transpose, adjoint
 end
 @inline Ten(; xx = 𝟎, yx = 𝟎, zx = 𝟎, xy = 𝟎, yy = 𝟎, zy = 𝟎, xz = 𝟎, yz = 𝟎, zz = 𝟎) = Ten(xx, yx, zx, xy, yy, zy, xz, yz, zz)
 
-@inline *(T::AbstractTen, v::AbstractVec{<:Any, 1}) = dot(T, v)
-@inline *(v::AbstractVec{<:Any, 1}, T::AbstractTen) = dot(v, T)
+@inline Base.:*(T::AbstractTen, v::AbstractVec{<:Any, 1}) = dot(T, v)
+@inline Base.:*(v::AbstractVec{<:Any, 1}, T::AbstractTen) = dot(v, T)
 
 @inline function transpose(T::AbstractTen)
     x = T.x
@@ -33,8 +33,6 @@ end
 
 @inline dot(v::AbstractVec{<:Any, 1}, T::AbstractTen) = dot(transpose(T), v)
 
-@inline dotadd(u::AbstractVec, v::AbstractVec, a::Number) = _muladd(u.x, v.x, _muladd(u.y, v.y, _muladd(u.z, v.z, a)))
-
 @inline function _muladd(T::AbstractTen, v::AbstractVec{<:Any, 1}, u::AbstractVec{<:Any, 1})
     Tt = transpose(T)
     return Vec(dotadd(Tt.x, v, u.x), dotadd(Tt.y, v, u.y), dotadd(Tt.z, v, u.z))
@@ -46,14 +44,14 @@ end
 @inline muladd(v::AbstractVec{<:Any, 1}, T::AbstractTen, u::AbstractVec{<:Any, 1}) = _muladd(v, T, u)
 @inline dotadd(v::AbstractVec{<:Any, 1}, T::AbstractTen, u::AbstractVec{<:Any, 1}) = _muladd(v, T, u)
 
-@inline *(T::AbstractTen, B::AbstractTen) = Vec(T * B.x, T * B.y, T * B.z)
+@inline Base.:*(T::AbstractTen, B::AbstractTen) = Vec(T * B.x, T * B.y, T * B.z)
 @inline dot(T::AbstractTen, B::AbstractTen) = T * B
 
 @inline _muladd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = Vec(_muladd(A, B.x, C.x), _muladd(A, B.y, C.y), _muladd(A, B.z, C.z))
 @inline muladd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = _muladd(A, B, C)
 @inline dotadd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = _muladd(A, B, C)
 
-@inline otimes(u::AbstractVec, v::AbstractVec) = Ten(
+@inline otimes(u::AbstractVec{<:Any,1}, v::AbstractVec{<:Any,1}) = Ten(
     xx = u.x * v.x, xy = u.x * v.y, xz = u.x * v.z,
     yx = u.y * v.x, yy = u.y * v.y, yz = u.y * v.z,
     zx = u.z * v.x, zy = u.z * v.y, zz = u.z * v.z

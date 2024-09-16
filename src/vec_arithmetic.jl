@@ -1,38 +1,38 @@
-import Base: +, -, *, /, //, muladd, conj, ==, zero
+import Base: /, //, muladd, conj, ==, zero
 import LinearAlgebra: dot, ⋅, norm, cross, ×, normalize, isapprox
 export dot, ⋅, norm, cross, ×, normalize # Reexport from LinearAlgebra
 
 include("muladd_definitions.jl")
 
 # Definitions for abstract Tensors
-@inline +(a::AbstractVec) = a
-@inline *(b::Number, v::T) where {T <: AbstractVec} = @inline  begin
+@inline Base.:+(a::AbstractVec) = a
+@inline Base.:*(b::Number, v::T) where {T <: AbstractVec} = @inline  begin
     bt = convert(promote_type(typeof(b), nonzero_eltype(T)), b)
     constructor(T)(map(*, ntuple(i -> bt, Val(fieldcount(T))), fields(v))...)
 end
-@inline *(b::Union{Zero, One}, v::T) where {T <: AbstractVec} = constructor(T)(map(*, ntuple(i -> b, Val(fieldcount(T))), fields(v))...)
-@inline *(v::AbstractVec, b::Number) = b * v
+@inline Base.:*(b::Union{Zero, One}, v::T) where {T <: AbstractVec} = constructor(T)(map(*, ntuple(i -> b, Val(fieldcount(T))), fields(v))...)
+@inline Base.:*(v::AbstractVec, b::Number) = b * v
 @inline /(v::AbstractVec, b::Number) = inv(b) * v
 @inline //(v::AbstractVec, b::Number) = (One() // b) * v
-@inline -(a::T) where {T <: AbstractVec} = @inline constructor(T)(map(-, fields(a))...)
+@inline Base.:-(a::T) where {T <: AbstractVec} = @inline constructor(T)(map(-, fields(a))...)
 @inline zero(::Type{T}) where {T <: AbstractVec} = @inline constructor(T)(_zero_for_tuple(fieldtypes(T)...)...)
 @inline zero(::T) where {T <: AbstractVec} = zero(T)
 @inline conj(a::T) where {T <: AbstractVec} = @inline constructor(T)(map(conj, fields(a))...)
 
 # Definitons for mixed Types
-@inline +(a::AbstractVec, b::AbstractVec) = Vec(a.x + b.x, a.y + b.y, a.z + b.z)
-@inline +(a::AbstractVec...) = Vec(+(map(_x, a)...), +(map(_y, a)...), +(map(_z, a)...))
-@inline -(a::AbstractVec, b::AbstractVec) = Vec(a.x - b.x, a.y - b.y, a.z - b.z)
+@inline Base.:+(a::AbstractVec, b::AbstractVec) = Vec(a.x + b.x, a.y + b.y, a.z + b.z)
+@inline Base.:+(a::AbstractVec...) = Vec(+(map(_x, a)...), +(map(_y, a)...), +(map(_z, a)...))
+@inline Base.:-(a::AbstractVec, b::AbstractVec) = Vec(a.x - b.x, a.y - b.y, a.z - b.z)
 @inline ==(a::AbstractVec, b::AbstractVec) = (a.x == b.x) & (a.y == b.y) & (a.z == b.z)
 
 @inline isapprox(x::AbstractVec, y::AbstractVec) = norm(x - y) <= max(Base.rtoldefault(nonzero_eltype(x)), Base.rtoldefault(nonzero_eltype(y))) * max(norm(x), norm(y))
 
 # We treat Vec's as scalar for broadcasting but the default definition of + and - for AbstractArray's relies
 # on broadcasting to perform addition and subtraction. The method definitons below overcomes this inconsistency
-@inline +(a::AbstractVec, b::AbstractArray) = Array(a) + b
-@inline +(b::AbstractArray, a::AbstractVec) = b + Array(a)
-@inline -(a::AbstractVec, b::AbstractArray) = Array(a) - b
-@inline -(b::AbstractArray, a::AbstractVec) = b - Array(a)
+@inline Base.:+(a::AbstractVec, b::AbstractArray) = Array(a) + b
+@inline Base.:+(b::AbstractArray, a::AbstractVec) = b + Array(a)
+@inline Base.:-(a::AbstractVec, b::AbstractArray) = Array(a) - b
+@inline Base.:-(b::AbstractArray, a::AbstractVec) = b - Array(a)
 
 @inline function _muladd(a::Number, v::AbstractVec, u::AbstractVec)
     at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
@@ -46,6 +46,8 @@ end
 @inline muladd(v::AbstractVec, a::Number, u::AbstractVec) = _muladd(v, a, u)
 
 @inline dot(a::AbstractVec, b::AbstractVec) = _muladd(a.x, b.x, _muladd(a.y, b.y, a.z * b.z))
+
+@inline dotadd(a::AbstractVec{<:Any,1}, b::AbstractVec{<:Any,1}, c::Number) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
 
 @inline fsqrt(x) = @fastmath sqrt(x)
 

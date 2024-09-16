@@ -17,6 +17,14 @@ export Ten3DArray, Ten2DxyArray, Ten2DxzArray, Ten2DyzArray, Ten1DxArray, Ten1Dy
 export SymTen3DArray, SymTen2DxyArray, SymTen2DxzArray, SymTen2DyzArray, SymTen1DxArray, SymTen1DyArray, SymTen1DzArray
 export nonzero_eltype
 
+# define my own *, +, - so I can extend those operators without commiting type piracy (For SIMDExt.jl)
+@inline *(a,b) = Base.:*(a,b)
+@inline +(a,b) = Base.:+(a,b)
+@inline -(a,b) = Base.:-(a,b)
+@inline +(a) = Base.:+(a)
+@inline +(a::Vararg) = Base.:+(a...)
+@inline -(a) = Base.:-(a)
+
 include("type_utils.jl")
 
 abstract type AbstractVec{T, N} <: AbstractArray{T, N} end

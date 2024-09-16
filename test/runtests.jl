@@ -13,6 +13,10 @@ Base.isapprox(a::SIMD.Vec{N}, b::SIMD.Vec{N}) where {N} = reduce(&, ntuple(i -> 
 
 const zeroSIMD = SIMD.Vec(0.0, 0.0, 0.0, 0.0)
 
+my_isapprox(x, y) = isapprox(x, y)
+my_isapprox(x::SIMD.Vec{N, T}, y::Number) where {N, T} = isapprox(x, SIMD.Vec{N, T}(y))
+my_isapprox(y::Number, x::SIMD.Vec{N, T}) where {N, T} = isapprox(x, SIMD.Vec{N, T}(y))
+
 @testset "_muladd definitions" begin
     for x in (One(), Zero(), rand(), SIMD.Vec(rand(), rand(), rand(), rand()))
         for y in (One(), Zero(), rand(), SIMD.Vec(rand(), rand(), rand(), rand()))
@@ -20,7 +24,7 @@ const zeroSIMD = SIMD.Vec(0.0, 0.0, 0.0, 0.0)
                 if (all(t -> typeof(t) === Float64, (x, y, z)))
                     @test TensorsLite._muladd(x, y, z) === muladd(x, y, z)
                 else
-                    @test TensorsLite._muladd(x, y, z) ≈ x * y + z
+                    @test my_isapprox(TensorsLite._muladd(x, y, z), TensorsLite.:+(TensorsLite.:*(x, y), z))
                 end
             end
         end

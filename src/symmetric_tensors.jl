@@ -62,8 +62,8 @@ end
 end
 
 @inline constructor(::Type{T}) where {T <: SymTen} = SymTen
-@inline +(a::SymTen, b::SymTen) = @inline SymTen(map(+, fields(a), fields(b))...)
-@inline -(a::SymTen, b::SymTen) = @inline SymTen(map(-, fields(a), fields(b))...)
+@inline Base.:+(a::SymTen, b::SymTen) = @inline SymTen(map(+, fields(a), fields(b))...)
+@inline Base.:-(a::SymTen, b::SymTen) = @inline SymTen(map(-, fields(a), fields(b))...)
 @inline ==(a::SymTen, b::SymTen) = @inline reduce(&, map(==, fields(a), fields(b)))
 @inline function _muladd(a::Number, v::SymTen, u::SymTen)
     @inline begin
