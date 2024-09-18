@@ -141,20 +141,20 @@ const TenMaybe2DxyArray{T, Tz, N} = VecArray{TenMaybe2Dxy{T, Tz}, N, VecMaybe2Dx
 
 @inline function Base.getindex(A::VecArray, i::Int)
     @boundscheck checkbounds(A, i)
-    @inbounds r = Vec(A.x[i], A.y[i], A.z[i])
+    @inbounds @inline r = Vec(A.x[i], A.y[i], A.z[i])
     return r
 end
 
 @inline function Base.getindex(A::VecArray{T, N}, I::Vararg{Int, N}) where {T, N}
     @boundscheck checkbounds(A, I...)
-    @inbounds r = Vec(A.x[I...], A.y[I...], A.z[I...])
+    @inbounds @inline r = Vec(A.x[I...], A.y[I...], A.z[I...])
     return r
 end
 
 @inline function Base.setindex!(A::VecArray, u::AbstractVec, i::Int)
     @boundscheck checkbounds(A, i)
 
-    @inbounds begin
+    @inbounds @inline begin
         A.x[i] = u.x
         A.y[i] = u.y
         A.z[i] = u.z
@@ -166,7 +166,7 @@ end
 @inline function Base.setindex!(A::VecArray{T, N}, u::AbstractVec, I::Vararg{Int, N}) where {T, N}
     @boundscheck checkbounds(A, I...)
 
-    @inbounds begin
+    @inbounds @inline begin
         A.x[I...] = u.x
         A.y[I...] = u.y
         A.z[I...] = u.z
