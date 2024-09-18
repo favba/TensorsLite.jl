@@ -72,3 +72,8 @@ end
     bz = b.z
     return  Vec(_muladd(ay, bz, -(az * by)), _muladd(az, bx, -(ax * bz)), _muladd(ax, by, -(ay * bx)))
 end
+
+@inline Base.sum(v::AbstractVec{<:Any, 1}) = v.x + v.y + v.z
+@inline Base.sum(op::F, v::AbstractVec{<:Any, 1}) where {F <: Function} = @inline op(v.x) + op(v.y) + op(v.z)
+
+@inline Base.map(f::F, vecs::Vararg{AbstractVec{<:Any,N}}) where {F <: Function, N} = @inline(Vec(map(f, getfield.(vecs, (:x,))...), map(f, getfield.(vecs, (:y,))...), map(f, getfield.(vecs, (:z,))...)))
