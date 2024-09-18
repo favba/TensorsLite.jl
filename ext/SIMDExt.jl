@@ -4,9 +4,6 @@ using TensorsLite, Zeros
 import TensorsLite: *, -, +
 import SIMD
 
-Base.conj(x::SIMD.Vec{N, T}) where {N, T} = x
-Base.real(x::SIMD.Vec{N, T}) where {N, T} = x
-
 TensorsLite.:*(::Zero, ::SIMD.Vec) = Zero()
 TensorsLite.:*(::SIMD.Vec, ::Zero) = Zero()
 
