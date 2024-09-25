@@ -47,7 +47,7 @@ end
 
 @inline dot(a::AbstractVec, b::AbstractVec) = _muladd(a.x, b.x, _muladd(a.y, b.y, a.z * b.z))
 
-@inline dotadd(a::AbstractVec{<:Any,1}, b::AbstractVec{<:Any,1}, c::Number) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
+@inline dotadd(a::AbstractVec{<:Any, 1}, b::AbstractVec{<:Any, 1}, c::Number) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
 
 @inline fsqrt(x) = @fastmath sqrt(x)
 
@@ -55,10 +55,10 @@ end
 
 @inline norm(u::AbstractVec) = fsqrt(real(inner(u, u)))
 
-@inline norm(u::Vec1Dx, p::Real = 2) = abs(u.x)
-@inline norm(u::Vec1Dy, p::Real = 2) = abs(u.y)
-@inline norm(u::Vec1Dz, p::Real = 2) = abs(u.z)
-@inline norm(u::Vec0D, p::Real = 2) = 𝟎
+@inline norm(u::Vec1Dx, ::Real = 2) = abs(u.x)
+@inline norm(u::Vec1Dy, ::Real = 2) = abs(u.y)
+@inline norm(u::Vec1Dz, ::Real = 2) = abs(u.z)
+@inline norm(::Vec0D, ::Real = 2) = 𝟎
 
 @inline normalize(u::AbstractVec) = u / norm(u)
 @inline normalize(u::AbstractVec{Zero}) = u
@@ -76,4 +76,4 @@ end
 @inline Base.sum(v::AbstractVec{<:Any, 1}) = v.x + v.y + v.z
 @inline Base.sum(op::F, v::AbstractVec{<:Any, 1}) where {F <: Function} = @inline op(v.x) + op(v.y) + op(v.z)
 
-@inline Base.map(f::F, vecs::Vararg{AbstractVec{<:Any,N}}) where {F <: Function, N} = @inline(Vec(map(f, getfield.(vecs, (:x,))...), map(f, getfield.(vecs, (:y,))...), map(f, getfield.(vecs, (:z,))...)))
+@inline Base.map(f::F, vecs::Vararg{AbstractVec{<:Any, N}}) where {F <: Function, N} = @inline(Vec(map(f, getfield.(vecs, (:x,))...), map(f, getfield.(vecs, (:y,))...), map(f, getfield.(vecs, (:z,))...)))

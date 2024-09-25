@@ -18,9 +18,9 @@ export SymTen3DArray, SymTen2DxyArray, SymTen2DxzArray, SymTen2DyzArray, SymTen1
 export nonzero_eltype
 
 # define my own *, +, - so I can extend those operators without commiting type piracy (For SIMDExt.jl)
-@inline *(a,b) = Base.:*(a,b)
-@inline +(a,b) = Base.:+(a,b)
-@inline -(a,b) = Base.:-(a,b)
+@inline *(a, b) = Base.:*(a, b)
+@inline +(a, b) = Base.:+(a, b)
+@inline -(a, b) = Base.:-(a, b)
 @inline +(a) = Base.:+(a)
 @inline +(a::Vararg) = Base.:+(a...)
 @inline -(a) = Base.:-(a)
@@ -104,7 +104,7 @@ const 𝐢 = Vec(One(), Zero(), Zero())
 const 𝐣 = Vec(Zero(), One(), Zero())
 const 𝐤 = Vec(Zero(), Zero(), One())
 
-@inline if_zero_to_zerovec(x::Zero) = Vec(𝟎, 𝟎, 𝟎)
+@inline if_zero_to_zerovec(::Zero) = Vec(𝟎, 𝟎, 𝟎)
 @inline if_zero_to_zerovec(x::Vec) = x
 
 @inline function Vec(; x = 𝟎, y = 𝟎, z = 𝟎)

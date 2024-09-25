@@ -47,9 +47,9 @@ TensorsLite.:-(v::SIMD.Vec, ::One) = v - 1
 @inline TensorsLite._muladd(x::SIMD.Vec, ::One, y::Number) = x + y
 @inline TensorsLite._muladd(x::Number, ::One, y::SIMD.Vec) = x + y
 
-@inline TensorsLite._muladd(x::SIMD.Vec{N,T}, y::SIMD.Vec{N,T}, ::One) where {N,T} = muladd(x, y, SIMD.Vec{N,T}(one(T)))
-@inline TensorsLite._muladd(x::SIMD.Vec{N,T}, y::Number, ::One) where {N,T} = muladd(x, SIMD.Vec{N,T}(y), SIMD.Vec{N,T}(one(T)))
-@inline TensorsLite._muladd(y::Number, x::SIMD.Vec{N,T}, ::One) where {N,T} = muladd(SIMD.Vec{N,T}(y), x, SIMD.Vec{N,T}(one(T)))
+@inline TensorsLite._muladd(x::SIMD.Vec{N, T}, y::SIMD.Vec{N, T}, ::One) where {N, T} = muladd(x, y, SIMD.Vec{N, T}(one(T)))
+@inline TensorsLite._muladd(x::SIMD.Vec{N, T}, y::Number, ::One) where {N, T} = muladd(x, SIMD.Vec{N, T}(y), SIMD.Vec{N, T}(one(T)))
+@inline TensorsLite._muladd(y::Number, x::SIMD.Vec{N, T}, ::One) where {N, T} = muladd(SIMD.Vec{N, T}(y), x, SIMD.Vec{N, T}(one(T)))
 
 #Resolving Ambiguities
 @inline TensorsLite._muladd(::One, ::Zero, x::SIMD.Vec) = x
@@ -67,7 +67,7 @@ TensorsLite.:-(v::SIMD.Vec, ::One) = v - 1
 
 @inline TensorsLite._muladd(::SIMD.Vec, ::Zero, ::One) = One()
 
-@inline TensorsLite._muladd( ::Zero, ::SIMD.Vec, ::One) = One()
+@inline TensorsLite._muladd(::Zero, ::SIMD.Vec, ::One) = One()
 
 @inline Base.:/(v::AbstractVec, b::SIMD.Vec) = inv(b) * v
 
@@ -83,7 +83,7 @@ end
 @inline _getindex(::Type{Zero}, x, idx, rest::Vararg) = Zeros.Zero()
 Base.@propagate_inbounds _getindex(::Type, x, idx, rest::Vararg) = Base.getindex(x, idx, rest...)
 
-const SIMDIndex{N} = Union{<:SIMD.VecRange{N}, <:SIMD.Vec{N, Int}} where N
+const SIMDIndex{N} = Union{<:SIMD.VecRange{N}, <:SIMD.Vec{N, Int}} where {N}
 
 Base.@propagate_inbounds function Base.getindex(arr::VecArray{T, N, Tx, Ty, Tz}, idx::SIMDIndex, rest::Vararg) where {T, N, Tx, Ty, Tz}
     return @inline Vec(
@@ -99,12 +99,12 @@ _convert(::Type{SIMD.Vec{N, T}}, ::One) where {N, T} = SIMD.Vec(ntuple(i -> one(
 @inline _setindex!(::Type{Zero}, x, v::Zero, idx::SIMDIndex, rest::Vararg) = v
 
 # For When trying to write a higher-dimension Vec into a lower VecArray one
-@inline function _setindex!(::Type{Zero}, x, v::SIMD.Vec{N,T}, idx, rest::Vararg) where {N,T}
-    v == SIMD.Vec{N,T}(zero(T)) || throw(InexactError(:convert, Zero, v))
+@inline function _setindex!(::Type{Zero}, x, v::SIMD.Vec{N, T}, idx, rest::Vararg) where {N, T}
+    v == SIMD.Vec{N, T}(zero(T)) || throw(InexactError(:convert, Zero, v))
     return v
 end
 
-Base.@propagate_inbounds _setindex!(::Type{T}, x, v::Union{Zero,One}, idx::SIMDIndex{N}, rest::Vararg) where {T, N} = Base.setindex!(x, _convert(SIMD.Vec{N, T}, v), idx, rest...)
+Base.@propagate_inbounds _setindex!(::Type{T}, x, v::Union{Zero, One}, idx::SIMDIndex{N}, rest::Vararg) where {T, N} = Base.setindex!(x, _convert(SIMD.Vec{N, T}, v), idx, rest...)
 Base.@propagate_inbounds _setindex!(::Type, x, v, idx, rest::Vararg) = Base.setindex!(x, v, idx, rest...)
 
 Base.@propagate_inbounds function Base.setindex!(arr::VecArray{T, N, Tx, Ty, Tz}, v::Vec, idx::SIMDIndex, rest::Vararg) where {T, N, Tx, Ty, Tz}

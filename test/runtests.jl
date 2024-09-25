@@ -166,7 +166,7 @@ _rand(T::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
         un = (Vec(y = _rand(T1)), Vec(x = _rand(T1), z = _rand(T1)), Vec(_rand(T1), _rand(T1), _rand(T1)))
         for u in un
             Au = Array{nonzero_eltype(u)}(u)
-            for op in (+, -, normalize, sum, x -> sum(exp, x), x -> map(exp,x))
+            for op in (+, -, normalize, sum, x -> sum(exp, x), x -> map(exp, x))
                 @test op(u) ≈ op(Au)
             end
             @test norm(u) ≈ norm(Au)
@@ -212,7 +212,7 @@ end
         )
         for u in un
             Au = Array{nonzero_eltype(u)}(u)
-            for op in (+, -, normalize, sum, x -> sum(exp, x), x -> map(exp,x))
+            for op in (+, -, normalize, sum, x -> sum(exp, x), x -> map(exp, x))
                 @test op(u) ≈ op(Au)
             end
             @test norm(u) ≈ norm(Au)

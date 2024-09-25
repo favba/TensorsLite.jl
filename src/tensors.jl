@@ -51,7 +51,7 @@ end
 @inline muladd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = _muladd(A, B, C)
 @inline dotadd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = _muladd(A, B, C)
 
-@inline otimes(u::AbstractVec{<:Any,1}, v::AbstractVec{<:Any,1}) = Ten(
+@inline otimes(u::AbstractVec{<:Any, 1}, v::AbstractVec{<:Any, 1}) = Ten(
     xx = u.x * v.x, xy = u.x * v.y, xz = u.x * v.z,
     yx = u.y * v.x, yy = u.y * v.y, yz = u.y * v.z,
     zx = u.z * v.x, zy = u.z * v.y, zz = u.z * v.z
