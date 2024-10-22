@@ -177,6 +177,8 @@ end
 
 Base.similar(A::VecArray, T::Type{Vec{Tt, N, Tx, Ty, Tz}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, N, Tx, Ty, Tz, N2} = VecArray(similar(A.x, Tx, dims), similar(A.y, Ty, dims), similar(A.z, Tz, dims))
 
+Base.resize!(A::VecArray{T,1}, i::Integer) where T = begin resize!(A.x, i); resize!(A.y, i); resize!(A.z, i); A end
+
 #Definitons so broadcast return a VecArray =======================================
 
 function Base.similar(bc::Broadcast.Broadcasted, ::Type{Vec{T, 1, Tx, Ty, Tz}}) where {T, Tx, Ty, Tz}

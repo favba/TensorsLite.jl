@@ -84,6 +84,7 @@ const Vec1D{T} = Union{Vec1Dx{T}, Vec1Dy{T}, Vec1Dz{T}}
 const VecND{T} = Union{Vec3D{T}, Vec2D{T}, Vec1D{T}}
 const Vec0D = VecND{Zero}
 
+# This ends up also being a VecMaybe1Dz{T, Tz}, if T===Zero and Tz != Zero
 const VecMaybe2Dxy{T, Tz} = Vec{Union{T, Tz}, 1, T, T, Tz}
 
 const Ten3D{T} = Vec{T, 2, Vec3D{T}, Vec3D{T}, Vec3D{T}}

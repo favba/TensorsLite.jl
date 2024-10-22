@@ -392,10 +392,12 @@ end
 
     let a = VecArray(x = rand(Float32, 2), y = rand(Float32, 2))
         @test typeof(similar(a, Vec2Dyz{Int}, (4, 4, 4))) === Vec2DyzArray{Int, 3}
+        @test length(resize!(a, 4)) === 4
     end
 
     let a = TenArray(xx = rand(2), xz = rand(2), zx = rand(2), zz = rand(2))
         typeof(similar(a, Ten3D{Float16}, (1, 1, 1))) === Ten3DArray{Float16, 3}
+        @test length(resize!(a, 4)) === 4
     end
 
     let a1 = [1],a2 = [2],a3 = [3],a4 = [4],a5 = [5],a6 = [6],a7 = [7],a8 = [8],a9 = [9],T = TenArray(a1, a2, a3, a4, a5, a6, a7, a8, a9)
