@@ -103,3 +103,6 @@ end
     @inline xx, yx, zx, xy, yy, zy, xz, yz, zz = map(convert, (Txx, Tyx, Tzx, Txy, Tyy, Tzy, Txz, Tyz, Tzz), map(getproperty, (v, v, v, v, v, v, v, v, v), (:xx, :yx, :zx, :xy, :yy, :zy, :xz, :yz, :zz)))
     return Ten(xx, yx, zx, xy, yy, zy, xz, yz, zz)
 end
+
+@inline inner(a::AntiSymTen, b::AntiSymTen) = 2 * muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz * b.yz))
+

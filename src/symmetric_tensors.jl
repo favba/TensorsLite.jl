@@ -132,3 +132,6 @@ end
 
 @inline transpose(S::SymTen) = S
 @inline adjoint(S::SymTen) = conj(transpose(S))
+
+@inline inner(a::SymTen, b::SymTen) =  muladd(2, muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz*b.yz)), muladd(a.xx, b.xx, muladd(a.yy, b.yy, a.zz*b.zz)))
+
