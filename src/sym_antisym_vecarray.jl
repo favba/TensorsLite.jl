@@ -236,3 +236,151 @@ function Base.similar(bc::Broadcast.Broadcasted, ::Type{SymTen{T, Txx, Txy, Txz,
     zz = Array{Tzz}(undef, s...)
     return SymTenArray(xx, xy, xz, yy, yz, zz)
 end
+
+############################ AntiSymTenArray ###########################
+
+struct AntiSymTenArray{T, N, Tyx, Tzx, Tzy} <: AbstractArray{T, N}
+    yx::Tyx
+    zx::Tzx
+    zy::Tzy
+
+    AntiSymTenArray{T}(I::Vararg{Int, N}) where {T, N} = new{AntiSymTen{T, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}}(
+        Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...)
+    )
+
+    function AntiSymTenArray(yx::AbstractArray, zx::AbstractArray, zy::AbstractArray)
+
+        s = size(yx)
+        N = ndims(yx)
+        size(zx) === s || throw(DimensionMismatch("Input Arrays must have the same size"))
+        size(zy) === s || throw(DimensionMismatch("Input Arrays must have the same size"))
+
+
+        Tyx = eltype(yx)
+        Tzx = eltype(zx)
+        Tzy = eltype(zy)
+        Tf = promote_type_ignoring_Zero(Tyx, Tzx, Tzy)
+
+
+        Tyxf = _my_promote_type(Tf, Tyx)
+        Tzxf = _my_promote_type(Tf, Tzx)
+        Tzyf = _my_promote_type(Tf, Tzy)
+        Tff = _final_type(Tyxf, Tzxf, Tzyf)
+
+        return new{
+            AntiSymTen{Tff, Tyxf, Tzxf, Tzyf}, N,
+            typeof(yx), typeof(zx), typeof(zy)
+        }(yx, zx, zy)
+    end
+
+end
+
+function AntiSymTenArray(yx, zx, zy)
+
+    vals = (yx, zx, zy)
+
+    vals === (𝟎, 𝟎, 𝟎) && throw(DomainError(vals, "At least one entry must be a valid Array"))
+
+    non_zero_vals = _filter_zeros(vals...)
+    s = size(non_zero_vals[1])
+
+    all(x -> (size(x) === s), non_zero_vals) || throw(DimensionMismatch("Input Arrays must have the same size"))
+
+    sizes = (s, s, s)
+    final_vals = map(_if_zero_to_Array, sizes, vals)
+
+    return AntiSymTenArray(final_vals...)
+end
+
+AntiSymTenArray(;yx::Union{Zero, <:AbstractArray} = 𝟎, zx::Union{Zero, <:AbstractArray} = 𝟎,
+             zy::Union{Zero, <:AbstractArray} = 𝟎) = AntiSymTenArray(yx, zx, zy)
+
+const AntiSymTen3DArray{T, N} = AntiSymTenArray{AntiSymTen3D{T}, N,
+                                                Array{T, N}, Array{T, N}, Array{T, N}}
+const AntiSymTen2DxyArray{T, N} = AntiSymTenArray{AntiSymTen2Dxy{T}, N,
+                                                  Array{T, N}, Array{Zero, N}, Array{Zero, N}}
+const AntiSymTen2DxzArray{T, N} = AntiSymTenArray{AntiSymTen2Dxz{T}, N,
+                                                  Array{Zero, N}, Array{T, N}, Array{Zero, N}}
+const AntiSymTen2DyzArray{T, N} = AntiSymTenArray{AntiSymTen2Dyz{T}, N,
+                                                  Array{Zero, N}, Array{Zero, N}, Array{T, N}}
+
+@inline Base.size(A::AntiSymTenArray) = size(A.yx)
+@inline Base.length(A::AntiSymTenArray) = length(A.yx)
+
+@inline function Base.getindex(A::AntiSymTenArray, i::Int)
+    @boundscheck checkbounds(A, i)
+    @inbounds r = AntiSymTen(A.yx[i], A.zx[i], A.zy[i])
+    return r
+end
+
+@inline function Base.getindex(A::AntiSymTenArray{T, N}, I::Vararg{Int, N}) where {T, N}
+    @boundscheck checkbounds(A, I...)
+    @inbounds r = AntiSymTen(A.yx[I...], A.zx[I...], A.zy[I...])
+    return r
+end
+
+@inline function Base.setindex!(A::AntiSymTenArray{T}, s::AbstractTen, i::Int) where {T}
+    @boundscheck checkbounds(A, i)
+
+    sym_s = convert(T, s)
+    @inbounds begin
+        A.yx[i] = sym_s.yx
+        A.zx[i] = sym_s.zx
+        A.zy[i] = sym_s.zy
+    end
+
+    return A
+end
+
+@inline function Base.setindex!(A::AntiSymTenArray{T, N}, s::AbstractTen, I::Vararg{Int, N}) where {T, N}
+    @boundscheck checkbounds(A, I...)
+
+    sym_s = convert(T, s)
+    @inbounds begin
+        A.yx[I...] = sym_s.yx
+        A.zx[I...] = sym_s.zx
+        A.zy[I...] = sym_s.zy
+    end
+
+    return A
+end
+
+Base.similar(A::AntiSymTenArray, ::Type{AntiSymTen{Tt, Tyx, Tzx, Tzy}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, Tyx, Tzx, Tzy, N2} = AntiSymTenArray(similar(A.yx, Tyx, dims), similar(A.zx, Tzx, dims), similar(A.zy, Tzy, dims))
+
+@inline function Base.getproperty(S::AntiSymTenArray, s::Symbol)
+    if s === :x
+        yx = getfield(S, :yx)
+        zx = getfield(S, :zx)
+        return VecArray(y = yx, z = zx)
+    elseif s === :y
+        xy = getfield(S, :yx)
+        zy = getfield(S, :zy)
+        return VecArray(x = -xy, z = zy)
+    elseif s === :z
+        xz = getfield(S, :zx)
+        yz = getfield(S, :zy)
+        return VecArray(x = -xz, y = -yz)
+    elseif s === :xy
+        return -getfield(S, :yx)
+    elseif s === :xz
+        return -getfield(S, :zx)
+    elseif s === :yz
+        return -getfield(S, :zy)
+    elseif s === :xx
+        return Array{Zero}(undef, size(S))
+    elseif s === :yy
+        return Array{Zero}(undef, size(S))
+    elseif s === :zz
+        return Array{Zero}(undef, size(S))
+    else
+        return getfield(S, s)
+    end
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{AntiSymTen{T, Txy, Txz, Tyz}}) where {T, Txy, Txz, Tyz}
+    s = length.(axes(bc))
+    yx = Array{Txy}(undef, s...)
+    zx = Array{Txz}(undef, s...)
+    zy = Array{Tyz}(undef, s...)
+    return AntiSymTenArray(yx, zx, zy)
+end

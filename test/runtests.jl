@@ -475,6 +475,46 @@ end
     end
 end
 
+@testset "AntiSymTenArray" begin
+    @test_throws DomainError AntiSymTenArray()
+    @test_throws DimensionMismatch AntiSymTenArray(yx = rand(1, 2), zy = rand(2, 1))
+    @test_throws DimensionMismatch AntiSymTenArray(yx = rand(1, 2), zx = rand(2, 1))
+
+    @test size(AntiSymTenArray{Float32}(4, 3)) === (4, 3)
+    @test eltype(AntiSymTenArray{Float32}(4, 3)) === AntiSymTen3D{Float32}
+
+    @test eltype(AntiSymTenArray(zy = rand(Int, 3))) === AntiSymTen2Dyz{Int}
+
+    @test typeof(similar(AntiSymTenArray(yx = rand(Int, 3)), AntiSymTen2Dxy{Float32})) === AntiSymTen2DxyArray{Float32, 1}
+    @test eltype(similar(AntiSymTenArray(zy = rand(Int, 3)), AntiSymTen2Dxy{Float32})) === AntiSymTen2Dxy{Float32}
+    @test size(similar(AntiSymTenArray(zy = rand(Int, 3)), AntiSymTen2Dxy{Float32}, 3, 4)) === (3, 4)
+
+    let a1 = rand(3, 3),a2 = rand(3, 3),a3 = rand(3, 3), T = AntiSymTenArray(a1, a2, a3)
+        zero_vec = Array{Zero}(undef, size(T))
+        @test T.xx == zero_vec
+        @test T.yx === a1
+        @test T.zx === a2
+        @test T.xy == -a1
+        @test T.yy == zero_vec
+        @test T.zy === a3
+        @test T.xz == -a2
+        @test T.yz == -a3
+        @test T.zz == zero_vec
+
+        @test T.x == VecArray(zero_vec, a1, a2)
+        @test T.y == VecArray(-a1, zero_vec, a3)
+        @test T.z == VecArray(-a2, -a3, zero_vec)
+
+        @test T[5] === AntiSymTen(a1[5], a2[5], a3[5])
+        @test T[2, 3] === AntiSymTen(a1[2, 3], a2[2, 3], a3[2, 3])
+
+        @test setindex!(T, AntiSymTen(zy = 3), 3)[3] === AntiSymTen(0.0, 0.0, 3.0)
+        @test setindex!(T, AntiSymTen(yx = 1), 3, 3)[3, 3] === AntiSymTen(1.0, 0.0, 0.0)
+
+        @test typeof(T .+ AntiSymTen()) === typeof(T)
+    end
+end
+
 @testset "VecArray SIMD" begin
     I = SIMD.VecRange{4}(1)
     J = SIMD.Vec(2, 1, 4, 3)
