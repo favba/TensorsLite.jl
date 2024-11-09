@@ -131,7 +131,7 @@ end
 end
 
 _rand(T) = rand(T)
-_rand(T::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+_rand(::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
 
 @testset "Vector Operations" begin
 

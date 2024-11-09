@@ -12,7 +12,10 @@ include("muladd_definitions.jl")
 end
 @inline Base.:*(b::Union{Zero, One}, v::T) where {T <: AbstractVec} = constructor(T)(map(*, ntuple(i -> b, Val(fieldcount(T))), fields(v))...)
 @inline Base.:*(v::AbstractVec, b::Number) = b * v
-@inline /(v::AbstractVec, b::Number) = inv(b) * v
+@inline Base.:/(v::T, b::Number) where {T <: AbstractVec} = @inline  begin
+    bt = convert(promote_type(typeof(b), nonzero_eltype(T)), b)
+    constructor(T)(map(/, fields(v), ntuple(i -> bt, Val(fieldcount(T))))...)
+end
 @inline //(v::AbstractVec, b::Number) = (One() // b) * v
 @inline Base.:-(a::T) where {T <: AbstractVec} = @inline constructor(T)(map(-, fields(a))...)
 @inline zero(::Type{T}) where {T <: AbstractVec} = @inline constructor(T)(_zero_for_tuple(fieldtypes(T)...)...)
