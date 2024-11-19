@@ -621,6 +621,11 @@ end
 
 @testset "SIMD Vec operations" begin
 
+    let a = SIMD.Vec(2., 3., 4., 5.), v1D = 2.0𝐢, v3D = Vec(2.0, 3.0, 4.0)
+        @test a * v1D === (a * v1D.x) * 𝐢
+        @test a * v3D === Vec(a * v3D.x, a * v3D.y, a * v3D.z)
+    end
+
     for u in (VecArray(x = rand(16)), VecArray(x = rand(16), y = rand(16)), VecArray(x = rand(16), y = rand(16), z = rand(16)))
 
         for op in (+, -, norm, normalize, x -> (2 * x), x -> (x / 2))

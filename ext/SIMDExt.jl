@@ -69,16 +69,14 @@ TensorsLite.:-(v::SIMD.Vec, ::One) = v - 1
 
 @inline TensorsLite._muladd(::Zero, ::SIMD.Vec, ::One) = One()
 
-@inline TensorsLite.:*(b::SIMD.Vec, v::T) where {T <: AbstractVec} = @inline  begin
-    bt = convert(promote_type(typeof(b), TensorsLite.nonzero_eltype(T)), b)
-    TensorsLite.constructor(T)(map(*, ntuple(i -> bt, Val(fieldcount(T))), TensorsLite.fields(v))...)
+@inline Base.:*(b::SIMD.Vec, v::T) where {T <: AbstractVec} = @inline  begin
+    TensorsLite.constructor(T)(map(TensorsLite.:*, ntuple(i -> b, Val(fieldcount(T))), TensorsLite.fields(v))...)
 end
 
 @inline my_div(a,b) = a / b
 @inline my_div(::Zero, ::SIMD.Vec) = Zero()
 @inline Base.:/(v::T, b::SIMD.Vec) where {T <: AbstractVec} = @inline  begin
-    bt = convert(promote_type(typeof(b), TensorsLite.nonzero_eltype(T)), b)
-    TensorsLite.constructor(T)(map(my_div, TensorsLite.fields(v), ntuple(i -> bt, Val(fieldcount(T))))...)
+    TensorsLite.constructor(T)(map(my_div, TensorsLite.fields(v), ntuple(i -> b, Val(fieldcount(T))))...)
 end
 
 @inline Base.:*(v::AbstractVec, b::SIMD.Vec) = b * v
