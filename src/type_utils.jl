@@ -1,6 +1,6 @@
 @inline fields(v::T) where {T} = ntuple(i -> getfield(v, i), Val(fieldcount(T)))
 
-@inline no_Vecs(a::T1, y::T2, z::T3) where {T1, T2, T3} = !(T1 <: Vec) && !(T2 <: Vec) && !(T3 <: Vec)
+@inline no_Vecs(::T1, ::T2, ::T3) where {T1, T2, T3} = !(T1 <: Vec) && !(T2 <: Vec) && !(T3 <: Vec)
 
 _my_promote_type(T::Type, Tx::Type) = (Tx === Zero || Tx === One) ? Tx : promote_type(T, Tx)
 
@@ -46,7 +46,7 @@ end
     T = eltype(TA)
     return _non_zero_type(T)
 end
-@inline nonzero_eltype(x::T) where {T <: AbstractArray} = nonzero_eltype(T)
+@inline nonzero_eltype(::T) where {T <: AbstractArray} = nonzero_eltype(T)
 
 @inline _zero_for_tuple() = ()
 @inline _zero_for_tuple(::Type{T}, types::Vararg{T2, N}) where {T, T2, N} = (zero(T), _zero_for_tuple(types...)...)
