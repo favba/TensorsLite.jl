@@ -144,6 +144,10 @@ const SymTenMaybe2DxyArray{T, Tz, N} = SymTenArray{
 
 @inline Base.size(A::SymTenArray) = size(A.xx)
 @inline Base.length(A::SymTenArray) = length(A.xx)
+Base.dataids(A::SymTenArray) = (Base.dataids(A.xx)..., Base.dataids(A.yx)..., Base.dataids(A.zx)...,
+                                                       Base.dataids(A.yy)..., Base.dataids(A.zy)...,
+                                                                              Base.dataids(A.zz)...)
+
 
 @inline function Base.getindex(A::SymTenArray, i::Int)
     @boundscheck checkbounds(A, i)
@@ -306,6 +310,7 @@ const AntiSymTen2DyzArray{T, N} = AntiSymTenArray{AntiSymTen2Dyz{T}, N,
 
 @inline Base.size(A::AntiSymTenArray) = size(A.yx)
 @inline Base.length(A::AntiSymTenArray) = length(A.yx)
+Base.dataids(A::AntiSymTenArray) = (Base.dataids(A.yx)..., Base.dataids(A.zx)..., Base.dataids(A.zy)...)
 
 @inline function Base.getindex(A::AntiSymTenArray, i::Int)
     @boundscheck checkbounds(A, i)

@@ -392,11 +392,15 @@ end
 
     let a = VecArray(x = rand(Float32, 2), y = rand(Float32, 2))
         @test typeof(similar(a, Vec2Dyz{Int}, (4, 4, 4))) === Vec2DyzArray{Int, 3}
+        b = VecArray(x = a.y, y = rand(Float32,2))
+        @test Base.mightalias(a, b)
         @test length(resize!(a, 4)) === 4
     end
 
     let a = TenArray(xx = rand(2), xz = rand(2), zx = rand(2), zz = rand(2))
         typeof(similar(a, Ten3D{Float16}, (1, 1, 1))) === Ten3DArray{Float16, 3}
+        b = TenArray(yy = a.zx, zz = rand(2), yz = rand(2), zy = rand(2))
+        @test Base.mightalias(a,b)
         @test length(resize!(a, 4)) === 4
     end
 
@@ -461,6 +465,8 @@ end
         @test T.yz === a5
         @test T.zz === a6
 
+        @test Base.mightalias(SymTenArray(zz = T.yx), T)
+
         @test T.x === VecArray(a1, a2, a3)
         @test T.y === VecArray(a2, a4, a5)
         @test T.z === VecArray(a3, a5, a6)
@@ -500,6 +506,8 @@ end
         @test T.xz == -a2
         @test T.yz == -a3
         @test T.zz == zero_vec
+
+        @test Base.mightalias(AntiSymTenArray(zx = T.yx), T)
 
         @test T.x == VecArray(zero_vec, a1, a2)
         @test T.y == VecArray(-a1, zero_vec, a3)

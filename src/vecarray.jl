@@ -139,6 +139,8 @@ const TenMaybe2DxyArray{T, Tz, N} = VecArray{TenMaybe2Dxy{T, Tz}, N, VecMaybe2Dx
 @inline Base.size(A::VecArray) = size(A.x)
 @inline Base.length(A::VecArray) = length(A.x)
 
+Base.dataids(A::VecArray) = (Base.dataids(A.x)..., Base.dataids(A.y)..., Base.dataids(A.z)...)
+
 @inline function Base.getindex(A::VecArray, i::Int)
     @boundscheck checkbounds(A, i)
     @inbounds @inline r = Vec(A.x[i], A.y[i], A.z[i])
