@@ -2,6 +2,7 @@ using TensorsLite
 using Zeros
 using Test
 using LinearAlgebra
+using StrideArraysCore: object_and_preserve
 import SIMD
 
 const ze = Zero()
@@ -392,13 +393,15 @@ end
 
     let a = VecArray(x = rand(Float32, 2), y = rand(Float32, 2))
         @test typeof(similar(a, Vec2Dyz{Int}, (4, 4, 4))) === Vec2DyzArray{Int, 3}
+        @test a == object_and_preserve(a)[1]
         b = VecArray(x = a.y, y = rand(Float32,2))
         @test Base.mightalias(a, b)
         @test length(resize!(a, 4)) === 4
     end
 
     let a = TenArray(xx = rand(2), xz = rand(2), zx = rand(2), zz = rand(2))
-        typeof(similar(a, Ten3D{Float16}, (1, 1, 1))) === Ten3DArray{Float16, 3}
+        @test typeof(similar(a, Ten3D{Float16}, (1, 1, 1))) === Ten3DArray{Float16, 3}
+        @test a == object_and_preserve(a)[1]
         b = TenArray(yy = a.zx, zz = rand(2), yz = rand(2), zy = rand(2))
         @test Base.mightalias(a,b)
         @test length(resize!(a, 4)) === 4
@@ -465,6 +468,7 @@ end
         @test T.yz === a5
         @test T.zz === a6
 
+        @test T == object_and_preserve(T)[1]
         @test Base.mightalias(SymTenArray(zz = T.yx), T)
 
         @test T.x === VecArray(a1, a2, a3)
@@ -507,6 +511,7 @@ end
         @test T.yz == -a3
         @test T.zz == zero_vec
 
+        @test T == object_and_preserve(T)[1]
         @test Base.mightalias(AntiSymTenArray(zx = T.yx), T)
 
         @test T.x == VecArray(zero_vec, a1, a2)

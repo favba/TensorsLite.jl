@@ -9,10 +9,12 @@ Zeros = "bd1ec220-6eb4-527a-9b49-e79c3db6233b"
 [weakdeps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SIMD = "fdea26ae-647d-5447-a871-4b548cad5224"
+StrideArraysCore = "7792a7ef-975c-4747-a70f-980b88e8d1da"
 
 [extensions]
 LinearAlgebraExt = "LinearAlgebra"
 SIMDExt = "SIMD"
+StrideArraysCoreExt = "StrideArraysCore"
 
 [compat]
 Zeros = "0.3"
@@ -23,6 +25,7 @@ SIMD = "3.6"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SIMD = "fdea26ae-647d-5447-a871-4b548cad5224"
+StrideArraysCore = "7792a7ef-975c-4747-a70f-980b88e8d1da"
 
 [targets]
-test = ["Test", "LinearAlgebra", "SIMD"]
+test = ["Test", "LinearAlgebra", "SIMD", "StrideArraysCore"]
