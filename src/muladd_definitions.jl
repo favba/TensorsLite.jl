@@ -11,8 +11,8 @@
 @inline _muladd(x::Number, ::One, y::Number) = x + y
 
 #Resolving Ambiguities
-@inline _muladd(y::One, ::Zero, x::Number) = x
-@inline _muladd(y::Zero, ::One, x::Number) = x
+@inline _muladd(::One, ::Zero, x::Number) = x
+@inline _muladd(::Zero, ::One, x::Number) = x
 
 @inline _muladd(::One, ::Zero, ::Zero) = Zero()
 
@@ -24,3 +24,4 @@
 
 @inline _muladd(::One, ::One, y::Number) = y + One()
 @inline _muladd(::One, ::One, y::Zero) = One()
+
