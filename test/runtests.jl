@@ -79,7 +79,16 @@ end
 
     @test eltype(Ten(xx = One())) === Union{Zero, One}
 
+    @test Vec{2}() === Ten()
     @test Vec2Dxy(Vec2Dxy(1.0, 2.0), Vec2Dxy(3.0, 4.0)).z === Vec()
+
+    @test typeof(Vec2Dxz(Vec2Dxz(1.0,3.0), Vec2Dxz(-1, 3))) === Ten2Dxz{Float64}
+    @test typeof(Vec2Dyz(Vec2Dyz(1.0,3.0), Vec2Dyz(-1, 3))) === Ten2Dyz{Float64}
+
+    @test typeof(Vec1Dx(Vec1Dx(1.0))) === Ten1Dx{Float64}
+    @test typeof(Vec1Dy(Vec1Dy(1.0))) === Ten1Dy{Float64}
+    @test typeof(Vec1Dz(Vec1Dz(1.0))) === Ten1Dz{Float64}
+
 end
 
 @testset "Vec size and length" begin
