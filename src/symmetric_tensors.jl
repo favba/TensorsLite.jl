@@ -1,21 +1,21 @@
 struct SymTen{T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTen{T}
     xx::Txx
-    yx::Tyx
-    zx::Tzx
+    xy::Tyx
+    xz::Tzx
     yy::Tyy
-    zy::Tzy
+    yz::Tzy
     zz::Tzz
 
     @inline function SymTen(
-            xx, yx, zx,
-                yy, zy,
+            xx, xy, xz,
+                yy, yz,
                     zz
         )
         Txx = typeof(xx)
-        Tyx = typeof(yx)
-        Tzx = typeof(zx)
+        Tyx = typeof(xy)
+        Tzx = typeof(xz)
         Tyy = typeof(yy)
-        Tzy = typeof(zy)
+        Tzy = typeof(yz)
         Tzz = typeof(zz)
         Tf = promote_type_ignoring_Zero(
             Txx, Tyx, Tzx,
@@ -23,10 +23,10 @@ struct SymTen{T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTen{T}
                       Tzz
         )
         xxn = _my_convert(Tf, xx)
-        yxn = _my_convert(Tf, yx)
-        zxn = _my_convert(Tf, zx)
+        yxn = _my_convert(Tf, xy)
+        zxn = _my_convert(Tf, xz)
         yyn = _my_convert(Tf, yy)
-        zyn = _my_convert(Tf, zy)
+        zyn = _my_convert(Tf, yz)
         zzn = _my_convert(Tf, zz)
 
         Txxf = typeof(xxn)
@@ -44,7 +44,7 @@ struct SymTen{T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTen{T}
     end
 end
 
-@inline SymTen(; xx = 𝟎, yx = 𝟎, zx = 𝟎, yy = 𝟎, zy = 𝟎, zz = 𝟎) = SymTen(xx, yx, zx, yy, zy, zz)
+@inline SymTen(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎) = SymTen(xx, xy, xz, yy, yz, zz)
 
 @inline function Base.convert(::Type{SymTen{T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, v::SymTen) where {T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}
     @inline nfields = map(convert, (Txx, Tyx, Tzx, Tyy, Tzy, Tzz), fields(v))
@@ -55,9 +55,9 @@ end
     @inline xx, yx, zx, yy, zy, zz = map(convert, (Txx, Tyx, Tzx, Tyy, Tzy, Tzz), fields(v))
 
     return Ten(
-        xx = xx, xy = yx, xz = zx,
-        yx = yx, yy = yy, yz = zy,
-        zx = zx, zy = zy, zz = zz
+        xx, yx, zx,
+        yx, yy, zy,
+        zx, zy, zz
     )
 end
 
@@ -96,35 +96,35 @@ Base.IndexStyle(::Type{SymTen}) = IndexCartesian()
     t = (Int(i), Int(j))
     @boundscheck checkbounds(S, t...)
     t === (1, 1) && return S.xx
-    (t === (2, 1) || t === (1, 2)) && return S.yx
-    (t === (3, 1) || t === (1, 3)) && return S.zx
+    (t === (2, 1) || t === (1, 2)) && return S.xy
+    (t === (3, 1) || t === (1, 3)) && return S.xz
     t === (2, 2) && return S.yy
-    (t === (3, 2) || t === (2, 3))  && return S.zy
+    (t === (3, 2) || t === (2, 3))  && return S.yz
     return S.zz
 end
 
 @inline function Base.getproperty(S::SymTen, s::Symbol)
     if s === :x
         xx = getfield(S, :xx)
-        yx = getfield(S, :yx)
-        zx = getfield(S, :zx)
+        yx = getfield(S, :xy)
+        zx = getfield(S, :xz)
         return Vec(xx, yx, zx)
     elseif s === :y
-        xy = getfield(S, :yx)
+        xy = getfield(S, :xy)
         yy = getfield(S, :yy)
-        zy = getfield(S, :zy)
+        zy = getfield(S, :yz)
         return Vec(xy, yy, zy)
     elseif s === :z
-        xz = getfield(S, :zx)
-        yz = getfield(S, :zy)
+        xz = getfield(S, :xz)
+        yz = getfield(S, :yz)
         zz = getfield(S, :zz)
         return Vec(xz, yz, zz)
-    elseif s === :xy
-        return getfield(S, :yx)
-    elseif s === :xz
-        return getfield(S, :zx)
-    elseif s === :yz
-        return getfield(S, :zy)
+    elseif s === :yx
+        return getfield(S, :xy)
+    elseif s === :zx
+        return getfield(S, :xz)
+    elseif s === :zy
+        return getfield(S, :yz)
     else
         return getfield(S, s)
     end

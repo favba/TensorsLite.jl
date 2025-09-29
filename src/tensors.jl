@@ -1,10 +1,71 @@
-@inline function Ten(xx, yx, zx, xy, yy, zy, xz, yz, zz)
+@inline function Ten(xx, xy, xz,
+                     yx, yy, yz,
+                     zx, zy, zz)
     x = Vec(xx, yx, zx)
     y = Vec(xy, yy, zy)
     z = Vec(xz, yz, zz)
     return Vec(x, y, z)
 end
-@inline Ten(; xx = 𝟎, yx = 𝟎, zx = 𝟎, xy = 𝟎, yy = 𝟎, zy = 𝟎, xz = 𝟎, yz = 𝟎, zz = 𝟎) = Ten(xx, yx, zx, xy, yy, zy, xz, yz, zz)
+@inline Ten(; xx = 𝟎, yx = 𝟎, zx = 𝟎, xy = 𝟎, yy = 𝟎, zy = 𝟎, xz = 𝟎, yz = 𝟎, zz = 𝟎) = Ten(xx, xy, xz,
+                                                                                            yx, yy, yz,
+                                                                                            zx, zy, zz)
+
+const Ten3D{T} = Vec{T, 2, Vec3D{T}, Vec3D{T}, Vec3D{T}}
+Ten3D{T}(xx, yx, zx, xy, yy, zy, xz, yz, zz) where {T} = 
+    Ten(convert(T, xx), convert(T, xy), convert(T, xz),
+        convert(T, yx), convert(T, yy), convert(T, yz),
+        convert(T, zx), convert(T, zy), convert(T, zz))
+    Ten3D(v::Vararg{Any, 6}) = Ten(v...)
+
+const Ten2Dxy{T} = Vec{Union{Zero, T}, 2, Vec2Dxy{T}, Vec2Dxy{T}, Vec0D}
+Ten2Dxy{T}(xx, xy, yx, yy) where {T} = 
+    Ten(xx = convert(T, xx), xy = convert(T, xy),
+        yx = convert(T, yx), yy = convert(T, yy))
+Ten2Dxy(xx, xy, yx, yy) = 
+    Ten(xx = xx, xy = xy,
+        yx = yx, yy = yy)
+
+const Ten2Dxz{T} = Vec{Union{Zero, T}, 2, Vec2Dxz{T}, Vec0D, Vec2Dxz{T}}
+Ten2Dxz{T}(xx, xz, zx, zz) where {T} = 
+    Ten(xx = convert(T, xx), xz = convert(T, xz),
+        zx = convert(T, zx), zz = convert(T, zz))
+Ten2Dxz(xx, xz, zx, zz) = 
+    Ten(xx = xx, xz = xz,
+        zx = zx, zz = zz)
+
+const Ten2Dyz{T} = Vec{Union{Zero, T}, 2, Vec0D, Vec2Dyz{T}, Vec2Dyz{T}}
+Ten2Dyz{T}(yy, yz, zy, zz) where {T} = 
+    Ten(yy = convert(T, yy), yz = convert(T, yz),
+        zy = convert(T, zy), zz = convert(T, zz))
+Ten2Dyz(yy, yz, zy, zz) = 
+    Ten(yy = yy, yz = yz,
+        zy = zy, zz = zz)
+ 
+const Ten2D{T} = Union{Ten2Dxy{T}, Ten2Dxz{T}, Ten2Dyz{T}}
+
+const Ten1Dx{T} = Vec{Union{Zero, T}, 2, Vec1Dx{T}, Vec0D, Vec0D}
+Ten1Dx{T}(xx) where {T} = 
+    Ten(xx = convert(T, xx))
+Ten1Dx(xx) = 
+    Ten(xx = xx)
+
+const Ten1Dy{T} = Vec{Union{Zero, T}, 2, Vec0D, Vec1Dy{T}, Vec0D}
+Ten1Dy{T}(yy) where {T} = 
+    Ten(yy = convert(T, yy))
+Ten1Dy(yy) = 
+    Ten(yy = yy)
+
+const Ten1Dz{T} = Vec{Union{Zero, T}, 2, Vec0D, Vec0D, Vec1Dz{T}}
+Ten1Dz{T}(zz) where {T} = 
+    Ten(zz = convert(T, zz))
+Ten1Dz(zz) = 
+    Ten(zz = zz)
+
+const Ten1D{T} = Union{Ten1Dx{T}, Ten1Dy{T}, Ten1Dz{T}}
+const TenND{T} = Union{Ten3D{T}, Ten2D{T}, Ten1D{T}}
+const Ten0D = TenND{Zero}
+
+const TenMaybe2Dxy{T, Tz} = Vec{Union{T, Tz}, 2, VecMaybe2Dxy{T, Tz}, VecMaybe2Dxy{T, Tz}, Vec3D{Tz}}
 
 @inline Base.:*(T::AbstractTen, v::AbstractVec{<:Any, 1}) = dot(T, v)
 @inline Base.:*(v::AbstractVec{<:Any, 1}, T::AbstractTen) = dot(v, T)
@@ -50,9 +111,9 @@ end
 @inline dotadd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = _muladd(A, B, C)
 
 @inline otimes(u::AbstractVec{<:Any, 1}, v::AbstractVec{<:Any, 1}) = Ten(
-    xx = u.x * v.x, xy = u.x * v.y, xz = u.x * v.z,
-    yx = u.y * v.x, yy = u.y * v.y, yz = u.y * v.z,
-    zx = u.z * v.x, zy = u.z * v.y, zz = u.z * v.z
+    u.x * v.x, u.x * v.y, u.x * v.z,
+    u.y * v.x, u.y * v.y, u.y * v.z,
+    u.z * v.x, u.z * v.y, u.z * v.z
 )
 
 const ⊗ = otimes

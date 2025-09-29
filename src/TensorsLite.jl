@@ -53,17 +53,18 @@ struct Vec{T, N, Tx, Ty, Tz} <: AbstractVec{T, N}
         return new{Tff, 1, Txf, Tyf, Tzf}(xn, yn, zn)
     end
 
-    @inline function Vec(x::Vec, y::Vec, z::Vec)
-        _Tx = nonzero_eltype(x)
-        _Ty = nonzero_eltype(y)
-        _Tz = nonzero_eltype(z)
-        Tf = promote_type_ignoring_Zero(_Tx, _Ty, _Tz)
-        xf = Vec(_my_convert(Tf, x.x), _my_convert(Tf, x.y), _my_convert(Tf, x.z))
-        yf = Vec(_my_convert(Tf, y.x), _my_convert(Tf, y.y), _my_convert(Tf, y.z))
-        zf = Vec(_my_convert(Tf, z.x), _my_convert(Tf, z.y), _my_convert(Tf, z.z))
-        return new{Union{eltype(xf), eltype(yf), eltype(zf)}, 2, typeof(xf), typeof(yf), typeof(zf)}(xf, yf, zf)
+    @inline function Vec(x::AbstractVec{Tx,N}, y::AbstractVec{Ty,N}, z::AbstractVec{Tz,N}) where {Tx, Ty, Tz, N}
+        Tf = promote_type_ignoring_Zero(_non_zero_type(Tx), _non_zero_type(Ty), _non_zero_type(Tz))
+        xf = Vec(_eltype_convert(Tf, x.x), _eltype_convert(Tf, x.y), _eltype_convert(Tf, x.z))
+        yf = Vec(_eltype_convert(Tf, y.x), _eltype_convert(Tf, y.y), _eltype_convert(Tf, y.z))
+        zf = Vec(_eltype_convert(Tf, z.x), _eltype_convert(Tf, z.y), _eltype_convert(Tf, z.z))
+        return new{Union{eltype(xf), eltype(yf), eltype(zf)}, N+1, typeof(xf), typeof(yf), typeof(zf)}(xf, yf, zf)
     end
 end
+
+@inline Vec() = Vec(Zero(), Zero(), Zero())
+@inline Vec{1}() = Vec()
+@inline Vec{N}() where N = Vec(Vec{N-1}(), Vec{N-1}(), Vec{N-1}())
 
 include("vec_type_utils.jl")
 
@@ -73,14 +74,46 @@ include("vec_type_utils.jl")
 
 const AbstractTen{T} = AbstractVec{T, 2}
 
-const Vec3D{T} = Vec{T, 1, T, T, T}
+const Vec3D{T} = Vec{T,1,T,T,T}
+
 const Vec2Dxy{T} = Vec{Union{Zero, T}, 1, T, T, Zero}
+Vec2Dxy{T}(a, b) where {T} = Vec(convert(T, a), convert(T, b), Zero())
+Vec2Dxy(a, b) = Vec2Dxy{promote_type(typeof(a),typeof(b))}(a, b)
+Vec2Dxy{T}(a::AbstractVec{<:Any, N}, b::AbstractVec{<:Any, N}) where {T, N} = Vec(_eltype_convert(T, a), _eltype_convert(T, b), Vec{N}())
+Vec2Dxy(a::AbstractVec{Ta, N}, b::AbstractVec{Tb, N}) where {Ta, Tb, N} = Vec2Dxy{promote_type(_non_zero_type(Ta), _non_zero_type(Tb))}(a, b)
+
 const Vec2Dxz{T} = Vec{Union{Zero, T}, 1, T, Zero, T}
+Vec2Dxz{T}(a, b) where {T} = Vec(convert(T, a), Zero(), convert(T, b))
+Vec2Dxz(a, b) = Vec2Dxz{promote_type(typeof(a),typeof(b))}(a, b)
+Vec2Dxz{T}(a::AbstractVec{<:Any, N}, b::AbstractVec{<:Any, N}) where {T, N} = Vec(_eltype_convert(T, a), Vec{N}(), _eltype_convert(T, b))
+Vec2Dxz(a::AbstractVec{Ta, N}, b::AbstractVec{Tb, N}) where {Ta, Tb, N} = Vec2Dxz{promote_type(_non_zero_type(Ta), _non_zero_type(Tb))}(a, b)
+
 const Vec2Dyz{T} = Vec{Union{Zero, T}, 1, Zero, T, T}
+Vec2Dyz{T}(a, b) where {T} = Vec(Zero(), convert(T, a), convert(T, b))
+Vec2Dyz(a, b) = Vec2Dyz{promote_type(typeof(a),typeof(b))}(a, b)
+Vec2Dyz{T}(a::AbstractVec{<:Any, N}, b::AbstractVec{<:Any, N}) where {T, N} = Vec(Vec{N}(), _eltype_convert(T, a), _eltype_convert(T, b))
+Vec2Dyz(a::AbstractVec{Ta, N}, b::AbstractVec{Tb, N}) where {Ta, Tb, N} = Vec2Dyz{promote_type(_non_zero_type(Ta), _non_zero_type(Tb))}(a, b)
+
 const Vec2D{T} = Union{Vec2Dxy{T}, Vec2Dxz{T}, Vec2Dyz{T}}
+
 const Vec1Dx{T} = Vec{Union{Zero, T}, 1, T, Zero, Zero}
+Vec1Dx{T}(a) where {T} = Vec(convert(T, a), Zero(), Zero())
+Vec1Dx(a) = Vec(a, Zero(), Zero())
+Vec1Dx{T}(a::AbstractVec{<:Any, N}) where {T, N} = Vec(_eltype_convert(T, a), Vec{N}(), Vec{N}())
+Vec1Dx(a::AbstractVec{Ta, N}) where {Ta, N} = Vec1Dx{_non_zero_type(Ta)}(a)
+
 const Vec1Dy{T} = Vec{Union{Zero, T}, 1, Zero, T, Zero}
+Vec1Dy{T}(a) where {T} = Vec(Zero(), convert(T, a), Zero())
+Vec1Dy(a) = Vec(Zero(), a, Zero())
+Vec1Dy{T}(a::AbstractVec{<:Any, N}) where {T, N} = Vec(Vec{N}(), _eltype_convert(T, a), Vec{N}())
+Vec1Dy(a::AbstractVec{Ta, N}) where {Ta, N} = Vec1Dy{_non_zero_type(Ta)}(a)
+
 const Vec1Dz{T} = Vec{Union{Zero, T}, 1, Zero, Zero, T}
+Vec1Dz{T}(a) where {T} = Vec(Zero(), Zero(), convert(T, a))
+Vec1Dz(a) = Vec(Zero(), Zero(), a)
+Vec1Dz{T}(a::AbstractVec{<:Any, N}) where {T, N} = Vec(Vec{N}(), Vec{N}(), _eltype_convert(T, a))
+Vec1Dz(a::AbstractVec{Ta, N}) where {Ta, N} = Vec1Dz{_non_zero_type(Ta)}(a)
+
 const Vec1D{T} = Union{Vec1Dx{T}, Vec1Dy{T}, Vec1Dz{T}}
 const VecND{T} = Union{Vec3D{T}, Vec2D{T}, Vec1D{T}}
 const Vec0D = VecND{Zero}
@@ -88,52 +121,18 @@ const Vec0D = VecND{Zero}
 # This ends up also being a VecMaybe1Dz{T, Tz}, if T===Zero and Tz != Zero
 const VecMaybe2Dxy{T, Tz} = Vec{Union{T, Tz}, 1, T, T, Tz}
 
-const Ten3D{T} = Vec{T, 2, Vec3D{T}, Vec3D{T}, Vec3D{T}}
-const Ten2Dxy{T} = Vec{Union{Zero, T}, 2, Vec2Dxy{T}, Vec2Dxy{T}, Vec0D}
-const Ten2Dxz{T} = Vec{Union{Zero, T}, 2, Vec2Dxz{T}, Vec0D, Vec2Dxz{T}}
-const Ten2Dyz{T} = Vec{Union{Zero, T}, 2, Vec0D, Vec2Dyz{T}, Vec2Dyz{T}}
-const Ten2D{T} = Union{Ten2Dxy{T}, Ten2Dxz{T}, Ten2Dyz{T}}
-const Ten1Dx{T} = Vec{Union{Zero, T}, 2, Vec1Dx{T}, Vec0D, Vec0D}
-const Ten1Dy{T} = Vec{Union{Zero, T}, 2, Vec0D, Vec1Dy{T}, Vec0D}
-const Ten1Dz{T} = Vec{Union{Zero, T}, 2, Vec0D, Vec0D, Vec1Dz{T}}
-const Ten1D{T} = Union{Ten1Dx{T}, Ten1Dy{T}, Ten1Dz{T}}
-const TenND{T} = Union{Ten3D{T}, Ten2D{T}, Ten1D{T}}
-const Ten0D = TenND{Zero}
-
-const TenMaybe2Dxy{T, Tz} = Vec{Union{T, Tz}, 2, VecMaybe2Dxy{T, Tz}, VecMaybe2Dxy{T, Tz}, Vec3D{Tz}}
-
 const 𝐢 = Vec(One(), Zero(), Zero())
 const 𝐣 = Vec(Zero(), One(), Zero())
 const 𝐤 = Vec(Zero(), Zero(), One())
 
-@inline if_zero_to_zerovec(::Zero) = Vec(𝟎, 𝟎, 𝟎)
-@inline if_zero_to_zerovec(x::Vec) = x
+Base.IndexStyle(::Type{T}) where {T <: AbstractVec{<:Any, 1}} = IndexLinear()
+Base.IndexStyle(::Type{T}) where {T <: AbstractVec{<:Any, N}} where {N} = IndexCartesian()
 
-@inline function Vec(; x = 𝟎, y = 𝟎, z = 𝟎)
-    if no_Vecs(x, y, z)
-        return Vec(x, y, z)
-    else
-        x1 = if_zero_to_zerovec(x)
-        y1 = if_zero_to_zerovec(y)
-        z1 = if_zero_to_zerovec(z)
-        return Vec(x1, y1, z1)
-    end
-end
+Base.length(::Type{<:AbstractVec{<:Any, N}}) where {N} = 3^N
+Base.length(u::AbstractVec{<:Any, N}) where {N} = length(typeof(u))
 
-Base.IndexStyle(::Type{T}) where {T <: Vec{<:Any, 1}} = IndexLinear()
-Base.IndexStyle(::Type{T}) where {T <: Vec{<:Any, 2}} = IndexCartesian()
-
-Base.length(::Type{<:Vec{<:Any, 1}}) = 3
-Base.length(u::Vec{<:Any, 1}) = length(typeof(u))
-
-Base.size(::Type{<:Vec{T, 1}}) where {T} = (3,)
-Base.size(u::Vec{T, 1}) where {T} = size(typeof(u))
-
-Base.length(::Type{<:AbstractTen}) = 9
-Base.length(u::AbstractTen) = length(typeof(u))
-
-Base.size(::Type{<:AbstractTen}) = (3, 3)
-Base.size(u::AbstractTen) = size(typeof(u))
+Base.size(::Type{<:AbstractVec{T, N}}) where {T,N} = ntuple(i -> 3, Val{N}())
+Base.size(u::AbstractVec{T, N}) where {T, N} = size(typeof(u))
 
 @inline _x(u::AbstractVec) = u.x
 @inline _y(u::AbstractVec) = u.y
@@ -143,8 +142,8 @@ Base.size(u::AbstractTen) = size(typeof(u))
     return getfield(u, i)
 end
 
-@inline function Base.getindex(u::Vec{<:Any, 2}, i::Integer, j::Integer)
-    return getfield(getfield(u, j), i)
+@inline function Base.getindex(u::Vec{<:Any, N}, I::Vararg{Integer, N}) where {N}
+    return getindex(getfield(u, @inbounds(I[N])), ntuple(i -> @inbounds(I[i]), Val{N-1}())...)
 end
 
 include("vec_arithmetic.jl")

@@ -40,21 +40,21 @@ const sz = SIMD.Vec(3.0, 4.0)
 
 @testset "Vec Constructors" begin
 
-    @test Vec(x = 1).x === 1
-    @test Vec(y = 1.0).y === 1.0
-    @test typeof(Vec(z = 1.0)) === Vec1Dz{Float64}
+    @test Vec1Dx(1).x === 1
+    @test Vec1Dy(1.0).y === 1.0
+    @test typeof(Vec1Dz(1.0)) === Vec1Dz{Float64}
 
-    @test eltype(Vec(x = 1.0, y = 2)) === Union{Zero, Float64}
+    @test eltype(Vec2Dxy(1.0,2)) === Union{Zero, Float64}
 
-    @test eltype(Vec(x = 1, y = 3, z = 4.0im)) === ComplexF64
+    @test eltype(Vec(1, 3, 4.0im)) === ComplexF64
 
-    @test eltype(Vec(x = One())) === Union{Zero, One}
+    @test eltype(Vec1Dx(One())) === Union{Zero, One}
 
-    @test Vec(x = sx).x === sx
-    @test Vec(y = sy).y === sy
-    @test typeof(Vec(z = sz)) === Vec1Dz{SIMD.Vec{2, Float64}}
+    @test Vec1Dx(sx).x === sx
+    @test Vec1Dy(sy).y === sy
+    @test typeof(Vec1Dz(sz)) === Vec1Dz{SIMD.Vec{2, Float64}}
 
-    @test eltype(Vec(x = sx, y = sy)) === Union{Zero, SIMD.Vec{2, Float64}}
+    @test eltype(Vec2Dxy(sx, sy)) === Union{Zero, SIMD.Vec{2, Float64}}
 
 end
 
@@ -79,11 +79,11 @@ end
 
     @test eltype(Ten(xx = One())) === Union{Zero, One}
 
-    @test Vec(x = Vec(x = 1.0, y = 2.0), y = Vec(x = 3.0, y = 4.0)).z === Vec()
+    @test Vec2Dxy(Vec2Dxy(1.0, 2.0), Vec2Dxy(3.0, 4.0)).z === Vec()
 end
 
 @testset "Vec size and length" begin
-    let a = Vec(rand(), rand(), rand()), T = Ten(xx = rand(), yy = rand(), xz = rand())
+    let a = Vec(rand(), rand(), rand()), T = Ten2Dyz(rand(), rand(), rand(), rand())
         @test size(a) === (3,)
         @test length(a) === 3
         @test size(T) === (3, 3)
@@ -95,19 +95,19 @@ end
 
     @test all(x -> (x === ze), Vec())
 
-    let a1 = Vec(x = 1.0)
+    let a1 = Vec1Dx(1.0)
         @test a1[1] === 1.0
         @test a1[2] === ze
         @test a1[3] === ze
     end
 
-    let a2 = Vec(y = 1.0)
+    let a2 = Vec1Dy(1.0)
         @test a2[1] === ze
         @test a2[2] === 1.0
         @test a2[3] === ze
     end
 
-    let a3 = Vec(z = 1.0)
+    let a3 = Vec1Dz(1.0)
         @test a3[1] === ze
         @test a3[2] === ze
         @test a3[3] === 1.0
@@ -143,12 +143,12 @@ _rand(::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
 
     @test convert(Vec3D{Float64}, 𝐢) === Vec(1.0, 0.0, 0.0)
     @test convert(Vec3D{Float64}, 𝐤) === Vec(0.0, 0.0, 1.0)
-    @test convert(Vec2Dxy{Float64}, 𝐢) === Vec(x = 1.0, y = 0.0)
-    @test convert(Vec2Dxz{Float64}, 𝐤) === Vec(x = 0.0, z = 1.0)
+    @test convert(Vec2Dxy{Float64}, 𝐢) === Vec2Dxy(1.0, 0.0)
+    @test convert(Vec2Dxz{Float64}, 𝐤) === Vec2Dxz(0.0, 1.0)
 
-    @test zero(1.0𝐢) === Vec(x = 0.0)
-    @test zero(1𝐣) === Vec(y = 0)
-    @test zero(Vec(y = 1.0, z = im)) === Vec(y = zero(1.0im), z = zero(1.0im))
+    @test zero(1.0𝐢) === Vec1Dx(0.0)
+    @test zero(1𝐣) === Vec1Dy(0)
+    @test zero(Vec2Dyz(1.0, im)) === Vec2Dyz(zero(1.0im), zero(1.0im))
 
     @test Vec(1, 2, 3) // 4 === Vec(1 // 4, 1 // 2, 3 // 4)
 
@@ -160,11 +160,11 @@ _rand(::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
 
     @test normalize(Vec()) === Vec()
 
-    @test Vec(x = 1.0) ≈ Vec(x = 1.0, y = eps())
-    @test isapprox(Vec(x = 1.0), Vec(x = 1.0, y = eps()); rtol = sqrt(eps()))
+    @test Vec1Dx(1.0) ≈ Vec2Dxy(1.0, eps())
+    @test isapprox(Vec1Dx(1.0), Vec2Dxy(1.0, eps()); rtol = sqrt(eps()))
 
     for T1 in (Int64, Float64, ComplexF64)
-        un = (Vec(y = _rand(T1)), Vec(x = _rand(T1), z = _rand(T1)), Vec(_rand(T1), _rand(T1), _rand(T1)))
+        un = (Vec1Dy(_rand(T1)), Vec2Dxz(_rand(T1), _rand(T1)), Vec(_rand(T1), _rand(T1), _rand(T1)))
         for u in un
             Au = Array{nonzero_eltype(u)}(u)
             for op in (+, -, normalize, sum, x -> sum(exp, x), x -> map(exp, x))
@@ -176,7 +176,7 @@ _rand(::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
             end
         end
         for T2 in (Int64, Float64, ComplexF64)
-            vn = (Vec(y = _rand(T2)), Vec(x = _rand(T2), z = _rand(T2)), Vec(_rand(T2), _rand(T2), _rand(T2)))
+            vn = (Vec1Dy(_rand(T2)), Vec2Dxz(_rand(T2), _rand(T2)), Vec(_rand(T2), _rand(T2), _rand(T2)))
             for u in un
                 Au = Array{nonzero_eltype(u)}(u)
                 for v in vn
@@ -198,17 +198,17 @@ end
 
 @testset "Tensor Operations" begin
 
-    @test Ten(xx = 1.0) ≈ Ten(xx = 1.0, xy = eps())
-    @test isapprox(Ten(xx = 1.0), Ten(xx = 1.0, xy = eps()); rtol = sqrt(eps()))
+    @test Ten1Dx(1.0) ≈ (1.0(𝐢⊗𝐢) + eps()*(𝐢⊗𝐣)) 
+    @test isapprox(Ten1Dx(1.0), (1.0(𝐢⊗𝐢) + eps()*(𝐢⊗𝐣)); rtol = sqrt(eps()))
 
     for T1 in (Int64, Float64, ComplexF64)
         un = (
-            Ten(yy = _rand(T1)),
-            Ten(xx = _rand(T1), xz = _rand(T1), zx = _rand(T1), zz = _rand(T1)),
+            Ten1Dy(_rand(T1)),
+            Ten2Dxz(_rand(T1), _rand(T1), _rand(T1), _rand(T1)),
             Ten(
-                xx = _rand(T1), xy = _rand(T1), xz = _rand(T1),
-                yx = _rand(T1), yy = _rand(T1), yz = _rand(T1),
-                zx = _rand(T1), zy = _rand(T1), zz = _rand(T1)
+                _rand(T1), _rand(T1), _rand(T1),
+                _rand(T1), _rand(T1), _rand(T1),
+                _rand(T1), _rand(T1), _rand(T1)
             ),
         )
         for u in un
@@ -220,12 +220,12 @@ end
         end
         for T2 in (Int64, Float64, ComplexF64)
             vn = (
-                Ten(yy = _rand(T1)),
-                Ten(xx = _rand(T1), xz = _rand(T1), zx = _rand(T1), zz = _rand(T1)),
+                Ten1Dy(_rand(T1)),
+                Ten2Dxz(_rand(T1), _rand(T1), _rand(T1), _rand(T1)),
                 Ten(
-                    xx = _rand(T1), xy = _rand(T1), xz = _rand(T1),
-                    yx = _rand(T1), yy = _rand(T1), yz = _rand(T1),
-                    zx = _rand(T1), zy = _rand(T1), zz = _rand(T1)
+                    _rand(T1), _rand(T1), _rand(T1),
+                    _rand(T1), _rand(T1), _rand(T1),
+                    _rand(T1), _rand(T1), _rand(T1)
                 ),
             )
             for u in un
@@ -251,17 +251,17 @@ end
 @testset "Tensor x Vec Operations" begin
     for T1 in (Int64, Float64, ComplexF64)
         Tn = (
-            Ten(yy = _rand(T1)),
-            Ten(xx = _rand(T1), xz = _rand(T1), zx = _rand(T1), zz = _rand(T1)),
+            Ten1Dy(_rand(T1)),
+            Ten2Dxz(_rand(T1), _rand(T1), _rand(T1), _rand(T1)),
             Ten(
-                xx = _rand(T1), xy = _rand(T1), xz = _rand(T1),
-                yx = _rand(T1), yy = _rand(T1), yz = _rand(T1),
-                zx = _rand(T1), zy = _rand(T1), zz = _rand(T1)
+                _rand(T1), _rand(T1), _rand(T1),
+                _rand(T1), _rand(T1), _rand(T1),
+                _rand(T1), _rand(T1), _rand(T1)
             ),
         )
 
         for T2 in (Int64, Float64, ComplexF64)
-            vn = (Vec(y = _rand(T2)), Vec(x = _rand(T2), z = _rand(T2)), Vec(_rand(T2), _rand(T2), _rand(T2)))
+            vn = (Vec1Dy(_rand(T2)), Vec2Dxz(_rand(T2), _rand(T2)), Vec(_rand(T2), _rand(T2), _rand(T2)))
             for T in Tn
                 AT = Array{nonzero_eltype(T)}(T)
 
@@ -286,9 +286,9 @@ end
 
 @testset "SymTen" begin
     @test typeof(SymTen(1, 2, 3, 4, 5, 6)) === SymTen3D{Int}
-    @test typeof(SymTen(xx = 1.0, yx = 2, yy = 3)) === SymTen2Dxy{Float64}
-    @test typeof(SymTen(xx = 1.0, zx = 2, zz = 3)) === SymTen2Dxz{Float64}
-    @test typeof(SymTen(yy = 1.0, zy = 2, zz = 3)) === SymTen2Dyz{Float64}
+    @test typeof(SymTen(xx = 1.0, xy = 2, yy = 3)) === SymTen2Dxy{Float64}
+    @test typeof(SymTen(xx = 1.0, xz = 2, zz = 3)) === SymTen2Dxz{Float64}
+    @test typeof(SymTen(yy = 1.0, yz = 2, zz = 3)) === SymTen2Dyz{Float64}
 
     @test -SymTen(1, 2, 3, 4, 5, 6) === SymTen(-1, -2, -3, -4, -5, -6)
 
@@ -317,147 +317,151 @@ end
         @test S.zx === S.xz
     end
 
-    @test convert(SymTen2Dxy{Float64}, SymTen(xx = 1)) === SymTen(xx = 1.0, yx = 0.0, yy = 0.0)
-    @test convert(Ten2Dxz{Float64}, SymTen(zx = 1)) === Ten(xx = 0.0, zx = 1.0, xz = 1.0, zz = 0.0)
+    @test convert(SymTen2Dxy{Float64}, SymTen(xx = 1)) === SymTen(xx = 1.0, xy = 0.0, yy = 0.0)
+    @test convert(Ten2Dxz{Float64}, SymTen(xz = 1)) === Ten(xx = 0.0, zx = 1.0, xz = 1.0, zz = 0.0)
 
 end
 
 @testset "AntiSymTen" begin
-    @test typeof(AntiSymTen(yx = 1.0, zx = 2, zy = 3)) === AntiSymTen3D{Float64}
-    @test typeof(AntiSymTen(yx = 1.0)) === AntiSymTen2Dxy{Float64}
-    @test typeof(AntiSymTen(zy = 2)) === AntiSymTen2Dyz{Int}
-    @test typeof(AntiSymTen(zx = 2.0)) === AntiSymTen2Dxz{Float64}
+    @test typeof(AntiSymTen(xy = 1.0, xz = 2, yz = 3)) === AntiSymTen3D{Float64}
+    @test typeof(AntiSymTen(xy = 1.0)) === AntiSymTen2Dxy{Float64}
+    @test typeof(AntiSymTen(yz = 2)) === AntiSymTen2Dyz{Int}
+    @test typeof(AntiSymTen(xz = 2.0)) === AntiSymTen2Dxz{Float64}
 
     @test -AntiSymTen(1, 2, 3) === AntiSymTen(-1, -2, -3)
 
     @test AntiSymTen(1, 2, 3) == [
-        0 -1 -2;
-        1  0 -3;
-        2  3  0
+         0   1  2;
+        -1   0  3;
+        -2  -3  0
     ]
 
     @test AntiSymTen(3, 2, 1) == AntiSymTen(3.0, 2.0, 1.0)
 
-    @test (AntiSymTen(yx = 1) + AntiSymTen(yx = 2.0, zx = 5.0)) === AntiSymTen(yx = 3.0, zx = 5.0)
-    @test (AntiSymTen(yx = 1) - AntiSymTen(yx = 2.0, zx = 5.0)) === AntiSymTen(yx = -1.0, zx = -5.0)
-    @test muladd(3.0, AntiSymTen(yx = 4.0), AntiSymTen(yx = 5.0)) === AntiSymTen(yx = 17.0)
+    @test (AntiSymTen(xy = 1) + AntiSymTen(xy = 2.0, xz = 5.0)) === AntiSymTen(xy = 3.0, xz = 5.0)
+    @test (AntiSymTen(xy = 1) - AntiSymTen(xy = 2.0, xz = 5.0)) === AntiSymTen(xy = -1.0, xz = -5.0)
+    @test muladd(3.0, AntiSymTen(xy = 4.0), AntiSymTen(xy = 5.0)) === AntiSymTen(xy = 17.0)
     @test muladd(One(), AntiSymTen(1, 2, 3), AntiSymTen()) === AntiSymTen(1, 2, 3)
 
-    let yx = rand(ComplexF64),zx = rand(ComplexF64),zy = rand(ComplexF64)
-        W = AntiSymTen(yx, zx, zy)
-        @test W.x === Vec(y = yx, z = zx)
-        @test W.y === Vec(x = -yx, z = zy)
-        @test W.z === Vec(x = -zx, y = -zy)
+    let xy = rand(ComplexF64), xz = rand(ComplexF64), yz = rand(ComplexF64)
+        W = AntiSymTen(xy, xz, yz)
+        @test W.x === Vec2Dyz(-xy, -xz)
+        @test W.y === Vec2Dxz(xy, -yz)
+        @test W.z === Vec2Dxy(xz, yz)
         @test transpose(W) === -W
-        @test W' === AntiSymTen(-conj(yx), -conj(zx), -conj(zy))
+        @test W' === AntiSymTen(-conj(xy), -conj(xz), -conj(yz))
     end
 
-    @test convert(AntiSymTen3D{Float64}, AntiSymTen(yx = 1)) === AntiSymTen(yx = 1.0, zx = 0.0, zy = 0.0)
-    @test convert(Ten2Dxz{Float64}, AntiSymTen(zx = 1)) === Ten(xx = 0.0, zx = 1.0, xz = -1.0, zz = 0.0)
+    @test convert(AntiSymTen3D{Float64}, AntiSymTen(xy = 1)) === AntiSymTen(xy = 1.0, xz = 0.0, yz = 0.0)
+    @test convert(Ten2Dxz{Float64}, AntiSymTen(xz = 1)) === Ten(xx = 0.0, xz = 1.0, zx = -1.0, zz = 0.0)
 
 end
 
 @testset "VecArray" begin
-    @test_throws DomainError VecArray()
-    @test_throws DimensionMismatch VecArray(x = rand(1, 2), y = rand(2, 1))
-    @test_throws DimensionMismatch VecArray(x = rand(1, 2), z = rand(2, 1))
-    @test_throws DimensionMismatch VecArray(y = rand(1, 2), z = rand(2, 1))
+    #@test_throws DomainError VecArray() Now creates a Zero Dimensional Vec3DArray{Zero, 0}
+    @test_throws DimensionMismatch Vec2DxyArray(rand(1, 2), rand(2, 1))
+    @test_throws DimensionMismatch Vec2DxzArray(rand(1, 2), rand(2, 1))
+    @test_throws DimensionMismatch Vec2DyzArray(rand(1, 2), rand(2, 1))
 
     @test size(VecArray{Float32}(4, 3)) === (4, 3)
     @test eltype(VecArray{Float32}(4, 3)) === Vec3D{Float32}
 
-    @test VecArray(x = ones(1, 1))[1] === Vec(x = 1.0)
-    @test VecArray(y = ones(1, 1))[1] === Vec(y = 1.0)
-    @test VecArray(z = ones(1, 1))[1] === Vec(z = 1.0)
+    @test Vec1DxArray(ones(1, 1))[1] === Vec1Dx(1.0)
+    @test Vec1DyArray(ones(1, 1))[1] === Vec1Dy(1.0)
+    @test Vec1DzArray(ones(1, 1))[1] === Vec1Dz(1.0)
 
-    @test VecArray(x = ones(1, 1), y = (ones(1, 1) .+ 1))[1] === Vec(x = 1.0, y = 2.0)
-    @test VecArray(y = ones(1, 1), z = (ones(1, 1) .+ 1))[1] === Vec(y = 1.0, z = 2.0)
-    @test VecArray(x = ones(1, 1), z = (ones(1, 1) .+ 1))[1] === Vec(x = 1.0, z = 2.0)
-    @test VecArray(x = ones(1, 1), y = (ones(1, 1) .+ 1), z = (ones(1, 1) .+ 2))[1] === Vec(x = 1.0, y = 2.0, z = 3.0)
+    @test Vec2DxyArray(ones(1, 1), (ones(1, 1) .+ 1))[1] === Vec2Dxy(1.0, 2.0)
+    @test Vec2DyzArray(ones(1, 1), (ones(1, 1) .+ 1))[1] === Vec2Dyz(1.0, 2.0)
+    @test Vec2DxzArray(ones(1, 1), (ones(1, 1) .+ 1))[1] === Vec2Dxz(1.0, 2.0)
+    @test VecArray(ones(1, 1), (ones(1, 1) .+ 1), (ones(1, 1) .+ 2))[1] === Vec(1.0, 2.0, 3.0)
 
-    @test VecArray(x = ones(1, 1))[1, 1] === Vec(x = 1.0)
-    @test VecArray(y = ones(1, 1))[1, 1] === Vec(y = 1.0)
-    @test VecArray(z = ones(1, 1))[1, 1] === Vec(z = 1.0)
+    @test Vec1DxArray(ones(1, 1))[1, 1] === Vec1Dx(1.0)
+    @test Vec1DyArray(ones(1, 1))[1, 1] === Vec1Dy(1.0)
+    @test Vec1DzArray(ones(1, 1))[1, 1] === Vec1Dz(1.0)
 
-    @test VecArray(x = ones(1, 1), y = (ones(1, 1) .+ 1))[1, 1] === Vec(x = 1.0, y = 2.0)
-    @test VecArray(y = ones(1, 1), z = (ones(1, 1) .+ 1))[1, 1] === Vec(y = 1.0, z = 2.0)
-    @test VecArray(x = ones(1, 1), z = (ones(1, 1) .+ 1))[1, 1] === Vec(x = 1.0, z = 2.0)
-    @test VecArray(x = ones(1, 1), y = (ones(1, 1) .+ 1), z = (ones(1, 1) .+ 2))[1, 1] === Vec(x = 1.0, y = 2.0, z = 3.0)
+    @test Vec2DxyArray(ones(1, 1), (ones(1, 1) .+ 1))[1, 1] === Vec2Dxy(1.0, 2.0)
+    @test Vec2DyzArray(ones(1, 1), (ones(1, 1) .+ 1))[1, 1] === Vec2Dyz(1.0, 2.0)
+    @test Vec2DxzArray(ones(1, 1), (ones(1, 1) .+ 1))[1, 1] === Vec2Dxz(1.0, 2.0)
+    @test VecArray(ones(1, 1), (ones(1, 1) .+ 1), (ones(1, 1) .+ 2))[1, 1] === Vec(1.0, 2.0, 3.0)
 
 
-    @test setindex!(VecArray{Float64}(4, 4), Vec(x = 1.0, y = 2.0, z = 3.0), 4, 4)[4, 4] === Vec(x = 1.0, y = 2.0, z = 3.0)
-    @test setindex!(VecArray{Float64}(4, 4), Vec(x = 1.0, y = 2.0, z = 3.0), 16)[16] === Vec(x = 1.0, y = 2.0, z = 3.0)
+    @test setindex!(VecArray{Float64}(4, 4), Vec(1.0, 2.0, 3.0), 4, 4)[4, 4] === Vec(1.0, 2.0, 3.0)
+    @test setindex!(VecArray{Float64}(4, 4), Vec(1.0, 2.0, 3.0), 16)[16] === Vec(1.0, 2.0, 3.0)
 
-    @test setindex!(VecArray(y = zeros(4, 4)), Vec(x = 0.0, y = 2.0, z = 0.0), 4, 4)[4, 4] === Vec(y = 2.0)
-    @test setindex!(VecArray(y = zeros(4, 4)), Vec(x = 0.0, y = 2.0, z = 0.0), 16)[16] === Vec(y = 2.0)
+    @test setindex!(Vec1DyArray(zeros(4, 4)), Vec(0.0, 2.0, 0.0), 4, 4)[4, 4] === Vec1Dy(2.0)
+    @test setindex!(Vec1DyArray(zeros(4, 4)), Vec(0.0, 2.0, 0.0), 16)[16] === Vec1Dy(2.0)
 
-    let a = VecArray(x = rand(Float32, 2), y = rand(Float32, 2))
+    let a = Vec2DxyArray(rand(Float32, 2), rand(Float32, 2))
         @test typeof(similar(a, Vec2Dyz{Int}, (4, 4, 4))) === Vec2DyzArray{Int, 3}
         @test a == object_and_preserve(a)[1]
-        b = VecArray(x = a.y, y = rand(Float32,2))
+        b = Vec2DxyArray(a.y, rand(Float32,2))
         @test Base.mightalias(a, b)
         @test length(resize!(a, 4)) === 4
     end
 
-    let a = TenArray(xx = rand(2), xz = rand(2), zx = rand(2), zz = rand(2))
+    let a = Ten2DxzArray(rand(2), rand(2), rand(2), rand(2))
         @test typeof(similar(a, Ten3D{Float16}, (1, 1, 1))) === Ten3DArray{Float16, 3}
         @test a == object_and_preserve(a)[1]
-        b = TenArray(yy = a.zx, zz = rand(2), yz = rand(2), zy = rand(2))
+        b = Ten2DyzArray(a.zx, rand(2), rand(2), rand(2))
         @test Base.mightalias(a,b)
         @test length(resize!(a, 4)) === 4
     end
 
-    let a1 = [1],a2 = [2],a3 = [3],a4 = [4],a5 = [5],a6 = [6],a7 = [7],a8 = [8],a9 = [9],T = TenArray(a1, a2, a3, a4, a5, a6, a7, a8, a9)
+    let a1 = [1],a2 = [2],a3 = [3],a4 = [4],a5 = [5],a6 = [6],a7 = [7],a8 = [8],a9 = [9],T = TenArray(a1, a2, a3,
+                                                                                                      a4, a5, a6,
+                                                                                                      a7, a8, a9)
         @test T.xx === a1
-        @test T.yx === a2
-        @test T.zx === a3
-        @test T.xy === a4
+        @test T.yx === a4
+        @test T.zx === a7
+        @test T.xy === a2
         @test T.yy === a5
-        @test T.zy === a6
-        @test T.xz === a7
-        @test T.yz === a8
+        @test T.zy === a8
+        @test T.xz === a3
+        @test T.yz === a6
         @test T.zz === a9
     end
 
 end
 
 @testset "VecArray Broadcasting" begin
-    let ux = VecArray(x = rand(3)), uxy = VecArray(x = rand(Float32, 3), y = rand(Float32, 3)), uxyz = VecArray(x = rand(Float32, 3), y = rand(Float32, 3), z = rand(Float32, 3))
-        @test (ux .+ uxy) == VecArray(x = ux.x .+ uxy.x, y = uxy.y)
+    let ux = Vec1DxArray(rand(3)), uxy = Vec2DxyArray(rand(Float32, 3), rand(Float32, 3)), uxyz = VecArray(rand(Float32, 3), rand(Float32, 3), rand(Float32, 3))
+        @test (ux .+ uxy) == Vec2DxyArray(ux.x .+ uxy.x, Float64.(uxy.y))
         @test typeof(ux .+ uxy) === Vec2DxyArray{Float64, 1}
-        @test (uxy .+ uxyz) == VecArray(x = uxy.x .+ uxyz.x, y = uxy.y .+ uxyz.y, z = uxyz.z)
+        @test (uxy .+ uxyz) == VecArray(uxy.x .+ uxyz.x, uxy.y .+ uxyz.y, uxyz.z)
         @test typeof(uxy .+ uxyz) === Vec3DArray{Float32, 1}
-        @test ux .+ 𝐢 == VecArray(x = ux.x .+ 1)
-        @test (ux .= Vec()) == VecArray(x = zeros(3))
+        @test ux .+ 𝐢 == Vec1DxArray(ux.x .+ 1)
+        @test (ux .= Vec()) == Vec1DxArray(zeros(3))
     end
 end
 
 @testset "TenArray Broadcasting" begin
     let ux = TenArray(xx = rand(3)), uxy = TenArray(xx = rand(Float32, 3), yx = rand(Float32, 3), xy = rand(Float32, 3), yy = rand(Float32, 3))
-        @test (ux .+ uxy) == TenArray(xx = ux.x.x .+ uxy.x.x, xy = uxy.y.x, yx = uxy.x.y, yy = uxy.y.y)
+        @test (ux .+ uxy) == Ten2DxyArray(ux.x.x .+ uxy.x.x, uxy.y.x, uxy.x.y, uxy.y.y)
         @test typeof(ux .+ uxy) === Ten2DxyArray{Float64, 1}
-        @test ux .+ (𝐢 ⊗ 𝐢) == TenArray(xx = ux.x.x .+ 1)
-        @test (ux .= Ten()) == TenArray(xx = zeros(3))
+        @test ux .+ (𝐢 ⊗ 𝐢) == Ten1DxArray(ux.x.x .+ 1)
+        @test (ux .= Ten()) == Ten1DxArray(zeros(3))
     end
 end
 
 @testset "SymTenArray" begin
     @test_throws DomainError SymTenArray()
-    @test_throws DimensionMismatch SymTenArray(xx = rand(1, 2), yx = rand(2, 1))
-    @test_throws DimensionMismatch SymTenArray(xx = rand(1, 2), zx = rand(2, 1))
+    @test_throws DimensionMismatch SymTenArray(xx = rand(1, 2), xy = rand(2, 1))
+    @test_throws DimensionMismatch SymTenArray(xx = rand(1, 2), xz = rand(2, 1))
     @test_throws DimensionMismatch SymTenArray(xx = rand(1, 2), yy = rand(2, 1))
     @test_throws DimensionMismatch SymTenArray(xx = rand(1, 2), zz = rand(2, 1))
 
     @test size(SymTenArray{Float32}(4, 3)) === (4, 3)
     @test eltype(SymTenArray{Float32}(4, 3)) === SymTen3D{Float32}
 
-    @test eltype(SymTenArray(yy = rand(Int, 3), zy = rand(Int, 3), zz = rand(Int, 3))) === SymTen2Dyz{Int}
+    @test eltype(SymTenArray(yy = rand(Int, 3), yz = rand(Int, 3), zz = rand(Int, 3))) === SymTen2Dyz{Int}
 
-    @test typeof(similar(SymTenArray(yy = rand(Int, 3), zy = rand(Int, 3), zz = rand(Int, 3)), SymTen2Dxy{Float32})) === SymTen2DxyArray{Float32, 1}
-    @test eltype(similar(SymTenArray(yy = rand(Int, 3), zy = rand(Int, 3), zz = rand(Int, 3)), SymTen2Dxy{Float32})) === SymTen2Dxy{Float32}
-    @test size(similar(SymTenArray(yy = rand(Int, 3), zy = rand(Int, 3), zz = rand(Int, 3)), SymTen2Dxy{Float32}, 3, 4)) === (3, 4)
+    @test typeof(similar(SymTenArray(yy = rand(Int, 3), yz = rand(Int, 3), zz = rand(Int, 3)), SymTen2Dxy{Float32})) === SymTen2DxyArray{Float32, 1}
+    @test eltype(similar(SymTenArray(yy = rand(Int, 3), yz = rand(Int, 3), zz = rand(Int, 3)), SymTen2Dxy{Float32})) === SymTen2Dxy{Float32}
+    @test size(similar(SymTenArray(yy = rand(Int, 3), yz = rand(Int, 3), zz = rand(Int, 3)), SymTen2Dxy{Float32}, 3, 4)) === (3, 4)
 
-    let a1 = rand(3, 3),a2 = rand(3, 3),a3 = rand(3, 3),a4 = rand(3, 3),a5 = rand(3, 3),a6 = rand(3, 3),T = SymTenArray(a1, a2, a3, a4, a5, a6)
+    let a1 = rand(3, 3),a2 = rand(3, 3),a3 = rand(3, 3),a4 = rand(3, 3),a5 = rand(3, 3),a6 = rand(3, 3),T = SymTenArray(a1, a2, a3,
+                                                                                                                            a4, a5,
+                                                                                                                                a6)
         @test T.xx === a1
         @test T.yx === a2
         @test T.zx === a3
@@ -478,8 +482,8 @@ end
         @test T[5] === SymTen(a1[5], a2[5], a3[5], a4[5], a5[5], a6[5])
         @test T[2, 3] === SymTen(a1[2, 3], a2[2, 3], a3[2, 3], a4[2, 3], a5[2, 3], a6[2, 3])
 
-        @test setindex!(T, SymTen(xx = 1, zy = 3), 3)[3] === SymTen(1.0, 0.0, 0.0, 0.0, 3.0, 0.0)
-        @test setindex!(T, SymTen(yx = 1, yy = 3), 3, 3)[3, 3] === SymTen(0.0, 1.0, 0.0, 3.0, 0.0, 0.0)
+        @test setindex!(T, SymTen(xx = 1, yz = 3), 3)[3] === SymTen(1.0, 0.0, 0.0, 0.0, 3.0, 0.0)
+        @test setindex!(T, SymTen(xy = 1, yy = 3), 3, 3)[3, 3] === SymTen(0.0, 1.0, 0.0, 3.0, 0.0, 0.0)
 
         @test typeof(T .+ SymTen()) === typeof(T)
     end
@@ -487,42 +491,42 @@ end
 
 @testset "AntiSymTenArray" begin
     @test_throws DomainError AntiSymTenArray()
-    @test_throws DimensionMismatch AntiSymTenArray(yx = rand(1, 2), zy = rand(2, 1))
-    @test_throws DimensionMismatch AntiSymTenArray(yx = rand(1, 2), zx = rand(2, 1))
+    @test_throws DimensionMismatch AntiSymTenArray(xy = rand(1, 2), yz = rand(2, 1))
+    @test_throws DimensionMismatch AntiSymTenArray(xy = rand(1, 2), xz = rand(2, 1))
 
     @test size(AntiSymTenArray{Float32}(4, 3)) === (4, 3)
     @test eltype(AntiSymTenArray{Float32}(4, 3)) === AntiSymTen3D{Float32}
 
-    @test eltype(AntiSymTenArray(zy = rand(Int, 3))) === AntiSymTen2Dyz{Int}
+    @test eltype(AntiSymTenArray(yz = rand(Int, 3))) === AntiSymTen2Dyz{Int}
 
-    @test typeof(similar(AntiSymTenArray(yx = rand(Int, 3)), AntiSymTen2Dxy{Float32})) === AntiSymTen2DxyArray{Float32, 1}
-    @test eltype(similar(AntiSymTenArray(zy = rand(Int, 3)), AntiSymTen2Dxy{Float32})) === AntiSymTen2Dxy{Float32}
-    @test size(similar(AntiSymTenArray(zy = rand(Int, 3)), AntiSymTen2Dxy{Float32}, 3, 4)) === (3, 4)
+    @test typeof(similar(AntiSymTenArray(xy = rand(Int, 3)), AntiSymTen2Dxy{Float32})) === AntiSymTen2DxyArray{Float32, 1}
+    @test eltype(similar(AntiSymTenArray(yz = rand(Int, 3)), AntiSymTen2Dxy{Float32})) === AntiSymTen2Dxy{Float32}
+    @test size(similar(AntiSymTenArray(yz = rand(Int, 3)), AntiSymTen2Dxy{Float32}, 3, 4)) === (3, 4)
 
     let a1 = rand(3, 3),a2 = rand(3, 3),a3 = rand(3, 3), T = AntiSymTenArray(a1, a2, a3)
         zero_vec = Array{Zero}(undef, size(T))
         @test T.xx == zero_vec
-        @test T.yx === a1
-        @test T.zx === a2
-        @test T.xy == -a1
+        @test T.xy === a1
+        @test T.xz === a2
+        @test T.yx == -a1
         @test T.yy == zero_vec
-        @test T.zy === a3
-        @test T.xz == -a2
-        @test T.yz == -a3
+        @test T.yz === a3
+        @test T.zx == -a2
+        @test T.zy == -a3
         @test T.zz == zero_vec
 
         @test T == object_and_preserve(T)[1]
-        @test Base.mightalias(AntiSymTenArray(zx = T.yx), T)
+        @test Base.mightalias(AntiSymTenArray(xz = T.xy), T)
 
-        @test T.x == VecArray(zero_vec, a1, a2)
-        @test T.y == VecArray(-a1, zero_vec, a3)
-        @test T.z == VecArray(-a2, -a3, zero_vec)
+        @test T.x == VecArray(zero_vec, -a1, -a2)
+        @test T.y == VecArray(a1, zero_vec, -a3)
+        @test T.z == VecArray(a2, a3, zero_vec)
 
         @test T[5] === AntiSymTen(a1[5], a2[5], a3[5])
         @test T[2, 3] === AntiSymTen(a1[2, 3], a2[2, 3], a3[2, 3])
 
-        @test setindex!(T, AntiSymTen(zy = 3), 3)[3] === AntiSymTen(0.0, 0.0, 3.0)
-        @test setindex!(T, AntiSymTen(yx = 1), 3, 3)[3, 3] === AntiSymTen(1.0, 0.0, 0.0)
+        @test setindex!(T, AntiSymTen(yz = 3), 3)[3] === AntiSymTen(0.0, 0.0, 3.0)
+        @test setindex!(T, AntiSymTen(xy = 1), 3, 3)[3, 3] === AntiSymTen(1.0, 0.0, 0.0)
 
         @test typeof(T .+ AntiSymTen()) === typeof(T)
     end
@@ -532,51 +536,51 @@ end
     I = SIMD.VecRange{4}(1)
     J = SIMD.Vec(2, 1, 4, 3)
     JF = SIMD.Vec(2.0, 1.0, 4.0, 3.0)
-    u1D = VecArray(x = rand(4))
-    @test u1D[I] === Vec(x = u1D.x[I])
-    @test u1D[J] === Vec(x = u1D.x[J])
+    u1D = Vec1DxArray(rand(4))
+    @test u1D[I] === Vec1Dx(u1D.x[I])
+    @test u1D[J] === Vec1Dx(u1D.x[J])
     @test begin
-        u1D[I] = Vec(x = zeroSIMD)
-        u1D[1:4] == VecArray(x = zeros(4))
-        u1D[J] = Vec(x = JF)
-        u1D[1:4] == VecArray(x = collect(1:4))
+        u1D[I] = Vec1Dx(zeroSIMD)
+        u1D[1:4] == Vec1DxArray( zeros(4))
+        u1D[J] = Vec1Dx(JF)
+        u1D[1:4] == Vec1DxArray(collect(1:4))
     end
-    u2D = VecArray(x = rand(4), y = rand(4))
-    @test u2D[I] === Vec(x = u2D.x[I], y = u2D.y[I])
-    @test u2D[J] === Vec(x = u2D.x[J], y = u2D.y[J])
+    u2D = Vec2DxyArray(rand(4), rand(4))
+    @test u2D[I] === Vec2Dxy(u2D.x[I], u2D.y[I])
+    @test u2D[J] === Vec2Dxy(u2D.x[J], u2D.y[J])
     @test begin
-        u2D[I] = Vec(x = zeroSIMD, y = zeroSIMD)
-        u2D[1:4] == VecArray(x = zeros(4), y = zeros(4))
-        u2D[J] = Vec(x = JF, y = JF)
-        u2D[1:4] == VecArray(x = collect(1:4), y = collect(1:4))
+        u2D[I] = Vec2Dxy(zeroSIMD, zeroSIMD)
+        u2D[1:4] == Vec2DxyArray(zeros(4), zeros(4))
+        u2D[J] = Vec2Dxy(JF, JF)
+        u2D[1:4] == Vec2DxyArray(collect(1:4), collect(1:4))
     end
-    u3D = VecArray(x = rand(4), y = rand(4), z = rand(4))
-    @test u3D[I] === Vec(x = u3D.x[I], y = u3D.y[I], z = u3D.z[I])
-    @test u3D[J] === Vec(x = u3D.x[J], y = u3D.y[J], z = u3D.z[J])
+    u3D = VecArray(rand(4), rand(4), rand(4))
+    @test u3D[I] === Vec(u3D.x[I], u3D.y[I], u3D.z[I])
+    @test u3D[J] === Vec(u3D.x[J], u3D.y[J], u3D.z[J])
     @test begin
-        u3D[I] = Vec(x = zeroSIMD, y = zeroSIMD, z = zeroSIMD)
-        u3D[1:4] == VecArray(x = zeros(4), y = zeros(4), z = zeros(4))
-        u3D[J] = Vec(x = JF, y = JF, z = JF)
-        u3D[1:4] == VecArray(x = collect(1:4), y = collect(1:4), z = collect(1:4))
+        u3D[I] = Vec(zeroSIMD, zeroSIMD, zeroSIMD)
+        u3D[1:4] == VecArray(zeros(4), zeros(4), zeros(4))
+        u3D[J] = Vec(JF, JF, JF)
+        u3D[1:4] == VecArray(collect(1:4), collect(1:4), collect(1:4))
     end
 
-    u1D2 = VecArray(x = rand(4, 2))
-    @test u1D2[I, 2] === Vec(x = u1D2.x[I, 2])
+    u1D2 = Vec1DxArray(rand(4, 2))
+    @test u1D2[I, 2] === Vec1Dx(u1D2.x[I, 2])
     @test begin
-        u1D2[I, 2] = Vec(x = zeroSIMD)
-        u1D2[1:4, 2] == VecArray(x = zeros(4))
+        u1D2[I, 2] = Vec1Dx(zeroSIMD)
+        u1D2[1:4, 2] == Vec1DxArray(zeros(4))
     end
-    u2D2 = VecArray(x = rand(4, 2), y = rand(4, 2))
-    @test u2D2[I, 2] === Vec(x = u2D2.x[I, 2], y = u2D2.y[I, 2])
+    u2D2 = Vec2DxyArray(rand(4, 2), rand(4, 2))
+    @test u2D2[I, 2] === Vec2Dxy(u2D2.x[I, 2], u2D2.y[I, 2])
     @test begin
-        u2D2[I, 2] = Vec(x = zeroSIMD, y = zeroSIMD)
-        u2D2[1:4, 2] == VecArray(x = zeros(4), y = zeros(4))
+        u2D2[I, 2] = Vec2Dxy(zeroSIMD, zeroSIMD)
+        u2D2[1:4, 2] == Vec2DxyArray(zeros(4), zeros(4))
     end
-    u3D2 = VecArray(x = rand(4, 2), y = rand(4, 2), z = rand(4, 2))
-    @test u3D2[I, 2] === Vec(x = u3D2.x[I, 2], y = u3D2.y[I, 2], z = u3D2.z[I, 2])
+    u3D2 = VecArray(rand(4, 2), rand(4, 2), rand(4, 2))
+    @test u3D2[I, 2] === Vec(u3D2.x[I, 2], u3D2.y[I, 2], u3D2.z[I, 2])
     @test begin
-        u3D2[I, 2] = Vec(x = zeroSIMD, y = zeroSIMD, z = zeroSIMD)
-        u3D2[1:4, 2] == VecArray(x = zeros(4), y = zeros(4), z = zeros(4))
+        u3D2[I, 2] = Vec(zeroSIMD, zeroSIMD, zeroSIMD)
+        u3D2[1:4, 2] == VecArray(zeros(4), zeros(4), zeros(4))
     end
 end
 
@@ -639,7 +643,7 @@ end
         @test a * v3D === Vec(a * v3D.x, a * v3D.y, a * v3D.z)
     end
 
-    for u in (VecArray(x = rand(16)), VecArray(x = rand(16), y = rand(16)), VecArray(x = rand(16), y = rand(16), z = rand(16)))
+    for u in (Vec1DxArray(rand(16)), Vec2DxyArray(rand(16), rand(16)), VecArray(rand(16), rand(16), rand(16)))
 
         for op in (+, -, norm, normalize, x -> (2 * x), x -> (x / 2))
             @test begin
@@ -649,7 +653,7 @@ end
             end
         end
 
-        for v in (VecArray(x = rand(16)), VecArray(x = rand(16), y = rand(16)), VecArray(x = rand(16), y = rand(16), z = rand(16)))
+        for v in (Vec1DxArray(rand(16)), Vec2DxyArray(rand(16), rand(16)), VecArray(rand(16), rand(16), rand(16)))
 
             for op in (+, -, cross, dot, inner, (x, y) -> dotadd(x, y, 3.0), (x, y) -> muladd(2.0, x, y), (x, y) -> muladd(x, 2.0, y), ⊗)
                 @test begin

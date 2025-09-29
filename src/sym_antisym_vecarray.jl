@@ -1,9 +1,9 @@
 struct SymTenArray{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractArray{T, N}
     xx::Txx
-    yx::Tyx
-    zx::Tzx
+    xy::Tyx
+    xz::Tzx
     yy::Tyy
-    zy::Tzy
+    yz::Tzy
     zz::Tzz
 
     SymTenArray{T}(I::Vararg{Int, N}) where {T, N} = new{SymTen{T, T, T, T, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}, Array{T, N}, Array{T, N}, Array{T, N}}(
@@ -91,12 +91,12 @@ function SymTenArray(
 end
 
 SymTenArray(;
-    xx::Union{Zero, <:AbstractArray} = 𝟎, yx::Union{Zero, <:AbstractArray} = 𝟎, zx::Union{Zero, <:AbstractArray} = 𝟎,
-                                          yy::Union{Zero, <:AbstractArray} = 𝟎, zy::Union{Zero, <:AbstractArray} = 𝟎,
+    xx::Union{Zero, <:AbstractArray} = 𝟎, xy::Union{Zero, <:AbstractArray} = 𝟎, xz::Union{Zero, <:AbstractArray} = 𝟎,
+                                          yy::Union{Zero, <:AbstractArray} = 𝟎, yz::Union{Zero, <:AbstractArray} = 𝟎,
                                                                                 zz::Union{Zero, <:AbstractArray} = 𝟎
 ) = SymTenArray(
-    xx, yx, zx,
-        yy, zy,
+    xx, xy, xz,
+        yy, yz,
             zz
 )
 
@@ -144,16 +144,16 @@ const SymTenMaybe2DxyArray{T, Tz, N} = SymTenArray{
 
 @inline Base.size(A::SymTenArray) = size(A.xx)
 @inline Base.length(A::SymTenArray) = length(A.xx)
-Base.dataids(A::SymTenArray) = (Base.dataids(A.xx)..., Base.dataids(A.yx)..., Base.dataids(A.zx)...,
-                                                       Base.dataids(A.yy)..., Base.dataids(A.zy)...,
+Base.dataids(A::SymTenArray) = (Base.dataids(A.xx)..., Base.dataids(A.xy)..., Base.dataids(A.xz)...,
+                                                       Base.dataids(A.yy)..., Base.dataids(A.yz)...,
                                                                               Base.dataids(A.zz)...)
 
 
 @inline function Base.getindex(A::SymTenArray, i::Int)
     @boundscheck checkbounds(A, i)
     @inbounds r = SymTen(
-        A.xx[i], A.yx[i], A.zx[i],
-                 A.yy[i], A.zy[i],
+        A.xx[i], A.xy[i], A.xz[i],
+                 A.yy[i], A.yz[i],
                           A.zz[i]
     )
     return r
@@ -162,8 +162,8 @@ end
 @inline function Base.getindex(A::SymTenArray{T, N}, I::Vararg{Int, N}) where {T, N}
     @boundscheck checkbounds(A, I...)
     @inbounds r = SymTen(
-        A.xx[I...], A.yx[I...], A.zx[I...],
-                    A.yy[I...], A.zy[I...],
+        A.xx[I...], A.xy[I...], A.xz[I...],
+                    A.yy[I...], A.yz[I...],
                                 A.zz[I...]
     )
     return r
@@ -175,10 +175,10 @@ end
     sym_s = convert(T, s)
     @inbounds begin
         A.xx[i] = sym_s.xx
-        A.yx[i] = sym_s.yx
-        A.zx[i] = sym_s.zx
+        A.xy[i] = sym_s.xy
+        A.xz[i] = sym_s.xz
         A.yy[i] = sym_s.yy
-        A.zy[i] = sym_s.zy
+        A.yz[i] = sym_s.yz
         A.zz[i] = sym_s.zz
     end
 
@@ -191,40 +191,40 @@ end
     sym_s = convert(T, s)
     @inbounds begin
         A.xx[I...] = sym_s.xx
-        A.yx[I...] = sym_s.yx
-        A.zx[I...] = sym_s.zx
+        A.xy[I...] = sym_s.xy
+        A.xz[I...] = sym_s.xz
         A.yy[I...] = sym_s.yy
-        A.zy[I...] = sym_s.zy
+        A.yz[I...] = sym_s.yz
         A.zz[I...] = sym_s.zz
     end
 
     return A
 end
 
-Base.similar(A::SymTenArray, T::Type{SymTen{Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz, N2} = SymTenArray(similar(A.xx, Txx, dims), similar(A.yx, Tyx, dims), similar(A.zx, Tzx, dims), similar(A.yy, Tyy, dims), similar(A.zy, Tzy, dims), similar(A.zz, Tzz, dims))
+Base.similar(A::SymTenArray, ::Type{SymTen{Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz, N2} = SymTenArray(similar(A.xx, Txx, dims), similar(A.xy, Tyx, dims), similar(A.xz, Tzx, dims), similar(A.yy, Tyy, dims), similar(A.yz, Tzy, dims), similar(A.zz, Tzz, dims))
 
 @inline function Base.getproperty(S::SymTenArray, s::Symbol)
     if s === :x
         xx = getfield(S, :xx)
-        yx = getfield(S, :yx)
-        zx = getfield(S, :zx)
+        yx = getfield(S, :xy)
+        zx = getfield(S, :xz)
         return VecArray(xx, yx, zx)
     elseif s === :y
-        xy = getfield(S, :yx)
+        xy = getfield(S, :xy)
         yy = getfield(S, :yy)
-        zy = getfield(S, :zy)
+        zy = getfield(S, :yz)
         return VecArray(xy, yy, zy)
     elseif s === :z
-        xz = getfield(S, :zx)
-        yz = getfield(S, :zy)
+        xz = getfield(S, :xz)
+        yz = getfield(S, :yz)
         zz = getfield(S, :zz)
         return VecArray(xz, yz, zz)
-    elseif s === :xy
-        return getfield(S, :yx)
-    elseif s === :xz
-        return getfield(S, :zx)
-    elseif s === :yz
-        return getfield(S, :zy)
+    elseif s === :yx
+        return getfield(S, :xy)
+    elseif s === :zx
+        return getfield(S, :xz)
+    elseif s === :zy
+        return getfield(S, :yz)
     else
         return getfield(S, s)
     end
@@ -244,25 +244,25 @@ end
 ############################ AntiSymTenArray ###########################
 
 struct AntiSymTenArray{T, N, Tyx, Tzx, Tzy} <: AbstractArray{T, N}
-    yx::Tyx
-    zx::Tzx
-    zy::Tzy
+    xy::Tyx
+    xz::Tzx
+    yz::Tzy
 
     AntiSymTenArray{T}(I::Vararg{Int, N}) where {T, N} = new{AntiSymTen{T, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}}(
         Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...)
     )
 
-    function AntiSymTenArray(yx::AbstractArray, zx::AbstractArray, zy::AbstractArray)
+    function AntiSymTenArray(xy::AbstractArray, xz::AbstractArray, yz::AbstractArray)
 
-        s = size(yx)
-        N = ndims(yx)
-        size(zx) === s || throw(DimensionMismatch("Input Arrays must have the same size"))
-        size(zy) === s || throw(DimensionMismatch("Input Arrays must have the same size"))
+        s = size(xy)
+        N = ndims(xy)
+        size(xz) === s || throw(DimensionMismatch("Input Arrays must have the same size"))
+        size(yz) === s || throw(DimensionMismatch("Input Arrays must have the same size"))
 
 
-        Tyx = eltype(yx)
-        Tzx = eltype(zx)
-        Tzy = eltype(zy)
+        Tyx = eltype(xy)
+        Tzx = eltype(xz)
+        Tzy = eltype(yz)
         Tf = promote_type_ignoring_Zero(Tyx, Tzx, Tzy)
 
 
@@ -273,15 +273,15 @@ struct AntiSymTenArray{T, N, Tyx, Tzx, Tzy} <: AbstractArray{T, N}
 
         return new{
             AntiSymTen{Tff, Tyxf, Tzxf, Tzyf}, N,
-            typeof(yx), typeof(zx), typeof(zy)
-        }(yx, zx, zy)
+            typeof(xy), typeof(xz), typeof(yz)
+        }(xy, xz, yz)
     end
 
 end
 
-function AntiSymTenArray(yx, zx, zy)
+function AntiSymTenArray(xy, xz, yz)
 
-    vals = (yx, zx, zy)
+    vals = (xy, xz, yz)
 
     vals === (𝟎, 𝟎, 𝟎) && throw(DomainError(vals, "At least one entry must be a valid Array"))
 
@@ -296,8 +296,8 @@ function AntiSymTenArray(yx, zx, zy)
     return AntiSymTenArray(final_vals...)
 end
 
-AntiSymTenArray(;yx::Union{Zero, <:AbstractArray} = 𝟎, zx::Union{Zero, <:AbstractArray} = 𝟎,
-             zy::Union{Zero, <:AbstractArray} = 𝟎) = AntiSymTenArray(yx, zx, zy)
+AntiSymTenArray(;xy::Union{Zero, <:AbstractArray} = 𝟎, xz::Union{Zero, <:AbstractArray} = 𝟎,
+             yz::Union{Zero, <:AbstractArray} = 𝟎) = AntiSymTenArray(xy, xz, yz)
 
 const AntiSymTen3DArray{T, N} = AntiSymTenArray{AntiSymTen3D{T}, N,
                                                 Array{T, N}, Array{T, N}, Array{T, N}}
@@ -308,19 +308,19 @@ const AntiSymTen2DxzArray{T, N} = AntiSymTenArray{AntiSymTen2Dxz{T}, N,
 const AntiSymTen2DyzArray{T, N} = AntiSymTenArray{AntiSymTen2Dyz{T}, N,
                                                   Array{Zero, N}, Array{Zero, N}, Array{T, N}}
 
-@inline Base.size(A::AntiSymTenArray) = size(A.yx)
-@inline Base.length(A::AntiSymTenArray) = length(A.yx)
-Base.dataids(A::AntiSymTenArray) = (Base.dataids(A.yx)..., Base.dataids(A.zx)..., Base.dataids(A.zy)...)
+@inline Base.size(A::AntiSymTenArray) = size(A.xy)
+@inline Base.length(A::AntiSymTenArray) = length(A.xy)
+Base.dataids(A::AntiSymTenArray) = (Base.dataids(A.xy)..., Base.dataids(A.xz)..., Base.dataids(A.yz)...)
 
 @inline function Base.getindex(A::AntiSymTenArray, i::Int)
     @boundscheck checkbounds(A, i)
-    @inbounds r = AntiSymTen(A.yx[i], A.zx[i], A.zy[i])
+    @inbounds r = AntiSymTen(A.xy[i], A.xz[i], A.yz[i])
     return r
 end
 
 @inline function Base.getindex(A::AntiSymTenArray{T, N}, I::Vararg{Int, N}) where {T, N}
     @boundscheck checkbounds(A, I...)
-    @inbounds r = AntiSymTen(A.yx[I...], A.zx[I...], A.zy[I...])
+    @inbounds r = AntiSymTen(A.xy[I...], A.xz[I...], A.yz[I...])
     return r
 end
 
@@ -329,9 +329,9 @@ end
 
     sym_s = convert(T, s)
     @inbounds begin
-        A.yx[i] = sym_s.yx
-        A.zx[i] = sym_s.zx
-        A.zy[i] = sym_s.zy
+        A.xy[i] = sym_s.xy
+        A.xz[i] = sym_s.xz
+        A.yz[i] = sym_s.yz
     end
 
     return A
@@ -342,35 +342,35 @@ end
 
     sym_s = convert(T, s)
     @inbounds begin
-        A.yx[I...] = sym_s.yx
-        A.zx[I...] = sym_s.zx
-        A.zy[I...] = sym_s.zy
+        A.xy[I...] = sym_s.xy
+        A.xz[I...] = sym_s.xz
+        A.yz[I...] = sym_s.yz
     end
 
     return A
 end
 
-Base.similar(A::AntiSymTenArray, ::Type{AntiSymTen{Tt, Tyx, Tzx, Tzy}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, Tyx, Tzx, Tzy, N2} = AntiSymTenArray(similar(A.yx, Tyx, dims), similar(A.zx, Tzx, dims), similar(A.zy, Tzy, dims))
+Base.similar(A::AntiSymTenArray, ::Type{AntiSymTen{Tt, Tyx, Tzx, Tzy}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, Tyx, Tzx, Tzy, N2} = AntiSymTenArray(similar(A.xy, Tyx, dims), similar(A.xz, Tzx, dims), similar(A.yz, Tzy, dims))
 
 @inline function Base.getproperty(S::AntiSymTenArray, s::Symbol)
     if s === :x
-        yx = getfield(S, :yx)
-        zx = getfield(S, :zx)
-        return VecArray(y = yx, z = zx)
+        yx = -getfield(S, :xy)
+        zx = -getfield(S, :xz)
+        return Vec2DyzArray(yx, zx)
     elseif s === :y
-        xy = getfield(S, :yx)
-        zy = getfield(S, :zy)
-        return VecArray(x = -xy, z = zy)
+        xy = getfield(S, :xy)
+        zy = -getfield(S, :yz)
+        return Vec2DxzArray(xy, zy)
     elseif s === :z
-        xz = getfield(S, :zx)
-        yz = getfield(S, :zy)
-        return VecArray(x = -xz, y = -yz)
-    elseif s === :xy
-        return -getfield(S, :yx)
-    elseif s === :xz
-        return -getfield(S, :zx)
-    elseif s === :yz
-        return -getfield(S, :zy)
+        xz = getfield(S, :xz)
+        yz = getfield(S, :yz)
+        return Vec2DxyArray(xz, yz)
+    elseif s === :yx
+        return -getfield(S, :xy)
+    elseif s === :zx
+        return -getfield(S, :xz)
+    elseif s === :zy
+        return -getfield(S, :yz)
     elseif s === :xx
         return Array{Zero}(undef, size(S))
     elseif s === :yy
@@ -384,8 +384,8 @@ end
 
 function Base.similar(bc::Broadcast.Broadcasted, ::Type{AntiSymTen{T, Txy, Txz, Tyz}}) where {T, Txy, Txz, Tyz}
     s = length.(axes(bc))
-    yx = Array{Txy}(undef, s...)
-    zx = Array{Txz}(undef, s...)
-    zy = Array{Tyz}(undef, s...)
-    return AntiSymTenArray(yx, zx, zy)
+    xy = Array{Txy}(undef, s...)
+    xz = Array{Txz}(undef, s...)
+    yz = Array{Tyz}(undef, s...)
+    return AntiSymTenArray(xy, xz, yz)
 end

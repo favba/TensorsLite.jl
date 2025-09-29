@@ -1,16 +1,16 @@
 struct AntiSymTen{T, Tyx, Tzx, Tzy} <: AbstractVec{T, 2}
-    yx::Tyx
-    zx::Tzx
-    zy::Tzy
+    xy::Tyx
+    xz::Tzx
+    yz::Tzy
 
-    @inline function AntiSymTen(yx, zx, zy)
-        Tyx = typeof(yx)
-        Tzx = typeof(zx)
-        Tzy = typeof(zy)
+    @inline function AntiSymTen(xy, xz, yz)
+        Tyx = typeof(xy)
+        Tzx = typeof(xz)
+        Tzy = typeof(yz)
         Tf = promote_type_ignoring_Zero(Tyx, Tzx, Tzy)
-        yxn = _my_convert(Tf, yx)
-        zxn = _my_convert(Tf, zx)
-        zyn = _my_convert(Tf, zy)
+        yxn = _my_convert(Tf, xy)
+        zxn = _my_convert(Tf, xz)
+        zyn = _my_convert(Tf, yz)
 
         Tyxf = typeof(yxn)
         Tzxf = typeof(zxn)
@@ -20,7 +20,7 @@ struct AntiSymTen{T, Tyx, Tzx, Tzy} <: AbstractVec{T, 2}
     end
 end
 
-@inline AntiSymTen(; yx = 𝟎, zx = 𝟎, zy = 𝟎) = AntiSymTen(yx, zx, zy)
+@inline AntiSymTen(; xy = 𝟎, xz = 𝟎, yz = 𝟎) = AntiSymTen(xy, xz, yz)
 
 @inline constructor(::Type{T}) where {T <: AntiSymTen} = AntiSymTen
 @inline Base.:+(a::AntiSymTen, b::AntiSymTen) = @inline AntiSymTen(map(+, fields(a), fields(b))...)
@@ -65,25 +65,25 @@ end
 @inline function Base.getproperty(S::AntiSymTen, s::Symbol)
     if s === :x
         xx = 𝟎
-        yx = getfield(S, :yx)
-        zx = getfield(S, :zx)
+        yx = -getfield(S, :xy)
+        zx = -getfield(S, :xz)
         return Vec(xx, yx, zx)
     elseif s === :y
-        xy = -getfield(S, :yx)
+        xy = getfield(S, :xy)
         yy = 𝟎
-        zy = getfield(S, :zy)
+        zy = -getfield(S, :yz)
         return Vec(xy, yy, zy)
     elseif s === :z
-        xz = -getfield(S, :zx)
-        yz = -getfield(S, :zy)
+        xz = getfield(S, :xz)
+        yz = getfield(S, :yz)
         zz = 𝟎
         return Vec(xz, yz, zz)
-    elseif s === :xy
-        return -getfield(S, :yx)
-    elseif s === :xz
-        return -getfield(S, :zx)
-    elseif s === :yz
-        return -getfield(S, :zy)
+    elseif s === :yx
+        return -getfield(S, :xy)
+    elseif s === :zx
+        return -getfield(S, :xz)
+    elseif s === :zy
+        return -getfield(S, :yz)
     elseif s === :xx || s === :yy || s === :zz
         return 𝟎
     else
@@ -101,7 +101,9 @@ end
 
 @inline function Base.convert(::Type{Vec{T, 2, Vec{_Tx, 1, Txx, Tyx, Tzx}, Vec{_Ty, 1, Txy, Tyy, Tzy}, Vec{_Tz, 1, Txz, Tyz, Tzz}}}, v::AntiSymTen) where {T, _Tx, _Ty, _Tz, Txx, Tyx, Tzx, Txy, Tyy, Tzy, Txz, Tyz, Tzz}
     @inline xx, yx, zx, xy, yy, zy, xz, yz, zz = map(convert, (Txx, Tyx, Tzx, Txy, Tyy, Tzy, Txz, Tyz, Tzz), map(getproperty, (v, v, v, v, v, v, v, v, v), (:xx, :yx, :zx, :xy, :yy, :zy, :xz, :yz, :zz)))
-    return Ten(xx, yx, zx, xy, yy, zy, xz, yz, zz)
+    return Ten(xx, xy, xz,
+               yx, yy, yz,
+               zx, zy, zz)
 end
 
 @inline inner(a::AntiSymTen, b::AntiSymTen) = 2 * muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz * b.yz))

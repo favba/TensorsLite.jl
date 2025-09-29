@@ -1,7 +1,5 @@
 @inline fields(v::T) where {T} = ntuple(i -> getfield(v, i), Val(fieldcount(T)))
 
-@inline no_Vecs(::T1, ::T2, ::T3) where {T1, T2, T3} = !(T1 <: Vec) && !(T2 <: Vec) && !(T3 <: Vec)
-
 _my_promote_type(T::Type, Tx::Type) = (Tx === Zero || Tx === One) ? Tx : promote_type(T, Tx)
 
 @inline function _final_type(types::Vararg{DataType, N}) where {N}
