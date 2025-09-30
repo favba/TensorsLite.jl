@@ -308,6 +308,14 @@ end
     @test typeof(SymTen(xx = 1.0, xz = 2, zz = 3)) === SymTen2Dxz{Float64}
     @test typeof(SymTen(yy = 1.0, yz = 2, zz = 3)) === SymTen2Dyz{Float64}
 
+    @test SymTen3D(1,2,3,4,5,6.) === SymTen(xx=1.0,xy=2.0,xz=3.0,yy=4.0,yz=5.0,zz=6.0)
+    @test SymTen2Dxy(1,2,3.) === SymTen(xx=1.0,xy=2.0,yy=3.0)
+    @test SymTen2Dxz(1,2,3.) === SymTen(xx=1.0,xz=2.0,zz=3.0)
+    @test SymTen2Dyz(1,2,3.) === SymTen(yy=1.0,yz=2.0,zz=3.0)
+    @test SymTen1Dx(1) === SymTen(xx=1)
+    @test SymTen1Dy(1) === SymTen(yy=1)
+    @test SymTen1Dz(1) === SymTen(zz=1)
+
     @test -SymTen(1, 2, 3, 4, 5, 6) === SymTen(-1, -2, -3, -4, -5, -6)
 
     @test SymTen(1, 2, 3, 4, 5, 6) == [
@@ -338,6 +346,9 @@ end
     @test convert(SymTen2Dxy{Float64}, SymTen(xx = 1)) === SymTen(xx = 1.0, xy = 0.0, yy = 0.0)
     @test convert(Ten2Dxz{Float64}, SymTen(xz = 1)) === Ten(xx = 0.0, zx = 1.0, xz = 1.0, zz = 0.0)
 
+    S1 = SymTen(rand(),rand(),rand(),rand(),rand(),rand())
+    S2 = SymTen(rand(),rand(),rand(),rand(),rand(),rand())
+    @test inner(S1, S2) ≈ dot(Array(S1), Array(S2))
 end
 
 @testset "AntiSymTen" begin

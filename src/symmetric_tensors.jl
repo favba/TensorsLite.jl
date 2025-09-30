@@ -80,13 +80,74 @@ end
 end
 
 const SymTen3D{T} = SymTen{T, T, T, T, T, T, T}
+
+SymTen3D{T}(xx, xy, xz, yy, yz, zz) where {T} = SymTen(convert(T, xx), convert(T, xy), convert(T, xz),
+                                                                       convert(T, yy), convert(T, yz),
+                                                                                       convert(T, zz))
+
+SymTen3D(xx, xy, xz, yy, yz, zz) = SymTen3D{promote_type(typeof(xx), typeof(xy), typeof(xz),
+                                                                     typeof(yy), typeof(yz),
+                                                                                 typeof(zz))}(xx, xy, xz,
+                                                                                                  yy, yz,
+                                                                                                      zz)
+
+
 const SymTen2Dxy{T} = SymTen{Union{Zero, T}, T, T, Zero, T, Zero, Zero}
+
+SymTen2Dxy{T}(xx, xy, yy) where {T} = SymTen(convert(T, xx), convert(T, xy), Zero(),
+                                                             convert(T, yy), Zero(),
+                                                                             Zero())
+
+SymTen2Dxy(xx, xy, yy) = SymTen2Dxy{promote_type(typeof(xx), typeof(xy), typeof(yy))}(xx, xy, yy)
+
+
 const SymTen2Dxz{T} = SymTen{Union{Zero, T}, T, Zero, T, Zero, Zero, T}
+
+SymTen2Dxz{T}(xx, xz, zz) where {T} = SymTen(convert(T, xx), Zero(), convert(T, xz),
+                                                             Zero(), Zero(),
+                                                                     convert(T, zz))
+
+SymTen2Dxz(xx, xz, zz) = SymTen2Dxz{promote_type(typeof(xx), typeof(xz), typeof(zz))}(xx, xz, zz)
+
+
 const SymTen2Dyz{T} = SymTen{Union{Zero, T}, Zero, Zero, Zero, T, T, T}
+
+SymTen2Dyz{T}(yy, yz, zz) where {T} = SymTen(Zero(), Zero(),         Zero() ,
+                                                     convert(T, yy), convert(T, yz),
+                                                                     convert(T, zz))
+
+SymTen2Dyz(yy, yz, zz) = SymTen2Dyz{promote_type(typeof(yy), typeof(yz), typeof(zz))}(yy, yz, zz)
+
+
 const SymTen2D{T} = Union{SymTen2Dxy{T}, SymTen2Dxz{T}, SymTen2Dyz{T}}
+
+
 const SymTen1Dx{T} = SymTen{Union{Zero, T}, T, Zero, Zero, Zero, Zero, Zero}
+
+SymTen1Dx{T}(xx) where {T} = SymTen(convert(T, xx), Zero(), Zero(),
+                                                    Zero(), Zero(),
+                                                            Zero())
+
+SymTen1Dx(xx) = SymTen1Dx{typeof(xx)}(xx)
+
+
 const SymTen1Dy{T} = SymTen{Union{Zero, T}, Zero, Zero, Zero, T, Zero, Zero}
+
+SymTen1Dy{T}(yy) where {T} = SymTen(Zero(), Zero(),         Zero(),
+                                            convert(T, yy), Zero(),
+                                                            Zero())
+
+SymTen1Dy(yy) = SymTen1Dy{typeof(yy)}(yy)
+
+
 const SymTen1Dz{T} = SymTen{Union{Zero, T}, Zero, Zero, Zero, Zero, Zero, T}
+SymTen1Dz{T}(zz) where {T} = SymTen(Zero(), Zero(), Zero(),
+                                            Zero(), Zero(),
+                                                    convert(T, zz))
+
+SymTen1Dz(zz) = SymTen1Dz{typeof(zz)}(zz)
+
+
 const SymTen1D{T} = Union{SymTen1Dx{T}, SymTen1Dy{T}, SymTen1Dz{T}}
 
 const SymTenMaybe2Dxy{T, Tz} = SymTen{Union{T, Tz}, T, T, Tz, T, Tz, Tz}
@@ -133,5 +194,5 @@ end
 @inline transpose(S::SymTen) = S
 @inline adjoint(S::SymTen) = conj(transpose(S))
 
-@inline inner(a::SymTen, b::SymTen) =  muladd(2, muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz*b.yz)), muladd(a.xx, b.xx, muladd(a.yy, b.yy, a.zz*b.zz)))
+@inline inner(a::SymTen{T1}, b::SymTen{T2}) where {T1<:Real, T2<:Real} =  muladd(2, muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz*b.yz)), muladd(a.xx, b.xx, muladd(a.yy, b.yy, a.zz*b.zz)))
 
