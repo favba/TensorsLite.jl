@@ -3,7 +3,7 @@ struct VecArray{T, N, Tx, Ty, Tz} <: AbstractArray{T, N}
     y::Ty
     z::Tz
 
-    VecArray{T}(I::Vararg{Int, N}) where {T, N} = new{Vec{T, 1, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}}(Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...))
+    VecArray{T}(I::Vararg{Integer, N}) where {T, N} = new{Vec{T, 1, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}}(Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...))
 
     function VecArray(x::AbstractArray, y::AbstractArray, z::AbstractArray)
 
@@ -40,37 +40,60 @@ struct VecArray{T, N, Tx, Ty, Tz} <: AbstractArray{T, N}
 
 end
 
-@inline VecArray(I::Vararg{Integer}) = VecArray(Array{Zero}(undef, I...), Array{Zero}(undef, I...), Array{Zero}(undef, I...) )
-@inline VecArray{1}(I::Vararg{Integer}) = VecArray(I...)
-@inline VecArray{N}(I::Vararg{Integer}) where N = VecArray(Vec{N-1}(I...), VecArray{N-1}(I...), VecArray{N-1}(I...))
+@inline ZeroVecArray(I::Vararg{Integer, NI}) where {NI} = VecArray(Array{Zero}(undef, I...), Array{Zero}(undef, I...), Array{Zero}(undef, I...) )
+@inline ZeroVecArray(::Val{1}, I::Vararg{Integer, NI}) where {NI} = ZeroVecArray(I...)
+@inline ZeroVecArray(::Val{N}, I::Vararg{Integer, NI}) where {N, NI} = VecArray(ZeroVecArray(Val{N-1}(), I...), ZeroVecArray(Val{N-1}(), I...), ZeroVecArray(Val{N-1}(), I...))
+
 
 const Vec3DArray{T, N} = VecArray{Vec3D{T}, N, Array{T, N}, Array{T, N}, Array{T, N}}
 
+Vec3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N}) where {T,N} = VecArray(a, b, c)
+
+
 const Vec2DxyArray{T, N} = VecArray{Vec2Dxy{T}, N, Array{T, N}, Array{T, N}, Array{Zero, N}}
+
 Vec2DxyArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}) where {T,N} = VecArray(a, b, similar(a, Zero))
-Vec2DxyArray(a::AbstractArray{<:AbstractVec{TV,NV},N}, b::AbstractArray{<:AbstractVec{TV,NV},N}) where {TV, NV, N} = VecArray(a, b, VecArray{NV}(size(a)...))
+
+Vec2DxyArray(a::AbstractArray{<:AbstractVec{TV,NV},N}, b::AbstractArray{<:AbstractVec{TV,NV},N}) where {TV, NV, N} = VecArray(a, b, ZeroVecArray(Val{NV}(), size(a)...))
+
 
 const Vec2DxzArray{T, N} = VecArray{Vec2Dxz{T}, N, Array{T, N}, Array{Zero, N}, Array{T, N}}
+
 Vec2DxzArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}) where {T,N} = VecArray(a, similar(a, Zero), b)
-Vec2DxzArray(a::AbstractArray{<:AbstractVec{TV,NV},N}, b::AbstractArray{<:AbstractVec{TV,NV},N}) where {TV, NV, N} = VecArray(a, VecArray{NV}(size(a)...), b)
+
+Vec2DxzArray(a::AbstractArray{<:AbstractVec{TV,NV},N}, b::AbstractArray{<:AbstractVec{TV,NV},N}) where {TV, NV, N} = VecArray(a, ZeroVecArray(Val{NV}(), size(a)...), b)
+
 
 const Vec2DyzArray{T, N} = VecArray{Vec2Dyz{T}, N, Array{Zero, N}, Array{T, N}, Array{T, N}}
+
 Vec2DyzArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}) where {T,N} = VecArray(similar(a, Zero), a, b)
-Vec2DyzArray(a::AbstractArray{<:AbstractVec{TV,NV},N}, b::AbstractArray{<:AbstractVec{TV,NV},N}) where {TV, NV, N} = VecArray(VecArray{NV}(size(a)...), a, b)
+
+Vec2DyzArray(a::AbstractArray{<:AbstractVec{TV,NV},N}, b::AbstractArray{<:AbstractVec{TV,NV},N}) where {TV, NV, N} = VecArray(ZeroVecArray(Val{NV}(), size(a)...), a, b)
+
 
 const Vec2DArray{T, N} = Union{Vec2DxyArray{T, N}, Vec2DxzArray{T, N}, Vec2DyzArray{T, N}}
 
+
 const Vec1DxArray{T, N} = VecArray{Vec1Dx{T}, N, Array{T, N}, Array{Zero, N}, Array{Zero, N}}
+
 Vec1DxArray(a::AbstractArray{T,N}) where {T,N} = VecArray(a, similar(a, Zero), similar(a, Zero))
-Vec1DxArray(a::AbstractArray{<:AbstractVec{TV,NV},N}) where {TV, NV, N} = VecArray(a, VecArray{NV}(size(a)...), VecArray{NV}(size(a)...))
+
+Vec1DxArray(a::AbstractArray{<:AbstractVec{TV,NV},N}) where {TV, NV, N} = VecArray(a, ZeroVecArray(Val{NV}(), size(a)...), ZeroVecArray(Val{NV}(), size(a)...))
+
 
 const Vec1DyArray{T, N} = VecArray{Vec1Dy{T}, N, Array{Zero, N}, Array{T, N}, Array{Zero, N}}
+
 Vec1DyArray(a::AbstractArray{T,N}) where {T,N} = VecArray(similar(a, Zero), a, similar(a, Zero))
-Vec1DyArray(a::AbstractArray{<:AbstractVec{TV,NV},N}) where {TV, NV, N} = VecArray(VecArray{NV}(size(a)...), a, VecArray{NV}(size(a)...))
+
+Vec1DyArray(a::AbstractArray{<:AbstractVec{TV,NV},N}) where {TV, NV, N} = VecArray(ZeroVecArray(Val{NV}(), size(a)...), a, ZeroVecArray(Val{NV}(), size(a)...))
+
 
 const Vec1DzArray{T, N} = VecArray{Vec1Dz{T}, N, Array{Zero, N}, Array{Zero, N}, Array{T, N}}
+
 Vec1DzArray(a::AbstractArray{T,N}) where {T,N} = VecArray(similar(a, Zero), similar(a, Zero), a)
-Vec1DzArray(a::AbstractArray{<:AbstractVec{TV,NV},N}) where {TV, NV, N} = VecArray(VecArray{NV}(size(a)...), VecArray{NV}(size(a)...), a)
+
+Vec1DzArray(a::AbstractArray{<:AbstractVec{TV,NV},N}) where {TV, NV, N} = VecArray(ZeroVecArray(Val{NV}(), size(a)...), ZeroVecArray(Val{NV}(), size(a)...), a)
+
 
 const Vec1DArray{T, N} = Union{Vec1DxArray{T, N}, Vec1DyArray{T, N}, Vec1DzArray{T, N}}
 const Vec0DArray{N} = VecArray{Vec0D, N, Array{Zero, N}, Array{Zero, N}, Array{Zero, N}}

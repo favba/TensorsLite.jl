@@ -446,18 +446,27 @@ end
         @test length(resize!(a, 4)) === 4
     end
 
-    let a1 = [1],a2 = [2],a3 = [3],a4 = [4],a5 = [5],a6 = [6],a7 = [7],a8 = [8],a9 = [9],T = TenArray(a1, a2, a3,
-                                                                                                      a4, a5, a6,
-                                                                                                      a7, a8, a9)
-        @test T.xx === a1
-        @test T.yx === a4
-        @test T.zx === a7
-        @test T.xy === a2
-        @test T.yy === a5
-        @test T.zy === a8
-        @test T.xz === a3
-        @test T.yz === a6
-        @test T.zz === a9
+    let xx = [1],xy = [2],xz = [3],yx = [4],yy = [5],yz = [6],zx = [7],zy = [8],zz = [9],T = TenArray(xx, xy, xz,
+                                                                                                      yx, yy, yz,
+                                                                                                      zx, zy, zz)
+        @test T.xx === xx
+        @test T.yx === yx
+        @test T.zx === zx
+        @test T.xy === xy
+        @test T.yy === yy
+        @test T.zy === zy
+        @test T.xz === xz
+        @test T.yz === yz
+        @test T.zz === zz
+
+        @test Vec3DArray(VecArray(xx,yx,zx), VecArray(xy, yy, zy), VecArray(xz, yz, zz)) === T
+        @test Vec2DxyArray(Vec2DxyArray(xx,yx), Vec2DxyArray(xy, yy)) == Ten2DxyArray(xx, xy, yx, yy)
+        @test Vec2DxzArray(Vec2DxzArray(xx,zx), Vec2DxzArray(xz, zz)) == Ten2DxzArray(xx, xz, zx, zz)
+        @test Vec2DyzArray(Vec2DyzArray(yy,zy), Vec2DyzArray(yz, zz)) == Ten2DyzArray(yy, yz, zy, zz)
+
+        @test Vec1DxArray(Vec1DxArray(xx)) == Ten1DxArray(xx)
+        @test Vec1DyArray(Vec1DyArray(yy)) == Ten1DyArray(yy)
+        @test Vec1DzArray(Vec1DzArray(zz)) == Ten1DzArray(zz)
     end
 
 end
