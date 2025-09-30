@@ -98,19 +98,19 @@ const Vec2D{T} = Union{Vec2Dxy{T}, Vec2Dxz{T}, Vec2Dyz{T}}
 
 const Vec1Dx{T} = Vec{Union{Zero, T}, 1, T, Zero, Zero}
 Vec1Dx{T}(a) where {T} = Vec(convert(T, a), Zero(), Zero())
-Vec1Dx(a) = Vec(a, Zero(), Zero())
+Vec1Dx(a) = Vec1Dx{typeof(a)}(a)
 Vec1Dx{T}(a::AbstractVec{<:Any, N}) where {T, N} = Vec(_eltype_convert(T, a), Vec{N}(), Vec{N}())
 Vec1Dx(a::AbstractVec{Ta, N}) where {Ta, N} = Vec1Dx{_non_zero_type(Ta)}(a)
 
 const Vec1Dy{T} = Vec{Union{Zero, T}, 1, Zero, T, Zero}
 Vec1Dy{T}(a) where {T} = Vec(Zero(), convert(T, a), Zero())
-Vec1Dy(a) = Vec(Zero(), a, Zero())
+Vec1Dy(a) = Vec1Dy{typeof(a)}(a)
 Vec1Dy{T}(a::AbstractVec{<:Any, N}) where {T, N} = Vec(Vec{N}(), _eltype_convert(T, a), Vec{N}())
 Vec1Dy(a::AbstractVec{Ta, N}) where {Ta, N} = Vec1Dy{_non_zero_type(Ta)}(a)
 
 const Vec1Dz{T} = Vec{Union{Zero, T}, 1, Zero, Zero, T}
 Vec1Dz{T}(a) where {T} = Vec(Zero(), Zero(), convert(T, a))
-Vec1Dz(a) = Vec(Zero(), Zero(), a)
+Vec1Dz(a) = Vec1Dz{typeof(a)}(a)
 Vec1Dz{T}(a::AbstractVec{<:Any, N}) where {T, N} = Vec(Vec{N}(), Vec{N}(), _eltype_convert(T, a))
 Vec1Dz(a::AbstractVec{Ta, N}) where {Ta, N} = Vec1Dz{_non_zero_type(Ta)}(a)
 
