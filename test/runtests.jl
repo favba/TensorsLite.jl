@@ -357,6 +357,11 @@ end
     @test typeof(AntiSymTen(yz = 2)) === AntiSymTen2Dyz{Int}
     @test typeof(AntiSymTen(xz = 2.0)) === AntiSymTen2Dxz{Float64}
 
+    @test AntiSymTen3D(1,2,3.0) === AntiSymTen(xy=1.0, xz=2.0, yz=3.0)
+    @test AntiSymTen2Dxy(1) === AntiSymTen(xy=1)
+    @test AntiSymTen2Dxz(1) === AntiSymTen(xz=1)
+    @test AntiSymTen2Dyz(1) === AntiSymTen(yz=1)
+
     @test -AntiSymTen(1, 2, 3) === AntiSymTen(-1, -2, -3)
 
     @test AntiSymTen(1, 2, 3) == [
@@ -383,6 +388,11 @@ end
 
     @test convert(AntiSymTen3D{Float64}, AntiSymTen(xy = 1)) === AntiSymTen(xy = 1.0, xz = 0.0, yz = 0.0)
     @test convert(Ten2Dxz{Float64}, AntiSymTen(xz = 1)) === Ten(xx = 0.0, xz = 1.0, zx = -1.0, zz = 0.0)
+
+    W1 = AntiSymTen(rand(), rand(), rand())
+    W2 = AntiSymTen(rand(), rand(), rand())
+
+    @test inner(W1, W2) ≈ dot(Array(W1), Array(W2))
 
 end
 

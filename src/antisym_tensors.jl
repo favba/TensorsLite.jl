@@ -41,9 +41,32 @@ end
 end
 
 const AntiSymTen3D{T} = AntiSymTen{T, T, T, T}
+
+AntiSymTen3D{T}(xy, xz, yz) where {T} = AntiSymTen(convert(T, xy), convert(T, xz), convert(T, yz))
+
+AntiSymTen3D(xy, xz, yz) = AntiSymTen3D{promote_type(typeof(xy), typeof(xz), typeof(yz))}(xy, xz, yz)
+
+
 const AntiSymTen2Dxy{T} = AntiSymTen{Union{Zero, T}, T, Zero, Zero}
+
+AntiSymTen2Dxy{T}(xy) where {T} = AntiSymTen(convert(T, xy), Zero(), Zero())
+
+AntiSymTen2Dxy(xy) = AntiSymTen2Dxy{typeof(xy)}(xy)
+
+
 const AntiSymTen2Dxz{T} = AntiSymTen{Union{Zero, T}, Zero, T, Zero}
+
+AntiSymTen2Dxz{T}(xz) where {T} = AntiSymTen(Zero(), convert(T, xz), Zero())
+
+AntiSymTen2Dxz(xz) = AntiSymTen2Dxz{typeof(xz)}(xz)
+
+
 const AntiSymTen2Dyz{T} = AntiSymTen{Union{Zero, T}, Zero, Zero, T}
+
+AntiSymTen2Dyz{T}(yz) where {T} = AntiSymTen(Zero(), Zero(), convert(T, yz))
+
+AntiSymTen2Dyz(yz) = AntiSymTen2Dyz{typeof(yz)}(yz)
+
 
 const AntiSymTenMaybe2Dxy{T, Tz} = AntiSymTen{Union{T, Tz}, T, Tz, Tz}
 
@@ -106,5 +129,5 @@ end
                zx, zy, zz)
 end
 
-@inline inner(a::AntiSymTen, b::AntiSymTen) = 2 * muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz * b.yz))
+@inline inner(a::AntiSymTen{T1}, b::AntiSymTen{T2}) where {T1<:Real, T2<:Real} = 2 * muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz * b.yz))
 
