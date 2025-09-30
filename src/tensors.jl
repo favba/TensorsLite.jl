@@ -6,60 +6,96 @@
     z = Vec(xz, yz, zz)
     return Vec(x, y, z)
 end
-@inline Ten(; xx = 𝟎, yx = 𝟎, zx = 𝟎, xy = 𝟎, yy = 𝟎, zy = 𝟎, xz = 𝟎, yz = 𝟎, zz = 𝟎) = Ten(xx, xy, xz,
-                                                                                            yx, yy, yz,
-                                                                                            zx, zy, zz)
+
+@inline Ten(; xx = 𝟎, yx = 𝟎, zx = 𝟎, xy = 𝟎, yy = 𝟎, zy = 𝟎, xz = 𝟎, yz = 𝟎, zz = 𝟎) = 
+    Ten(xx, xy, xz,
+        yx, yy, yz,
+        zx, zy, zz)
+
 
 const Ten3D{T} = Vec{T, 2, Vec3D{T}, Vec3D{T}, Vec3D{T}}
-Ten3D{T}(xx, yx, zx, xy, yy, zy, xz, yz, zz) where {T} = 
+
+Ten3D{T}(xx, xy, xz, yx, yy, yz, zx, zy, zz) where {T} = 
     Ten(convert(T, xx), convert(T, xy), convert(T, xz),
         convert(T, yx), convert(T, yy), convert(T, yz),
         convert(T, zx), convert(T, zy), convert(T, zz))
-    Ten3D(v::Vararg{Any, 6}) = Ten(v...)
+
+Ten3D(xx, xy, xz, yx, yy, yz, zx, zy, zz) = 
+    Ten3D{promote_type(typeof(xx), typeof(xy), typeof(xz),
+                       typeof(yx), typeof(yy), typeof(yz),
+                       typeof(zx), typeof(zy), typeof(zz))}(xx, xy, xz,
+                                                            yx, yy, yz,
+                                                            zx, zy, zz)
+
 
 const Ten2Dxy{T} = Vec{Union{Zero, T}, 2, Vec2Dxy{T}, Vec2Dxy{T}, Vec0D}
+
 Ten2Dxy{T}(xx, xy, yx, yy) where {T} = 
-    Ten(xx = convert(T, xx), xy = convert(T, xy),
-        yx = convert(T, yx), yy = convert(T, yy))
+    Ten(convert(T, xx), convert(T, xy), 𝟎,
+        convert(T, yx), convert(T, yy), 𝟎,
+        𝟎,              𝟎,              𝟎)
+
 Ten2Dxy(xx, xy, yx, yy) = 
-    Ten(xx = xx, xy = xy,
-        yx = yx, yy = yy)
+    Ten2Dxy{promote_type(typeof(xx), typeof(xy),
+                         typeof(yx), typeof(yy))}(xx, xy,
+                                                  yx, yy)
+
 
 const Ten2Dxz{T} = Vec{Union{Zero, T}, 2, Vec2Dxz{T}, Vec0D, Vec2Dxz{T}}
+
 Ten2Dxz{T}(xx, xz, zx, zz) where {T} = 
-    Ten(xx = convert(T, xx), xz = convert(T, xz),
-        zx = convert(T, zx), zz = convert(T, zz))
+    Ten(convert(T, xx), 𝟎, convert(T, xz),
+        𝟎,              𝟎, 𝟎,
+        convert(T, zx), 𝟎, convert(T, zz))
+
 Ten2Dxz(xx, xz, zx, zz) = 
-    Ten(xx = xx, xz = xz,
-        zx = zx, zz = zz)
+    Ten2Dxz{promote_type(typeof(xx), typeof(xz),
+                         typeof(zx), typeof(zz))}(xx, xz,
+                                                  zx, zz)
+
 
 const Ten2Dyz{T} = Vec{Union{Zero, T}, 2, Vec0D, Vec2Dyz{T}, Vec2Dyz{T}}
+
 Ten2Dyz{T}(yy, yz, zy, zz) where {T} = 
-    Ten(yy = convert(T, yy), yz = convert(T, yz),
-        zy = convert(T, zy), zz = convert(T, zz))
+    Ten(𝟎, 𝟎,              𝟎,
+        𝟎, convert(T, yy), convert(T, yz),
+        𝟎, convert(T, zy), convert(T, zz))
+
 Ten2Dyz(yy, yz, zy, zz) = 
-    Ten(yy = yy, yz = yz,
-        zy = zy, zz = zz)
+Ten2Dyz{promote_type(typeof(yy), typeof(yz),
+                     typeof(zy), typeof(zz))}(yy, yz,
+                                              zy, zz)
  
+
 const Ten2D{T} = Union{Ten2Dxy{T}, Ten2Dxz{T}, Ten2Dyz{T}}
 
+
 const Ten1Dx{T} = Vec{Union{Zero, T}, 2, Vec1Dx{T}, Vec0D, Vec0D}
-Ten1Dx{T}(xx) where {T} = 
-    Ten(xx = convert(T, xx))
-Ten1Dx(xx) = 
-    Ten(xx = xx)
+
+Ten1Dx{T}(xx) where {T} = Ten(convert(T, xx), 𝟎, 𝟎,
+                              𝟎,              𝟎, 𝟎,
+                              𝟎,              𝟎, 𝟎)
+
+Ten1Dx(xx) = Ten1Dx{typeof(xx)}(xx)
+
 
 const Ten1Dy{T} = Vec{Union{Zero, T}, 2, Vec0D, Vec1Dy{T}, Vec0D}
-Ten1Dy{T}(yy) where {T} = 
-    Ten(yy = convert(T, yy))
-Ten1Dy(yy) = 
-    Ten(yy = yy)
+
+Ten1Dy{T}(yy) where {T} = Ten(𝟎, 𝟎,              𝟎,
+                              𝟎, convert(T, yy), 𝟎,
+                              𝟎, 𝟎,              𝟎)
+
+Ten1Dy(yy) = Ten1Dy{typeof(yy)}(yy)
+
 
 const Ten1Dz{T} = Vec{Union{Zero, T}, 2, Vec0D, Vec0D, Vec1Dz{T}}
-Ten1Dz{T}(zz) where {T} = 
-    Ten(zz = convert(T, zz))
-Ten1Dz(zz) = 
-    Ten(zz = zz)
+
+Ten1Dz{T}(zz) where {T} = Ten(𝟎, 𝟎, 𝟎,
+                              𝟎, 𝟎, 𝟎,
+                              𝟎, 𝟎, convert(T, zz))
+
+Ten1Dz(zz) = Ten1Dz{typeof(zz)}(zz)
+
 
 const Ten1D{T} = Union{Ten1Dx{T}, Ten1Dy{T}, Ten1Dz{T}}
 const TenND{T} = Union{Ten3D{T}, Ten2D{T}, Ten1D{T}}

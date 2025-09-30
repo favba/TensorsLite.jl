@@ -89,6 +89,15 @@ end
     @test typeof(Vec1Dy(Vec1Dy(1.0))) === Ten1Dy{Float64}
     @test typeof(Vec1Dz(Vec1Dz(1.0))) === Ten1Dz{Float64}
 
+    @test Ten3D(1,2,3,4,5,6,7,8,9) === Ten(1,2,3,4,5,6,7,8,9)
+    @test Ten2Dxy(1,2,3,4.) === Ten(xx=1.0, xy=2.0, yx=3.0, yy=4.0)
+    @test Ten2Dxz(1,2,3,4.) === Ten(xx=1.0, xz=2.0, zx=3.0, zz=4.0)
+    @test Ten2Dyz(1,2,3,4.) === Ten(yy=1.0, yz=2.0, zy=3.0, zz=4.0)
+
+    @test Ten1Dx(1) === Ten(xx=1)
+    @test Ten1Dy(1) === Ten(yy=1)
+    @test Ten1Dz(1) === Ten(zz=1)
+
 end
 
 @testset "Vec size and length" begin
