@@ -105,36 +105,90 @@ const SymTen3DArray{T, N} = SymTenArray{
                                  Array{T, N}, Array{T, N},
                                               Array{T, N}
 }
+
+
+SymTen3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N},
+                                     d::AbstractArray{T,N}, e::AbstractArray{T,N},
+                                                            f::AbstractArray{T,N}) where {T,N} =
+    SymTenArray(a, b, c,
+                   d, e,
+                      f)
+
+
 const SymTen2DxyArray{T, N} = SymTenArray{
     SymTen2Dxy{T}, N, Array{T, N}, Array{T, N}, Array{Zero, N},
                                    Array{T, N}, Array{Zero, N},
                                                 Array{Zero, N}
 }
+
+SymTen2DxyArray(a::AbstractArray{T,N}, b::AbstractArray{T,N},
+                d::AbstractArray{T,N}) where {T,N} =
+    SymTenArray(a, b, ZeroArray(size(a)),
+                   d, ZeroArray(size(a)),
+                      ZeroArray(size(a)))
+
+
 const SymTen2DxzArray{T, N} = SymTenArray{
     SymTen2Dxz{T}, N, Array{T, N}, Array{Zero, N}, Array{T, N},
                                    Array{Zero, N}, Array{Zero, N},
                                                    Array{T, N}
 }
+
+SymTen2DxzArray(a::AbstractArray{T,N}, c::AbstractArray{T,N},
+                                       f::AbstractArray{T,N}) where {T,N} =
+    SymTenArray(a, ZeroArray(size(a)), c,
+                   ZeroArray(size(a)), ZeroArray(size(a)),
+                                       f)
+
+
 const SymTen2DyzArray{T, N} = SymTenArray{
     SymTen2Dyz{T}, N, Array{Zero, N}, Array{Zero, N}, Array{Zero, N},
                                       Array{T, N},    Array{T, N},
                                                       Array{T, N}
 }
+
+SymTen2DyzArray(d::AbstractArray{T,N}, e::AbstractArray{T,N},
+                                       f::AbstractArray{T,N}) where {T,N} =
+    SymTenArray(ZeroArray(size(d)), ZeroArray(size(d)), ZeroArray(size(d)),
+                d,                  e,
+                                                        f)
+
+
 const SymTen1DxArray{T, N} = SymTenArray{
     SymTen1Dx{T}, N, Array{T, N}, Array{Zero, N}, Array{Zero, N},
                                   Array{Zero, N}, Array{Zero, N},
                                                   Array{Zero, N}
 }
+
+SymTen1DxArray(a::AbstractArray{T,N}) where {T,N} =
+    SymTenArray(a, ZeroArray(size(a)), ZeroArray(size(a)),
+                   ZeroArray(size(a)), ZeroArray(size(a)),
+                                       ZeroArray(size(a)))
+
+
 const SymTen1DyArray{T, N} = SymTenArray{
-    SymTen1Dx{T}, N, Array{Zero, N}, Array{Zero, N}, Array{Zero, N},
+    SymTen1Dy{T}, N, Array{Zero, N}, Array{Zero, N}, Array{Zero, N},
                                      Array{T, N},    Array{Zero, N},
                                                      Array{Zero, N}
 }
+
+SymTen1DyArray(d::AbstractArray{T,N}) where {T,N} =
+    SymTenArray(ZeroArray(size(d)), ZeroArray(size(d)), ZeroArray(size(d)),
+                                    d,                  ZeroArray(size(d)),
+                                                        ZeroArray(size(d)))
+
+
 const SymTen1DzArray{T, N} = SymTenArray{
-    SymTen1Dx{T}, N, Array{Zero, N}, Array{Zero, N}, Array{Zero, N},
+    SymTen1Dz{T}, N, Array{Zero, N}, Array{Zero, N}, Array{Zero, N},
                                      Array{Zero, N}, Array{Zero, N},
                                                      Array{T, N}
 }
+
+SymTen1DzArray(f::AbstractArray{T,N}) where {T,N} =
+    SymTenArray(ZeroArray(size(f)), ZeroArray(size(f)), ZeroArray(size(f)),
+                                    ZeroArray(size(f)), ZeroArray(size(f)),
+                                                        f)
+
 
 const SymTenMaybe2DxyArray{T, Tz, N} = SymTenArray{
     SymTenMaybe2Dxy{T, Tz}, N, Array{T, N}, Array{T, N}, Array{Tz, N},
@@ -299,14 +353,34 @@ end
 AntiSymTenArray(;xy::Union{Zero, <:AbstractArray} = 𝟎, xz::Union{Zero, <:AbstractArray} = 𝟎,
              yz::Union{Zero, <:AbstractArray} = 𝟎) = AntiSymTenArray(xy, xz, yz)
 
+
 const AntiSymTen3DArray{T, N} = AntiSymTenArray{AntiSymTen3D{T}, N,
                                                 Array{T, N}, Array{T, N}, Array{T, N}}
+
+AntiSymTen3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N}) where {T,N} =
+    AntiSymTenArray(a, b, c)
+
+
 const AntiSymTen2DxyArray{T, N} = AntiSymTenArray{AntiSymTen2Dxy{T}, N,
                                                   Array{T, N}, Array{Zero, N}, Array{Zero, N}}
+
+AntiSymTen2DxyArray(a::AbstractArray{T,N}) where {T,N} =
+    AntiSymTenArray(a, ZeroArray(size(a)), ZeroArray(size(a)))
+
+
 const AntiSymTen2DxzArray{T, N} = AntiSymTenArray{AntiSymTen2Dxz{T}, N,
                                                   Array{Zero, N}, Array{T, N}, Array{Zero, N}}
+
+AntiSymTen2DxzArray(b::AbstractArray{T,N}) where {T,N} =
+    AntiSymTenArray(ZeroArray(size(b)), b, ZeroArray(size(b)))
+
+
 const AntiSymTen2DyzArray{T, N} = AntiSymTenArray{AntiSymTen2Dyz{T}, N,
                                                   Array{Zero, N}, Array{Zero, N}, Array{T, N}}
+
+AntiSymTen2DyzArray(c::AbstractArray{T,N}) where {T,N} =
+    AntiSymTenArray(ZeroArray(size(c)), ZeroArray(size(c)), c)
+
 
 @inline Base.size(A::AntiSymTenArray) = size(A.xy)
 @inline Base.length(A::AntiSymTenArray) = length(A.xy)

@@ -534,6 +534,14 @@ end
         @test setindex!(T, SymTen(xy = 1, yy = 3), 3, 3)[3, 3] === SymTen(0.0, 1.0, 0.0, 3.0, 0.0, 0.0)
 
         @test typeof(T .+ SymTen()) === typeof(T)
+
+        @test SymTen3DArray(a1,a2,a3,a4,a5,a6) === SymTenArray(a1,a2,a3,a4,a5,a6)
+        @test SymTen2DxyArray(a1,a2,a3) == SymTenArray(xx=a1,xy=a2,yy=a3)
+        @test SymTen2DxzArray(a1,a2,a3) == SymTenArray(xx=a1,xz=a2,zz=a3)
+        @test SymTen2DyzArray(a1,a2,a3) == SymTenArray(yy=a1,yz=a2,zz=a3)
+        @test SymTen1DxArray(a1) == SymTenArray(xx=a1)
+        @test SymTen1DyArray(a1) == SymTenArray(yy=a1)
+        @test SymTen1DzArray(a1) == SymTenArray(zz=a1)
     end
 end
 
@@ -577,6 +585,11 @@ end
         @test setindex!(T, AntiSymTen(xy = 1), 3, 3)[3, 3] === AntiSymTen(1.0, 0.0, 0.0)
 
         @test typeof(T .+ AntiSymTen()) === typeof(T)
+
+        @test AntiSymTen3DArray(a1, a2, a3) === AntiSymTenArray(xy=a1,xz=a2,yz=a3)
+        @test AntiSymTen2DxyArray(a1) == AntiSymTenArray(xy=a1)
+        @test AntiSymTen2DxzArray(a1) == AntiSymTenArray(xz=a1)
+        @test AntiSymTen2DyzArray(a1) == AntiSymTenArray(yz=a1)
     end
 end
 
