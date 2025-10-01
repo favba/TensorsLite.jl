@@ -119,4 +119,61 @@ Base.@propagate_inbounds function Base.setindex!(arr::VecArray{T, N, Tx, Ty, Tz}
     return v
 end
 
+Base.@propagate_inbounds function Base.getindex(
+    arr::SymTenArray{T, N, Txx, Txy, Txz,
+                                Tyy, Tyz,
+                                     Tzz}, idx::SIMDIndex, rest::Vararg) where {T, N, Txx, Txy, Txz,
+                                                                                           Tyy, Tyz,
+                                                                                                Tzz}
+    return @inline SymTen(
+        _getindex(eltype(Txx), arr.xx, idx, rest...),
+        _getindex(eltype(Txy), arr.xy, idx, rest...),
+        _getindex(eltype(Txz), arr.xz, idx, rest...),
+        _getindex(eltype(Tyy), arr.yy, idx, rest...),
+        _getindex(eltype(Tyz), arr.yz, idx, rest...),
+        _getindex(eltype(Tzz), arr.zz, idx, rest...)
+    )
+end
+
+Base.@propagate_inbounds function Base.setindex!(
+    arr::SymTenArray{T, N, Txx, Txy, Txz,
+                                Tyy, Tyz,
+                                     Tzz}, v::SymTen, idx::SIMDIndex, rest::Vararg) where {T, N, Txx, Txy, Txz,
+                                                                                                      Tyy, Tyz,
+                                                                                                           Tzz}
+
+    @inline begin
+        _setindex!(eltype(Txx), arr.xx, v.xx, idx, rest...)
+        _setindex!(eltype(Txy), arr.xy, v.xy, idx, rest...)
+        _setindex!(eltype(Txz), arr.xz, v.xz, idx, rest...)
+        _setindex!(eltype(Tyy), arr.yy, v.yy, idx, rest...)
+        _setindex!(eltype(Tyz), arr.yz, v.yz, idx, rest...)
+        _setindex!(eltype(Tzz), arr.zz, v.zz, idx, rest...)
+    end
+
+    return v
+end
+
+Base.@propagate_inbounds function Base.getindex(arr::AntiSymTenArray{T, N, Txy, Txz, Tyz}, idx::SIMDIndex, rest::Vararg) where {T, N, Txy, Txz, Tyz}
+    return @inline AntiSymTen(
+        _getindex(eltype(Txy), arr.xy, idx, rest...),
+        _getindex(eltype(Txz), arr.xz, idx, rest...),
+        _getindex(eltype(Tyz), arr.yz, idx, rest...),
+    )
+end
+
+Base.@propagate_inbounds function Base.setindex!(arr::AntiSymTenArray{T, N, Txy, Txz, Tyz}, v::AntiSymTen, idx::SIMDIndex, rest::Vararg) where {T, N, Txy, Txz, Tyz}
+    @inline begin
+        _setindex!(eltype(Txy), arr.xy, v.xy, idx, rest...)
+        _setindex!(eltype(Txz), arr.xz, v.xz, idx, rest...)
+        _setindex!(eltype(Tyz), arr.yz, v.yz, idx, rest...)
+    end
+    return v
+end
+
+#Is this type piracy?
+Base.@propagate_inbounds function Base.setindex!(a::AbstractArray{Zero, N}, v::Zero, idx::SIMDIndex, rest::Vararg) where {N}
+    return v
+end
+
 end

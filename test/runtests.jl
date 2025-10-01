@@ -726,4 +726,28 @@ end
         end
     end
 
+    for u in (Ten1DxArray(rand(16)), Ten2DyzArray(rand(16), rand(16), rand(16), rand(16)), SymTen2DxzArray(rand(16), rand(16), rand(16)), AntiSymTenArray(rand(16), rand(16), rand(16)))
+
+        for op in (+, -, norm, normalize, x -> (2 * x), x -> (x / 2))
+            @test begin
+                r = op.(u)
+                rout = similar(r)
+                all(map(isapprox, apply_simd_op(rout, op, u), r))
+            end
+        end
+
+        for v in (Ten1DxArray(rand(16)), Ten2DyzArray(rand(16), rand(16), rand(16), rand(16)), SymTen2DxzArray(rand(16), rand(16), rand(16)), AntiSymTenArray(rand(16), rand(16), rand(16)))
+
+            for op in (+, -, dot, inner, (x, y) -> dotadd(x, y, u[1]), (x, y) -> muladd(2.0, x, y), (x, y) -> muladd(x, 2.0, y))
+                @test begin
+                    r = op.(u, v)
+                    rout = similar(r)
+                    @show typeof(op), typeof(u), typeof(v), typeof(rout)
+                    @show all(map(isapprox, apply_simd_op(rout, op, u, v), r))
+                    all(map(isapprox, apply_simd_op(rout, op, u, v), r))
+                end
+            end
+        end
+    end
+
 end
