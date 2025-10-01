@@ -131,3 +131,5 @@ end
 
 @inline inner(a::AntiSymTen{T1}, b::AntiSymTen{T2}) where {T1<:Real, T2<:Real} = 2 * muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz * b.yz))
 
+@inline inner(a::AntiSymTen, b::SymTen) = 𝟎
+@inline inner(a::SymTen, b::AntiSymTen) = 𝟎
