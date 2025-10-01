@@ -40,7 +40,9 @@ struct VecArray{T, N, Tx, Ty, Tz} <: AbstractArray{T, N}
 
 end
 
-@inline ZeroVecArray(I::Vararg{Integer, NI}) where {NI} = VecArray(Array{Zero}(undef, I...), Array{Zero}(undef, I...), Array{Zero}(undef, I...) )
+ZeroArray(s) = Array{Zero}(undef, s)
+
+@inline ZeroVecArray(I::Vararg{Integer, NI}) where {NI} = VecArray(ZeroArray(I), ZeroArray(I), ZeroArray(I))
 @inline ZeroVecArray(::Val{1}, I::Vararg{Integer, NI}) where {NI} = ZeroVecArray(I...)
 @inline ZeroVecArray(::Val{N}, I::Vararg{Integer, NI}) where {N, NI} = VecArray(ZeroVecArray(Val{N-1}(), I...), ZeroVecArray(Val{N-1}(), I...), ZeroVecArray(Val{N-1}(), I...))
 
@@ -146,7 +148,6 @@ function TenArray(;
     return VecArray(xv, yv, zv)
 end
 
-ZeroArray(s) = Array{Zero}(undef, s)
 
 const Ten3DArray{T, N} = VecArray{Ten3D{T}, N, Vec3DArray{T, N}, Vec3DArray{T, N}, Vec3DArray{T, N}}
 
