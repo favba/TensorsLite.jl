@@ -742,8 +742,6 @@ end
                 @test begin
                     r = op.(u, v)
                     rout = similar(r)
-                    @show typeof(op), typeof(u), typeof(v), typeof(rout)
-                    @show all(map(isapprox, apply_simd_op(rout, op, u, v), r))
                     all(map(isapprox, apply_simd_op(rout, op, u, v), r))
                 end
             end
