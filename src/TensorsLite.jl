@@ -146,6 +146,9 @@ end
     return getindex(getfield(u, @inbounds(I[N])), ntuple(i -> @inbounds(I[i]), Val{N-1}())...)
 end
 
+Base.rand(::Type{Zero}) = Zero()
+Base.rand(::Type{Vec{T,N,Tx,Ty,Tz}}) where {T,N,Tx,Ty,Tz} = Vec(rand(Tx), rand(Ty), rand(Tz))
+
 include("vec_arithmetic.jl")
 include("tensors.jl")
 include("symmetric_tensors.jl")

@@ -196,3 +196,4 @@ end
 
 @inline inner(a::SymTen{T1}, b::SymTen{T2}) where {T1<:Real, T2<:Real} =  muladd(2, muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz*b.yz)), muladd(a.xx, b.xx, muladd(a.yy, b.yy, a.zz*b.zz)))
 
+Base.rand(::Type{SymTen{T,Txx,Txy,Txz,Tyy,Tyz,Tzz}}) where {T,Txx,Txy,Txz,Tyy,Tyz,Tzz} = SymTen(rand(Txx), rand(Txy), rand(Txz), rand(Tyy), rand(Tyz), rand(Tzz))

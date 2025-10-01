@@ -56,6 +56,8 @@ const sz = SIMD.Vec(3.0, 4.0)
 
     @test eltype(Vec2Dxy(sx, sy)) === Union{Zero, SIMD.Vec{2, Float64}}
 
+    @test typeof(rand(Vec2Dyz{Float16})) === Vec2Dyz{Float16}
+
 end
 
 @testset "Tensor Constructors" begin
@@ -98,6 +100,7 @@ end
     @test Ten1Dy(1) === Ten(yy=1)
     @test Ten1Dz(1) === Ten(zz=1)
 
+    @test typeof(rand(Ten2Dyz{Float16})) === Ten2Dyz{Float16}
 end
 
 @testset "Vec size and length" begin
@@ -349,6 +352,8 @@ end
     S1 = SymTen(rand(),rand(),rand(),rand(),rand(),rand())
     S2 = SymTen(rand(),rand(),rand(),rand(),rand(),rand())
     @test inner(S1, S2) ≈ dot(Array(S1), Array(S2))
+
+    @test typeof(rand(SymTen2Dyz{Float16})) === SymTen2Dyz{Float16}
 end
 
 @testset "AntiSymTen" begin
@@ -394,6 +399,7 @@ end
 
     @test inner(W1, W2) ≈ dot(Array(W1), Array(W2))
 
+    @test typeof(rand(AntiSymTen2Dyz{Float16})) === AntiSymTen2Dyz{Float16}
 end
 
 @testset "VecArray" begin
