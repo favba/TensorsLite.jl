@@ -46,29 +46,18 @@ end
 
 ### Aliases ####
 
-#const VecGenericArray{Tx,Ty,Tz,N,TAx,TAy,TAz} = TensorArray{Tensor{Union{Tx,Ty,Tz},1,Tx,Ty,Tz},TAx,TAy,TAz}
-#const Vec3DGenericArray{T,N,TAx,TAy,TAz} = VecGenericArray{T,T,T,N,TAx,TAy,TAz}
-#const Vec2DxyGenericArray{T,N,TAx,TAy,TAz} = VecGenericArray{T,T,Zero,N,TAx,TAy,TAz}
-#const Vec2DxzGenericArray{T,N,TAx,TAy,TAz} = VecGenericArray{T,Zero,T,N,TAx,TAy,TAz}
-#const Vec2DyzGenericArray{T,N,TAx,TAy,TAz} = VecGenericArray{Zero,T,T,N,TAx,TAy,TAz}
-#const Vec1DxGenericArray{T,N,TAx,TAy,TAz} = VecGenericArray{T,Zero,Zero,N,TAx,TAy,TAz}
-#const Vec1DyGenericArray{T,N,TAx,TAy,TAz} = VecGenericArray{Zero,T,Zero,N,TAx,TAy,TAz}
-#const Vec1DzGenericArray{T,N,TAx,TAy,TAz} = VecGenericArray{Zero,Zero,T,N,TAx,TAy,TAz}
-
-#const VecArray{Tx,Ty,Tz,N} = VecGenericArray{Tx,Ty,Tz,N,Array{Tx,N},Array{Ty,N},Array{Tz,N}}
 const Vec3DArray{T,N} = TensorArray{Vec3D{T},N,Array{T,N},Array{T,N},Array{T,N}}
-const Vec2DxyArray{T,N} = TensorArray{Vec2Dxy{T},Array{T,N},Array{T,N},Array{Zero,N}}
-const Vec2DxzArray{T,N} = TensorArray{Vec2Dxz{T},Array{T,N},Array{Zero,N},Array{T,N}}
-const Vec2DyzArray{T,N} = TensorArray{Vec2Dyz{T},Array{Zero,N},Array{T,N},Array{T,N}}
+const Vec2DxyArray{T,N} = TensorArray{Vec2Dxy{T},N,Array{T,N},Array{T,N},Array{Zero,N}}
+const Vec2DxzArray{T,N} = TensorArray{Vec2Dxz{T},N,Array{T,N},Array{Zero,N},Array{T,N}}
+const Vec2DyzArray{T,N} = TensorArray{Vec2Dyz{T},N,Array{Zero,N},Array{T,N},Array{T,N}}
 const Vec2DArray{T,N} = Union{Vec2DxyArray{T, N}, Vec2DxzArray{T, N},Vec2DyzArray{T, N}}
-const Vec1DxArray{T,N} = TensorArray{Vec1Dx{T},Array{T,N},Array{Zero,N},Array{Zero,N}}
-const Vec1DyArray{T,N} = TensorArray{Vec1Dy{T},Array{Zero,N},Array{T,N},Array{Zero,N}}
-const Vec1DzArray{T,N} = TensorArray{Vec1Dz{T},Array{Zero,N},Array{Zero,N},Array{T,N}}
+const Vec1DxArray{T,N} = TensorArray{Vec1Dx{T},N,Array{T,N},Array{Zero,N},Array{Zero,N}}
+const Vec1DyArray{T,N} = TensorArray{Vec1Dy{T},N,Array{Zero,N},Array{T,N},Array{Zero,N}}
+const Vec1DzArray{T,N} = TensorArray{Vec1Dz{T},N,Array{Zero,N},Array{Zero,N},Array{T,N}}
 const Vec1DArray{T,N} = Union{Vec1DxArray{T, N}, Vec1DyArray{T, N}, Vec1DzArray{T, N}}
 const VecNDArray{T,N} = Union{Vec3DArray{T, N}, Vec2DArray{T, N}, Vec1DArray{T, N}}
 const Vec0DArray{N} = Vec3DArray{Zero,N}
 
-#const TenArray{Tf,Txv,Tyv,Tzv,Tvx,Tvy,Tvz} = TensorArray{Tensor{Tf,2,Txv,Tyv,Tzv}, Tvx,Tvy,Tvz}
 const Ten3DArray{T,N} = TensorArray{Ten3D{T},N,Vec3DArray{T,N},Vec3DArray{T,N},Vec3DArray{T,N}}
 const Ten2DxyArray{T,N} = TensorArray{Ten2Dxy{T},N,Vec2DxyArray{T,N},Vec2DxyArray{T,N},Vec0DArray{N}}
 const Ten2DxzArray{T,N} = TensorArray{Ten2Dxz{T},N,Vec2DxzArray{T,N},Vec0DArray{N},Vec2DxzArray{T,N}}
