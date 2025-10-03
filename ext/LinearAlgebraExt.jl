@@ -6,20 +6,23 @@ import TensorsLite: dot, *, +, -, _muladd, transpose, adjoint
 
 import LinearAlgebra: LinearAlgebra, norm
 
-@inline LinearAlgebra.dot(a::AbstractVec, b::AbstractVec) = dot(a, b)
+@inline LinearAlgebra.dot(a::AbstractTensor, b::AbstractTensor) = dot(a, b)
 @inline LinearAlgebra.dot(x::AbstractVec, A::AbstractTen, y::AbstractVec) = dot(dot(x, A), y)
 
 @inline fsqrt(x) = @fastmath sqrt(x)
 
-@inline LinearAlgebra.norm(u::AbstractVec) = fsqrt(real(inner(u, u)))
+@inline LinearAlgebra.norm(u::AbstractTensor) = fsqrt(real(inner(u, u)))
 
 @inline LinearAlgebra.norm(u::Vec1Dx, ::Real = 2) = abs(u.x)
+#@inline LinearAlgebra.norm(u::Tensor1Dx, ::Real = 2) = LinearAlgebra.norm(u.x)
 @inline LinearAlgebra.norm(u::Vec1Dy, ::Real = 2) = abs(u.y)
+#@inline LinearAlgebra.norm(u::Tensor1Dy, ::Real = 2) = LinearAlgebra.norm(u.y)
 @inline LinearAlgebra.norm(u::Vec1Dz, ::Real = 2) = abs(u.z)
-@inline LinearAlgebra.norm(::TensorsLite.Vec0D, ::Real = 2) = 𝟎
+#@inline LinearAlgebra.norm(u::Tensor1Dz, ::Real = 2) = LinearAlgebra.norm(u.z)
+@inline LinearAlgebra.norm(::VecND{Zero}, ::Real = 2) = 𝟎
 
-@inline LinearAlgebra.normalize(u::AbstractVec) = u / norm(u)
-@inline LinearAlgebra.normalize(u::AbstractVec{Zero}) = u
+@inline LinearAlgebra.normalize(u::AbstractTensor) = u / norm(u)
+@inline LinearAlgebra.normalize(u::AbstractTensor{Zero}) = u
 
 @inline function LinearAlgebra.cross(a::AbstractVec, b::AbstractVec)
     ax = a.x
@@ -31,7 +34,7 @@ import LinearAlgebra: LinearAlgebra, norm
     return  Vec(_muladd(ay, bz, -(az * by)), _muladd(az, bx, -(ax * bz)), _muladd(ax, by, -(ay * bx)))
 end
 
-@inline Base.isapprox(x::AbstractVec, y::AbstractVec) = norm(x - y) <= max(Base.rtoldefault(nonzero_eltype(x)), Base.rtoldefault(nonzero_eltype(y))) * max(norm(x), norm(y))
+@inline Base.isapprox(x::AbstractTensor{<:Any,N}, y::AbstractTensor{<:Any,N}) where {N} = norm(x - y) <= max(Base.rtoldefault(nonzero_eltype(x)), Base.rtoldefault(nonzero_eltype(y))) * max(norm(x), norm(y))
 
 @inline LinearAlgebra.transpose(T::AbstractTen) = transpose(T)
 @inline LinearAlgebra.adjoint(T::AbstractTen) = adjoint(T)

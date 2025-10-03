@@ -32,6 +32,8 @@ my_isapprox(y::Number, x::SIMD.Vec{N, T}) where {N, T} = isapprox(x, SIMD.Vec{N,
     end
     @test TensorsLite._muladd(Zero(), 1.0im, 2.0) === 2.0 + 0.0im
     @test TensorsLite._muladd(1.0im, Zero(), 2.0) === 2.0 + 0.0im
+    @test TensorsLite._muladd(Zero(), 1.0im, Zero()) === Zero()
+    @test TensorsLite._muladd(1.0im, Zero(), One()) === One()
 end
 
 const sx = SIMD.Vec(1.0, 2.0)
@@ -81,15 +83,15 @@ end
 
     @test eltype(Ten(xx = One())) === Union{Zero, One}
 
-    @test Vec{2}() === Ten()
-    @test Vec2Dxy(Vec2Dxy(1.0, 2.0), Vec2Dxy(3.0, 4.0)).z === Vec()
+    @test Tensor{2}() === Ten()
+    @test Tensor(x=Vec2Dxy(1.0, 2.0), y=Vec2Dxy(3.0, 4.0)).z === Vec()
 
-    @test typeof(Vec2Dxz(Vec2Dxz(1.0,3.0), Vec2Dxz(-1, 3))) === Ten2Dxz{Float64}
-    @test typeof(Vec2Dyz(Vec2Dyz(1.0,3.0), Vec2Dyz(-1, 3))) === Ten2Dyz{Float64}
+    @test typeof(Tensor(x=Vec2Dxz(1.0,3.0), z=Vec2Dxz(-1, 3))) === Ten2Dxz{Float64}
+    @test typeof(Tensor(y=Vec2Dyz(1.0,3.0), z=Vec2Dyz(-1, 3))) === Ten2Dyz{Float64}
 
-    @test typeof(Vec1Dx(Vec1Dx(1.0))) === Ten1Dx{Float64}
-    @test typeof(Vec1Dy(Vec1Dy(1.0))) === Ten1Dy{Float64}
-    @test typeof(Vec1Dz(Vec1Dz(1.0))) === Ten1Dz{Float64}
+    @test typeof(Tensor(x=Vec1Dx(1.0))) === Ten1Dx{Float64}
+    @test typeof(Tensor(y=Vec1Dy(1.0))) === Ten1Dy{Float64}
+    @test typeof(Tensor(z=Vec1Dz(1.0))) === Ten1Dz{Float64}
 
     @test Ten3D(1,2,3,4,5,6,7,8,9) === Ten(1,2,3,4,5,6,7,8,9)
     @test Ten2Dxy(1,2,3,4.) === Ten(xx=1.0, xy=2.0, yx=3.0, yy=4.0)
@@ -465,14 +467,14 @@ end
         @test T.yz === yz
         @test T.zz === zz
 
-        @test Vec3DArray(VecArray(xx,yx,zx), VecArray(xy, yy, zy), VecArray(xz, yz, zz)) === T
-        @test Vec2DxyArray(Vec2DxyArray(xx,yx), Vec2DxyArray(xy, yy)) == Ten2DxyArray(xx, xy, yx, yy)
-        @test Vec2DxzArray(Vec2DxzArray(xx,zx), Vec2DxzArray(xz, zz)) == Ten2DxzArray(xx, xz, zx, zz)
-        @test Vec2DyzArray(Vec2DyzArray(yy,zy), Vec2DyzArray(yz, zz)) == Ten2DyzArray(yy, yz, zy, zz)
+        @test Tensor3DArray(VecArray(xx,yx,zx), VecArray(xy, yy, zy), VecArray(xz, yz, zz)) === T
+        @test Tensor2DxyArray(Vec2DxyArray(xx,yx), Vec2DxyArray(xy, yy)) == Ten2DxyArray(xx, xy, yx, yy)
+        @test Tensor2DxzArray(Vec2DxzArray(xx,zx), Vec2DxzArray(xz, zz)) == Ten2DxzArray(xx, xz, zx, zz)
+        @test Tensor2DyzArray(Vec2DyzArray(yy,zy), Vec2DyzArray(yz, zz)) == Ten2DyzArray(yy, yz, zy, zz)
 
-        @test Vec1DxArray(Vec1DxArray(xx)) == Ten1DxArray(xx)
-        @test Vec1DyArray(Vec1DyArray(yy)) == Ten1DyArray(yy)
-        @test Vec1DzArray(Vec1DzArray(zz)) == Ten1DzArray(zz)
+        @test Tensor1DxArray(Vec1DxArray(xx)) == Ten1DxArray(xx)
+        @test Tensor1DyArray(Vec1DyArray(yy)) == Ten1DyArray(yy)
+        @test Tensor1DzArray(Vec1DzArray(zz)) == Ten1DzArray(zz)
     end
 
 end

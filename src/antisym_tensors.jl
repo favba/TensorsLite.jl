@@ -1,4 +1,4 @@
-struct AntiSymTen{T, Tyx, Tzx, Tzy} <: AbstractVec{T, 2}
+struct AntiSymTen{T, Tyx, Tzx, Tzy} <: AbstractTensor{T, 2}
     xy::Tyx
     xz::Tzx
     yz::Tzy
@@ -71,7 +71,7 @@ AntiSymTen2Dyz(yz) = AntiSymTen2Dyz{typeof(yz)}(yz)
 const AntiSymTenMaybe2Dxy{T, Tz} = AntiSymTen{Union{T, Tz}, T, Tz, Tz}
 
 Base.IndexStyle(::Type{AntiSymTen}) = IndexCartesian()
-@inline function Base.getindex(S::AntiSymTen, i::Integer, j::Integer)
+Base.@constprop :aggressive function Base.getindex(S::AntiSymTen, i::Integer, j::Integer)
     t = (Int(i), Int(j))
     @boundscheck checkbounds(S, t...)
     t === (1, 1) && return 𝟎
@@ -90,17 +90,17 @@ end
         xx = 𝟎
         yx = -getfield(S, :xy)
         zx = -getfield(S, :xz)
-        return Vec(xx, yx, zx)
+        return Tensor(xx, yx, zx)
     elseif s === :y
         xy = getfield(S, :xy)
         yy = 𝟎
         zy = -getfield(S, :yz)
-        return Vec(xy, yy, zy)
+        return Tensor(xy, yy, zy)
     elseif s === :z
         xz = getfield(S, :xz)
         yz = getfield(S, :yz)
         zz = 𝟎
-        return Vec(xz, yz, zz)
+        return Tensor(xz, yz, zz)
     elseif s === :yx
         return -getfield(S, :xy)
     elseif s === :zx
@@ -122,7 +122,7 @@ end
     return AntiSymTen(nfields...)
 end
 
-@inline function Base.convert(::Type{Vec{T, 2, Vec{_Tx, 1, Txx, Tyx, Tzx}, Vec{_Ty, 1, Txy, Tyy, Tzy}, Vec{_Tz, 1, Txz, Tyz, Tzz}}}, v::AntiSymTen) where {T, _Tx, _Ty, _Tz, Txx, Tyx, Tzx, Txy, Tyy, Tzy, Txz, Tyz, Tzz}
+@inline function Base.convert(::Type{Tensor{T, 2, Tensor{_Tx, 1, Txx, Tyx, Tzx}, Tensor{_Ty, 1, Txy, Tyy, Tzy}, Tensor{_Tz, 1, Txz, Tyz, Tzz}}}, v::AntiSymTen) where {T, _Tx, _Ty, _Tz, Txx, Tyx, Tzx, Txy, Tyy, Tzy, Txz, Tyz, Tzz}
     @inline xx, yx, zx, xy, yy, zy, xz, yz, zz = map(convert, (Txx, Tyx, Tzx, Txy, Tyy, Tzy, Txz, Tyz, Tzz), map(getproperty, (v, v, v, v, v, v, v, v, v), (:xx, :yx, :zx, :xy, :yy, :zy, :xz, :yz, :zz)))
     return Ten(xx, xy, xz,
                yx, yy, yz,

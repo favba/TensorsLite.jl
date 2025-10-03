@@ -69,27 +69,27 @@ TensorsLite.:-(v::SIMD.Vec, ::One) = v - 1
 
 @inline TensorsLite._muladd(::Zero, ::SIMD.Vec, ::One) = One()
 
-@inline Base.:*(b::SIMD.Vec, v::T) where {T <: AbstractVec} = @inline  begin
+@inline Base.:*(b::SIMD.Vec, v::T) where {T <: AbstractTensor} = @inline  begin
     TensorsLite.constructor(T)(map(TensorsLite.:*, ntuple(i -> b, Val(fieldcount(T))), TensorsLite.fields(v))...)
 end
 
 @inline my_div(a,b) = a / b
 @inline my_div(::Zero, ::SIMD.Vec) = Zero()
-@inline Base.:/(v::T, b::SIMD.Vec) where {T <: AbstractVec} = @inline  begin
+@inline Base.:/(v::T, b::SIMD.Vec) where {T <: AbstractTensor} = @inline  begin
     TensorsLite.constructor(T)(map(my_div, TensorsLite.fields(v), ntuple(i -> b, Val(fieldcount(T))))...)
 end
 
-@inline Base.:*(v::AbstractVec, b::SIMD.Vec) = b * v
+@inline Base.:*(v::AbstractTensor, b::SIMD.Vec) = b * v
 
-@inline TensorsLite.dotadd(u::AbstractVec{<:Any, 1}, v::AbstractVec{<:Any, 1}, a::SIMD.Vec) = TensorsLite._muladd(u.x, v.x, TensorsLite._muladd(u.y, v.y, TensorsLite._muladd(u.z, v.z, a)))
+@inline TensorsLite.dotadd(u::AbstractVec, v::AbstractVec, a::SIMD.Vec) = TensorsLite._muladd(u.x, v.x, TensorsLite._muladd(u.y, v.y, TensorsLite._muladd(u.z, v.z, a)))
 
 @inline _getindex(::Type{Zero}, x, idx, rest::Vararg) = Zeros.Zero()
 Base.@propagate_inbounds _getindex(::Type, x, idx, rest::Vararg) = Base.getindex(x, idx, rest...)
 
 const SIMDIndex{N} = Union{<:SIMD.VecRange{N}, <:SIMD.Vec{N, Int}} where {N}
 
-Base.@propagate_inbounds function Base.getindex(arr::VecArray{T, N, Tx, Ty, Tz}, idx::SIMDIndex, rest::Vararg) where {T, N, Tx, Ty, Tz}
-    return @inline Vec(
+Base.@propagate_inbounds function Base.getindex(arr::TensorArray{T, N, Tx, Ty, Tz}, idx::SIMDIndex, rest::Vararg) where {T, N, Tx, Ty, Tz}
+    return @inline Tensor(
         _getindex(eltype(Tx), arr.x, idx, rest...),
         _getindex(eltype(Ty), arr.y, idx, rest...),
         _getindex(eltype(Tz), arr.z, idx, rest...),
@@ -110,7 +110,7 @@ end
 Base.@propagate_inbounds _setindex!(::Type{T}, x, v::Union{Zero, One}, idx::SIMDIndex{N}, rest::Vararg) where {T, N} = Base.setindex!(x, _convert(SIMD.Vec{N, T}, v), idx, rest...)
 Base.@propagate_inbounds _setindex!(::Type, x, v, idx, rest::Vararg) = Base.setindex!(x, v, idx, rest...)
 
-Base.@propagate_inbounds function Base.setindex!(arr::VecArray{T, N, Tx, Ty, Tz}, v::Vec, idx::SIMDIndex, rest::Vararg) where {T, N, Tx, Ty, Tz}
+Base.@propagate_inbounds function Base.setindex!(arr::TensorArray{T, N, Tx, Ty, Tz}, v::AbstractTensor, idx::SIMDIndex, rest::Vararg) where {T, N, Tx, Ty, Tz}
     @inline begin
         _setindex!(eltype(Tx), arr.x, v.x, idx, rest...)
         _setindex!(eltype(Ty), arr.y, v.y, idx, rest...)

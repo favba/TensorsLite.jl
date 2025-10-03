@@ -262,17 +262,17 @@ Base.similar(A::SymTenArray, ::Type{SymTen{Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, d
         xx = getfield(S, :xx)
         yx = getfield(S, :xy)
         zx = getfield(S, :xz)
-        return VecArray(xx, yx, zx)
+        return TensorArray(xx, yx, zx)
     elseif s === :y
         xy = getfield(S, :xy)
         yy = getfield(S, :yy)
         zy = getfield(S, :yz)
-        return VecArray(xy, yy, zy)
+        return TensorArray(xy, yy, zy)
     elseif s === :z
         xz = getfield(S, :xz)
         yz = getfield(S, :yz)
         zz = getfield(S, :zz)
-        return VecArray(xz, yz, zz)
+        return TensorArray(xz, yz, zz)
     elseif s === :yx
         return getfield(S, :xy)
     elseif s === :zx
@@ -430,15 +430,15 @@ Base.similar(A::AntiSymTenArray, ::Type{AntiSymTen{Tt, Tyx, Tzx, Tzy}}, dims::Tu
     if s === :x
         yx = -getfield(S, :xy)
         zx = -getfield(S, :xz)
-        return Vec2DyzArray(yx, zx)
+        return Tensor2DyzArray(yx, zx)
     elseif s === :y
         xy = getfield(S, :xy)
         zy = -getfield(S, :yz)
-        return Vec2DxzArray(xy, zy)
+        return Tensor2DxzArray(xy, zy)
     elseif s === :z
         xz = getfield(S, :xz)
         yz = getfield(S, :yz)
-        return Vec2DxyArray(xz, yz)
+        return Tensor2DxyArray(xz, yz)
     elseif s === :yx
         return -getfield(S, :xy)
     elseif s === :zx

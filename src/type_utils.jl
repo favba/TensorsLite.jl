@@ -31,6 +31,11 @@ function _my_convert(T::Type, x::T1) where {T1}
     return convert(T, x)
 end
 
+"""
+    _non_zero_type(::Type{Union{T,Zero}) -> T
+
+Return `T` of a `Union{Zero,T} where {T}` type
+"""
 @inline function _non_zero_type(T::Type)
     if T isa Union
         T.a !== Zero && return T.a
@@ -40,6 +45,11 @@ end
     end
 end
 
+"""
+    nonzero_eltype(::Type{AbstractArray{Union{T,Zero}}) -> T
+
+Return `T` of an `AbstractArray{Union{Zero, T}, N} where {T, N}` type
+"""
 @inline function nonzero_eltype(::Type{TA}) where {TA <: AbstractArray}
     T = eltype(TA)
     return _non_zero_type(T)

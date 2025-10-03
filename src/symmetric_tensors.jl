@@ -51,7 +51,7 @@ end
     return SymTen(nfields...)
 end
 
-@inline function Base.convert(::Type{Vec{T, 2, Vec{_Tx, 1, Txx, Tyx, Tzx}, Vec{_Ty, 1, Tyx, Tyy, Tzy}, Vec{_Tz, 1, Tzx, Tzy, Tzz}}}, v::SymTen) where {T, _Tx, _Ty, _Tz, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}
+@inline function Base.convert(::Type{Tensor{T, 2, Tensor{_Tx, 1, Txx, Tyx, Tzx}, Tensor{_Ty, 1, Tyx, Tyy, Tzy}, Tensor{_Tz, 1, Tzx, Tzy, Tzz}}}, v::SymTen) where {T, _Tx, _Ty, _Tz, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}
     @inline xx, yx, zx, yy, zy, zz = map(convert, (Txx, Tyx, Tzx, Tyy, Tzy, Tzz), fields(v))
 
     return Ten(
@@ -153,7 +153,7 @@ const SymTen1D{T} = Union{SymTen1Dx{T}, SymTen1Dy{T}, SymTen1Dz{T}}
 const SymTenMaybe2Dxy{T, Tz} = SymTen{Union{T, Tz}, T, T, Tz, T, Tz, Tz}
 
 Base.IndexStyle(::Type{SymTen}) = IndexCartesian()
-@inline function Base.getindex(S::SymTen, i::Integer, j::Integer)
+Base.@constprop :aggressive function Base.getindex(S::SymTen, i::Integer, j::Integer)
     t = (Int(i), Int(j))
     @boundscheck checkbounds(S, t...)
     t === (1, 1) && return S.xx
@@ -169,17 +169,17 @@ end
         xx = getfield(S, :xx)
         yx = getfield(S, :xy)
         zx = getfield(S, :xz)
-        return Vec(xx, yx, zx)
+        return Tensor(xx, yx, zx)
     elseif s === :y
         xy = getfield(S, :xy)
         yy = getfield(S, :yy)
         zy = getfield(S, :yz)
-        return Vec(xy, yy, zy)
+        return Tensor(xy, yy, zy)
     elseif s === :z
         xz = getfield(S, :xz)
         yz = getfield(S, :yz)
         zz = getfield(S, :zz)
-        return Vec(xz, yz, zz)
+        return Tensor(xz, yz, zz)
     elseif s === :yx
         return getfield(S, :xy)
     elseif s === :zx
