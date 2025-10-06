@@ -47,6 +47,7 @@ struct Tensor{T, N, Tx, Ty, Tz} <: AbstractTensor{T, N}
     z::Tz
 
     @inline function Tensor(x, y, z)
+        any(map(x->isa(x,AbstractTensor),(x,y,z))) && throw(DimensionMismatch())
         Tx = typeof(x)
         Ty = typeof(y)
         Tz = typeof(z)
@@ -185,8 +186,8 @@ Vec1Dz(a) = Vec1Dz{typeof(a)}(a)
 
 ############################### AbstractArray interface #############################
 
-element_ndims(::Type{T}) where {T} = Val{0}()
-element_ndims(::Type{Tensor{T,N}}) where {T, N} = Val{N-1}()
+tensor_ndims(::Type{T}) where {T} = Val{0}()
+tensor_ndims(::Type{TV}) where {T,N,TV<:Tensor{T,N}} = Val{N}()
 
 @inline Base.convert(::Type{Tensor{T, N, Tx, Ty, Tz}}, u::AbstractTensor{T2, N}) where {T, N, Tx, Ty, Tz, T2} = Tensor(convert(Tx, u.x), convert(Ty, u.y), convert(Tz, u.z))
 
