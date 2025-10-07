@@ -410,8 +410,8 @@ end
     @test_throws DimensionMismatch Vec2DxzArray(rand(1, 2), rand(2, 1))
     @test_throws DimensionMismatch Vec2DyzArray(rand(1, 2), rand(2, 1))
 
-    @test size(VecArray{Float32}(4, 3)) === (4, 3)
-    @test eltype(VecArray{Float32}(4, 3)) === Vec3D{Float32}
+    @test size(TensorArray{Float32,3}(4, 3)) === (4, 3)
+    @test eltype(TensorArray{Float32,1}(4, 3)) === Vec3D{Float32}
 
     @test Vec1DxArray(ones(1, 1))[1] === Vec1Dx(1.0)
     @test Vec1DyArray(ones(1, 1))[1] === Vec1Dy(1.0)
@@ -432,8 +432,8 @@ end
     @test VecArray(ones(1, 1), (ones(1, 1) .+ 1), (ones(1, 1) .+ 2))[1, 1] === Vec(1.0, 2.0, 3.0)
 
 
-    @test setindex!(VecArray{Float64}(4, 4), Vec(1.0, 2.0, 3.0), 4, 4)[4, 4] === Vec(1.0, 2.0, 3.0)
-    @test setindex!(VecArray{Float64}(4, 4), Vec(1.0, 2.0, 3.0), 16)[16] === Vec(1.0, 2.0, 3.0)
+    @test setindex!(TensorArray{Float64,1}(4, 4), Vec(1.0, 2.0, 3.0), 4, 4)[4, 4] === Vec(1.0, 2.0, 3.0)
+    @test setindex!(TensorArray{Float64,1}(4, 4), Vec(1.0, 2.0, 3.0), 16)[16] === Vec(1.0, 2.0, 3.0)
 
     @test setindex!(Vec1DyArray(zeros(4, 4)), Vec(0.0, 2.0, 0.0), 4, 4)[4, 4] === Vec1Dy(2.0)
     @test setindex!(Vec1DyArray(zeros(4, 4)), Vec(0.0, 2.0, 0.0), 16)[16] === Vec1Dy(2.0)
@@ -449,7 +449,7 @@ end
     let a = Ten2DxzArray(rand(2), rand(2), rand(2), rand(2))
         @test typeof(similar(a, Ten3D{Float16}, (1, 1, 1))) === Ten3DArray{Float16, 3}
         @test a == object_and_preserve(a)[1]
-        b = Ten2DyzArray(a.zx, rand(2), rand(2), rand(2))
+        b = TenArray(yy = a.zx, yz = rand(2), zy = rand(2), zz = rand(2))
         @test Base.mightalias(a,b)
         @test length(resize!(a, 4)) === 4
     end
@@ -467,14 +467,14 @@ end
         @test T.yz === yz
         @test T.zz === zz
 
-        @test Tensor3DArray(VecArray(xx,yx,zx), VecArray(xy, yy, zy), VecArray(xz, yz, zz)) === T
-        @test Tensor2DxyArray(Vec2DxyArray(xx,yx), Vec2DxyArray(xy, yy)) == Ten2DxyArray(xx, xy, yx, yy)
-        @test Tensor2DxzArray(Vec2DxzArray(xx,zx), Vec2DxzArray(xz, zz)) == Ten2DxzArray(xx, xz, zx, zz)
-        @test Tensor2DyzArray(Vec2DyzArray(yy,zy), Vec2DyzArray(yz, zz)) == Ten2DyzArray(yy, yz, zy, zz)
+        @test TensorArray(VecArray(xx,yx,zx), VecArray(xy, yy, zy), VecArray(xz, yz, zz)) === T
+        @test TensorArray(x = Vec2DxyArray(xx,yx), y = Vec2DxyArray(xy, yy)) == Ten2DxyArray(xx, xy, yx, yy)
+        @test TensorArray(x = Vec2DxzArray(xx,zx), z = Vec2DxzArray(xz, zz)) == Ten2DxzArray(xx, xz, zx, zz)
+        @test TensorArray(y = Vec2DyzArray(yy,zy), z = Vec2DyzArray(yz, zz)) == Ten2DyzArray(yy, yz, zy, zz)
 
-        @test Tensor1DxArray(Vec1DxArray(xx)) == Ten1DxArray(xx)
-        @test Tensor1DyArray(Vec1DyArray(yy)) == Ten1DyArray(yy)
-        @test Tensor1DzArray(Vec1DzArray(zz)) == Ten1DzArray(zz)
+        @test TensorArray(x = Vec1DxArray(xx)) == Ten1DxArray(xx)
+        @test TensorArray(y = Vec1DyArray(yy)) == Ten1DyArray(yy)
+        @test TensorArray(z = Vec1DzArray(zz)) == Ten1DzArray(zz)
     end
 
 end
@@ -492,7 +492,7 @@ end
 
 @testset "TenArray Broadcasting" begin
     let ux = TenArray(xx = rand(3)), uxy = TenArray(xx = rand(Float32, 3), yx = rand(Float32, 3), xy = rand(Float32, 3), yy = rand(Float32, 3))
-        @test (ux .+ uxy) == Ten2DxyArray(ux.x.x .+ uxy.x.x, uxy.y.x, uxy.x.y, uxy.y.y)
+        @test (ux .+ uxy) == Ten2DxyArray(ux.x.x .+ uxy.x.x, Float64.(uxy.y.x), Float64.(uxy.x.y), Float64.(uxy.y.y))
         @test typeof(ux .+ uxy) === Ten2DxyArray{Float64, 1}
         @test ux .+ (𝐢 ⊗ 𝐢) == Ten1DxArray(ux.x.x .+ 1)
         @test (ux .= Ten()) == Ten1DxArray(zeros(3))

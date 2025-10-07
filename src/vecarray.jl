@@ -25,8 +25,13 @@ struct TensorArray{T, N, Tx, Ty, Tz} <: AbstractArray{T, N}
         eTx = eltype(x)
         eTy = eltype(y)
         eTz = eltype(z)
+        Tf = promote_type_ignoring_Zero(eTx, eTy, eTz)
+        fTx = _my_promote_type(Tf, eTx)
+        fTy = _my_promote_type(Tf, eTy)
+        fTz = _my_promote_type(Tf, eTz)
+        Tff = _final_type(fTx,fTy,fTz)
 
-        return new{Tensor{Union{eTx, eTy, eTz}, 1, eTx, eTy, eTz}, N, Tx, Ty, Tz}(x, y, z)
+        return new{Tensor{Tff, 1, fTx, fTy, fTz}, N, Tx, Ty, Tz}(x, y, z)
     end
 
     function TensorArray(x::AbstractArray{Tx, N}, y::AbstractArray{Ty, N}, z::AbstractArray{Tz, N}) where {NV, eeTx, eeTy, eeTz, Tx<:AbstractTensor{eeTx, NV}, Ty<:AbstractTensor{eeTy, NV}, Tz<:AbstractTensor{eeTz, NV}, N}
@@ -35,11 +40,10 @@ struct TensorArray{T, N, Tx, Ty, Tz} <: AbstractArray{T, N}
         size(y) === s || throw(DimensionMismatch("Arrays must have the same size"))
         size(z) === s || throw(DimensionMismatch("Arrays must have the same size"))
 
-        eTx = eltype(x)
-        eTy = eltype(y)
-        eTz = eltype(z)
+        # Figure out how to not rely on promote_op
+        TT = Base.promote_op(Tensor,Tx,Ty,Tz)
 
-        return new{Tensor{Union{eeTx, eeTy, eeTz}, NV+1, eTx, eTy, eTz}, N, typeof(x), typeof(y), typeof(z)}(x, y, z)
+        return new{TT, N, typeof(x), typeof(y), typeof(z)}(x, y, z)
     end
 
 end
@@ -84,27 +88,57 @@ ZeroArray(s) = Array{Zero}(undef, s)
 @inline ZeroTensorArray(::Val{1}, I::Vararg{Integer, NI}) where {NI} = TensorArray(ZeroArray(I), ZeroArray(I), ZeroArray(I))
 @inline ZeroTensorArray(::Val{N}, I::Vararg{Integer, NI}) where {N, NI} = TensorArray(ZeroTensorArray(Val{N-1}(), I...), ZeroTensorArray(Val{N-1}(), I...), ZeroTensorArray(Val{N-1}(), I...))
 
-Tensor2DxyArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = TensorArray(a, b, ZeroTensorArray(element_ndims(T), size(a)...))
+_check_TensorArray_args(v::Vararg) = any(map(x->isa(x,AbstractArray{<:AbstractTensor}), v)) ? throw(DomainError("Tensor Array fields must be Arrays of  tensors with the same order")) : nothing
+_check_TensorArray_args(v::Vararg{T}) where {TE, N, T<:AbstractArray{<:AbstractTensor{TE,N}}} = nothing
+check_TensorArray_args(x,y,z) = _check_TensorArray_args(_filter_zeros(x,y,z)...)
+
+_get_ndims(::Union{Zero,<:AbstractArray{<:AbstractTensor{<:Any,N}}},
+           ::Union{Zero,<:AbstractArray{<:AbstractTensor{<:Any,N}}},
+           ::Union{Zero,<:AbstractArray{<:AbstractTensor{<:Any,N}}}) where {N} = Val{N}()
+
+_get_size(v::Vararg) = size(v[1])
+get_size(x,y,z) = _get_size(_filter_zeros(x,y,z)...)
+
+function if_zero_to_ZeroTensorArray(v::Val{NV}, s::NTuple{N,Int}, x, y, z) where {NV, N}
+    xf = isa(x,Zero) ? ZeroTensorArray(v, s...) : x
+    yf = isa(y,Zero) ? ZeroTensorArray(v, s...) : y
+    zf = isa(z,Zero) ? ZeroTensorArray(v, s...) : z
+    return (xf, yf, zf)
+end
+
+@inline function TensorArray(;x=𝟎,y=𝟎,z=𝟎)
+    if (x === 𝟎) && (y === 𝟎) && (z === 𝟎)
+        return throw(DomainError((x,y,z), "At least one entry must be a valid Array"))
+    else
+        check_TensorArray_args(x,y,z)
+        NV = _get_ndims(x,y,z)
+        s = get_size(x,y,z)
+        xf, yf, zf = if_zero_to_ZeroTensorArray(NV,s, x,y,z)
+        return TensorArray(xf,yf,zf)
+    end
+end
+
+Tensor2DxyArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = TensorArray(a, b, ZeroTensorArray(tensor_ndims(T), size(a)...))
 Tensor2DxyArray(::Type{T}, ::Val{1}, I::Vararg{Integer,N}) where {T, N} = Tensor2DxyArray(Array{T}(undef, I...), Array{T}(undef, I...))
 Tensor2DxyArray(::Type{T}, ::Val{NT}, I::Vararg{Integer,N}) where {T, NT, N} = Tensor2DxyArray(Tensor2DxyArray(T, Val{NT-1}(), I...),Tensor2DxyArray(T, Val{NT-1}(), I...))
 
-Tensor2DxzArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = TensorArray(a, ZeroTensorArray(element_ndims(T), size(a)...), b)
+Tensor2DxzArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = TensorArray(a, ZeroTensorArray(tensor_ndims(T), size(a)...), b)
 Tensor2DxzArray(::Type{T}, ::Val{1}, I::Vararg{Integer,N}) where {T, N} = Tensor2DxzArray(Array{T}(undef, I...), Array{T}(undef, I...))
 Tensor2DxzArray(::Type{T}, ::Val{NT}, I::Vararg{Integer,N}) where {T, NT, N} = Tensor2DxzArray(Tensor2DxzArray(T, Val{NT-1}(), I...),Tensor2DxzArray(T, Val{NT-1}(), I...))
 
-Tensor2DyzArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = TensorArray(ZeroTensorArray(element_ndims(T), size(a)...), a, b)
+Tensor2DyzArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = TensorArray(ZeroTensorArray(tensor_ndims(T), size(a)...), a, b)
 Tensor2DyzArray(::Type{T}, ::Val{1}, I::Vararg{Integer,N}) where {T, N} = Tensor2DyzArray(Array{T}(undef, I...), Array{T}(undef, I...))
 Tensor2DyzArray(::Type{T}, ::Val{NT}, I::Vararg{Integer,N}) where {T, NT, N} = Tensor2DyzArray(Tensor2DyzArray(T, Val{NT-1}(), I...),Tensor2DyzArray(T, Val{NT-1}(), I...))
 
-Tensor1DxArray(a::AbstractArray{T,N}) where {T,N} = TensorArray(a, ZeroTensorArray(element_ndims(T), size(a)...), ZeroTensorArray(element_ndims(T), size(a)...))
+Tensor1DxArray(a::AbstractArray{T,N}) where {T,N} = TensorArray(a, ZeroTensorArray(tensor_ndims(T), size(a)...), ZeroTensorArray(tensor_ndims(T), size(a)...))
 Tensor1DxArray(::Type{T}, ::Val{1}, I::Vararg{Integer,N}) where {T, N} = Tensor1DxArray(Array{T}(undef, I...))
 Tensor1DxArray(::Type{T}, ::Val{NT}, I::Vararg{Integer,N}) where {T, NT, N} = Tensor1DxArray(Tensor1DxArray(T, Val{NT-1}(), I...))
 
-Tensor1DyArray(a::AbstractArray{T,N}) where {T,N} = TensorArray(ZeroTensorArray(element_ndims(T), size(a)...), a, ZeroTensorArray(element_ndims(T), size(a)...))
+Tensor1DyArray(a::AbstractArray{T,N}) where {T,N} = TensorArray(ZeroTensorArray(tensor_ndims(T), size(a)...), a, ZeroTensorArray(tensor_ndims(T), size(a)...))
 Tensor1DyArray(::Type{T}, ::Val{1}, I::Vararg{Integer,N}) where {T, N} = Tensor1DyArray(Array{T}(undef, I...))
 Tensor1DyArray(::Type{T}, ::Val{NT}, I::Vararg{Integer,N}) where {T, NT, N} = Tensor1DyArray(Tensor1DyArray(T, Val{NT-1}(), I...))
 
-Tensor1DzArray(a::AbstractArray{T,N}) where {T,N} = TensorArray(ZeroTensorArray(element_ndims(T), size(a)...), ZeroTensorArray(element_ndims(T), size(a)...), a)
+Tensor1DzArray(a::AbstractArray{T,N}) where {T,N} = TensorArray(ZeroTensorArray(tensor_ndims(T), size(a)...), ZeroTensorArray(tensor_ndims(T), size(a)...), a)
 Tensor1DzArray(::Type{T}, ::Val{1}, I::Vararg{Integer,N}) where {T, N} = Tensor1DzArray(Array{T}(undef, I...))
 Tensor1DzArray(::Type{T}, ::Val{NT}, I::Vararg{Integer,N}) where {T, NT, N} = Tensor1DzArray(Tensor1DzArray(T, Val{NT-1}(), I...))
 
@@ -153,22 +187,7 @@ Vec3DArray{T}(I::Vararg{Integer,N}) where {T,N} = TensorArray(Array{T}(undef,I..
 _if_zero_to_Array(s::NTuple{N, Int}, ::Zero) where {N} = ZeroArray(s)
 _if_zero_to_Array(::NTuple{N, Int}, x::AbstractArray) where {N} = x
 
-function VecArray(;x = 𝟎, y = 𝟎, z = 𝟎)
-
-    vals = (x, y, z)
-
-    vals === (𝟎, 𝟎, 𝟎) && throw(DomainError(vals, "At least one entry must be a valid Array"))
-
-    non_zero_vals = _filter_zeros(vals...)
-    s = size(non_zero_vals[1])
-
-    all(x -> (size(x) === s), non_zero_vals) || throw(DimensionMismatch())
-
-    sizes = (s, s, s)
-    xv, yv, zv = map(_if_zero_to_Array, sizes, vals)
-
-    return VecArray(xv, yv, zv)
-end
+VecArray(;x = 𝟎, y= 𝟎, z = 𝟎) = TensorArray(x=x,y=y,z=z)
 
 #Tensor3DArray(a::AbstractArray{Ta,N}, b::AbstractArray{Tb,N}, c::AbstractArray{Tc,N}) where {Ta,Tb,Tc,N} = TensorArray(a, b, c)
 
@@ -233,7 +252,7 @@ Ten3DArray{T}(I::Vararg{Integer,N}) where {T,N} = TensorArray{T,2}(I...)
 
 Ten2DxyArray(xx::AbstractArray, xy::AbstractArray, yx::AbstractArray, yy::AbstractArray) = Ten2DxyArray(Vec2DxyArray(xx,yx), Vec2DxyArray(xy,yy))
 Ten2DxzArray(xx::AbstractArray, xz::AbstractArray, zx::AbstractArray, zz::AbstractArray) = Ten2DxzArray(Vec2DxzArray(xx,zx), Vec2DxzArray(xz,zz))
-Ten2DyzArray(yy::AbstractArray, yz::AbstractArray, zy::AbstractArray, zz::AbstractArray) = Ten2DyzArray(Vec2DxzArray(yy,zy), Vec2DxzArray(yz,zz))
+Ten2DyzArray(yy::AbstractArray, yz::AbstractArray, zy::AbstractArray, zz::AbstractArray) = Ten2DyzArray(Vec2DyzArray(yy,zy), Vec2DyzArray(yz,zz))
 Ten1DxArray(xx::AbstractArray) = Ten1DxArray(Vec1DxArray(xx))
 Ten1DyArray(yy::AbstractArray) = Ten1DyArray(Vec1DyArray(yy))
 Ten1DzArray(zz::AbstractArray) = Ten1DzArray(Vec1DzArray(zz))
