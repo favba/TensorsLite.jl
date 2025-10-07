@@ -17,7 +17,7 @@ struct SymTen{T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTen{T}
         Tyy = typeof(yy)
         Tzy = typeof(yz)
         Tzz = typeof(zz)
-        Tf = promote_type_ignoring_Zero(
+        Tf = promote_type_ignoring_Zero_and_One(
             Txx, Tyx, Tzx,
                  Tyy, Tzy,
                       Tzz
@@ -35,7 +35,7 @@ struct SymTen{T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTen{T}
         Tyyf = typeof(yyn)
         Tzyf = typeof(zyn)
         Tzzf = typeof(zzn)
-        Tff = _final_type(Txxf, Tyxf, Tzxf, Tyyf, Tzyf, Tzzf)
+        Tff = Union{Txxf, Tyxf, Tzxf, Tyyf, Tzyf, Tzzf}
         return new{Tff, Txxf, Tyxf, Tzxf, Tyyf, Tzyf, Tzzf}(
             xxn, yxn, zxn,
                  yyn, zyn,

@@ -2,57 +2,42 @@
 
 _my_promote_type(T::Type, Tx::Type) = (Tx === Zero || Tx === One) ? Tx : promote_type(T, Tx)
 
-@inline function _final_type(types::Vararg{DataType, N}) where {N}
-    _all_zeros(types...) && return Zero
-    _all_zeros_and_ones(types...) && return Union{Zero, One}
-    Tff = promote_type_ignoring_Zero(types...)
-    _is_there_any_zeros(types...) ? Union{Zero, Tff} : Tff
-end
-
-@inline _all_zeros(types::Type{Zero}) = true
-@inline _all_zeros(types::T) where {T} = false
-@inline _all_zeros(::Type{Zero}, types::Vararg{DataType, N}) where {N} = _all_zeros(types...)
-@inline _all_zeros(::Type{T}, types::Vararg{DataType, N}) where {T, N} = false
-
-@inline _all_zeros_and_ones(types::Type{Zero}) = true
-@inline _all_zeros_and_ones(types::Type{One}) = true
-@inline _all_zeros_and_ones(types::T) where {T} = false
-@inline _all_zeros_and_ones(::Type{One}, types::Vararg{DataType, N}) where {N} = _all_zeros_and_ones(types...)
-@inline _all_zeros_and_ones(::Type{Zero}, types::Vararg{DataType, N}) where {N} = _all_zeros_and_ones(types...)
-@inline _all_zeros_and_ones(::DataType, types::Vararg{DataType, N}) where {N} = false
-
-@inline _is_there_any_zeros() = false
-@inline _is_there_any_zeros(::Type{Zero}, types::Vararg{DataType, N}) where {N} = true
-@inline _is_there_any_zeros(::DataType, types::Vararg{DataType, N}) where {N} = _is_there_any_zeros(types...)
-
 function _my_convert(T::Type, x::T1) where {T1}
     T1 === Zero && return x
     T1 === One && return x
     return convert(T, x)
 end
 
-"""
-    _non_zero_type(::Type{Union{T,Zero}) -> T
-
-Return `T` of a `Union{Zero,T} where {T}` type
-"""
-@inline function _non_zero_type(T::Type)
+@inline function __non_StaticBool_type(T::Type)
     if T isa Union
-        T.a !== Zero && return T.a
-        T.b !== Zero && return T.b
+        if T.b isa Union
+            return _filter_type_zero_and_one(T.a, T.b.a, T.b.b)[1]
+        else
+            r = _filter_type_zero_and_one(T.a, T.b)
+            return isempty(r) ? One : r[1]
+        end
     else
         return T
     end
 end
 
 """
-    nonzero_eltype(::Type{AbstractArray{Union{T,Zero}}) -> T
+    _non_StaticBool_type(::Type{Union{T,Zero,One}) -> T
+    _non_StaticBool_type(::Type{Union{T,Zero}) -> T
+    _non_StaticBool_type(::Type{Union{T,One}) -> T
+    _non_StaticBool_type(::Type{Union{Zero,One}) -> One
+"""
+_non_StaticBool_type(::Type{T}) where {T} = __non_StaticBool_type(T)
 
-Return `T` of an `AbstractArray{Union{Zero, T}, N} where {T, N}` type
+"""
+    nonzero_eltype(::Type{AbstractArray{Union{T,Zero}}) -> T
+    nonzero_eltype(::Type{AbstractArray{Union{T,Zero,One}}) -> T
+    nonzero_eltype(::Type{AbstractArray{Union{T,One}}) -> T
+    nonzero_eltype(::Type{AbstractArray{Union{Zero,One}}) -> One
 """
 @inline function nonzero_eltype(::Type{TA}) where {TA <: AbstractArray}
     T = eltype(TA)
-    return _non_zero_type(T)
+    return _non_StaticBool_type(T)
 end
 @inline nonzero_eltype(::T) where {T <: AbstractArray} = nonzero_eltype(T)
 
@@ -63,12 +48,14 @@ end
 @inline _filter_zeros(::Zero, rest::Vararg{Any, N}) where {N} = (_filter_zeros(rest...)...,)
 @inline _filter_zeros(x::Any, rest::Vararg{Any, N}) where {N} = (x, _filter_zeros(rest...)...)
 
-@inline _filter_type_zero() = ()
-@inline _filter_type_zero(::Type{Zero}) = ()
-@inline _filter_type_zero(t::Type) = (t,)
-@inline _filter_type_zero(::Type{Zero}, rest::Vararg{Type, N}) where {N} = (_filter_type_zero(rest...)...,)
-@inline _filter_type_zero(x::Type, rest::Vararg{Type, N}) where {N} = (x, _filter_type_zero(rest...)...)
+@inline _filter_type_zero_and_one() = ()
+@inline _filter_type_zero_and_one(::Type{Zero}) = ()
+@inline _filter_type_zero_and_one(::Type{One}) = ()
+@inline _filter_type_zero_and_one(t::Type) = (t,)
+@inline _filter_type_zero_and_one(::Type{Zero}, rest::Vararg{Type, N}) where {N} = (_filter_type_zero_and_one(rest...)...,)
+@inline _filter_type_zero_and_one(::Type{One}, rest::Vararg{Type, N}) where {N} = (_filter_type_zero_and_one(rest...)...,)
+@inline _filter_type_zero_and_one(x::Type, rest::Vararg{Type, N}) where {N} = (x, _filter_type_zero_and_one(rest...)...)
 
 @inline _promote_type() = Zero
 @inline _promote_type(types::Vararg{Any, N}) where {N} = promote_type(types...)
-@inline promote_type_ignoring_Zero(types::Vararg{Any, N}) where {N} = _promote_type(_filter_type_zero(types...)...)
+@inline promote_type_ignoring_Zero_and_One(types::Vararg{Any, N}) where {N} = _promote_type(_filter_type_zero_and_one(types...)...)

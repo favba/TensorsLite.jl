@@ -32,7 +32,7 @@ struct SymTenArray{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractArray{T, N}
         Tyy = eltype(yy)
         Tzy = eltype(zy)
         Tzz = eltype(zz)
-        Tf = promote_type_ignoring_Zero(
+        Tf = promote_type_ignoring_Zero_and_One(
             Txx, Tyx, Tzx,
                  Tyy, Tzy,
                       Tzz
@@ -45,7 +45,7 @@ struct SymTenArray{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractArray{T, N}
         Tyyf = _my_promote_type(Tf, Tyy)
         Tzyf = _my_promote_type(Tf, Tzy)
         Tzzf = _my_promote_type(Tf, Tzz)
-        Tff = _final_type(Txxf, Tyxf, Tzxf, Tyyf, Tzyf, Tzzf)
+        Tff = Union{Txxf, Tyxf, Tzxf, Tyyf, Tzyf, Tzzf}
 
         return new{
             SymTen{Tff, Txxf, Tyxf, Tzxf, Tyyf, Tzyf, Tzzf}, N,
@@ -317,13 +317,13 @@ struct AntiSymTenArray{T, N, Tyx, Tzx, Tzy} <: AbstractArray{T, N}
         Tyx = eltype(xy)
         Tzx = eltype(xz)
         Tzy = eltype(yz)
-        Tf = promote_type_ignoring_Zero(Tyx, Tzx, Tzy)
+        Tf = promote_type_ignoring_Zero_and_One(Tyx, Tzx, Tzy)
 
 
         Tyxf = _my_promote_type(Tf, Tyx)
         Tzxf = _my_promote_type(Tf, Tzx)
         Tzyf = _my_promote_type(Tf, Tzy)
-        Tff = _final_type(Tyxf, Tzxf, Tzyf)
+        Tff = Union{Tyxf, Tzxf, Tzyf}
 
         return new{
             AntiSymTen{Tff, Tyxf, Tzxf, Tzyf}, N,

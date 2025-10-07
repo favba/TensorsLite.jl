@@ -8,7 +8,9 @@ import SIMD
 const ze = Zero()
 
 # This helps comparing arrays of Union{Zero,Number}
-(::Type{<:Union{Zero, T}})(x::Number) where {T <: Number} = x == zero(x) ? Zeros.Zero() : T(x)
+(::Type{Union{Zero, T}})(x::Number) where {T <: Number} = x == zero(x) ? Zeros.Zero() : T(x)
+(::Type{Union{One, T}})(x::Number) where {T <: Number} = x == one(x) ? Zeros.One() : T(x)
+#(::Type{Union{Zero, One}})(x::Number) = x == zero(x) ? Zeros.Zero() : x == one(x) ? Zeros.One() : throw(InexactError())
 
 Base.isapprox(a::SIMD.Vec{N}, b::SIMD.Vec{N}) where {N} = reduce(&, ntuple(i -> isapprox(a[i], b[i]), Val{N}()))
 
@@ -60,6 +62,13 @@ const sz = SIMD.Vec(3.0, 4.0)
 
     @test typeof(rand(Vec2Dyz{Float16})) === Vec2Dyz{Float16}
 
+    @test Tensor() === Tensor(Zero(),Zero(),Zero())
+    @test Tensor(x=1,y=2.0) === Tensor(1.0,2.0,Zero())
+
+    @test Vec3D{Float64}(1,2,3) === Tensor(1.0,2.0,3.0)
+
+    @test typeof(rand(Tensor{Union{One,Zero,Float64},1,Float64,One,Zero})) === Tensor{Union{One,Zero,Float64},1,Float64,One,Zero}
+
 end
 
 @testset "Tensor Constructors" begin
@@ -76,6 +85,8 @@ end
             zx = 7, zy = 8, zz = 9.0
         )
     ) === Float64
+
+    @test_throws DimensionMismatch Tensor(x=1.0,y=Vec(x=1))
 
     @test eltype(Ten(xx = 1.0)) === Union{Zero, Float64}
 

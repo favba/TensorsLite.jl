@@ -7,7 +7,7 @@ struct AntiSymTen{T, Tyx, Tzx, Tzy} <: AbstractTensor{T, 2}
         Tyx = typeof(xy)
         Tzx = typeof(xz)
         Tzy = typeof(yz)
-        Tf = promote_type_ignoring_Zero(Tyx, Tzx, Tzy)
+        Tf = promote_type_ignoring_Zero_and_One(Tyx, Tzx, Tzy)
         yxn = _my_convert(Tf, xy)
         zxn = _my_convert(Tf, xz)
         zyn = _my_convert(Tf, yz)
@@ -15,7 +15,7 @@ struct AntiSymTen{T, Tyx, Tzx, Tzy} <: AbstractTensor{T, 2}
         Tyxf = typeof(yxn)
         Tzxf = typeof(zxn)
         Tzyf = typeof(zyn)
-        Tff = _final_type(Tyxf, Tzxf, Tzyf)
+        Tff = Union{Tyxf, Tzxf, Tzyf}
         return new{Tff, Tyxf, Tzxf, Tzyf}(yxn, zxn, zyn)
     end
 end

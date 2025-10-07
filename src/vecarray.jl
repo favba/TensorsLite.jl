@@ -25,11 +25,11 @@ struct TensorArray{T, N, Tx, Ty, Tz} <: AbstractArray{T, N}
         eTx = eltype(x)
         eTy = eltype(y)
         eTz = eltype(z)
-        Tf = promote_type_ignoring_Zero(eTx, eTy, eTz)
+        Tf = promote_type_ignoring_Zero_and_One(eTx, eTy, eTz)
         fTx = _my_promote_type(Tf, eTx)
         fTy = _my_promote_type(Tf, eTy)
         fTz = _my_promote_type(Tf, eTz)
-        Tff = _final_type(fTx,fTy,fTz)
+        Tff = Union{fTx,fTy,fTz}
 
         return new{Tensor{Tff, 1, fTx, fTy, fTz}, N, Tx, Ty, Tz}(x, y, z)
     end

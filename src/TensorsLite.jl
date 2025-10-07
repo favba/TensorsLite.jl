@@ -27,6 +27,7 @@ export AntiSymTen3DArray, AntiSymTen2DxyArray, AntiSymTen2DxzArray, AntiSymTen2D
 export nonzero_eltype
 
 # define my own *, +, - so I can extend those operators without commiting type piracy (For SIMDExt.jl)
+# I'm also using my own `dot` function, and LinearAlgebra.dot is overloaded in ext/LinearAlgebraExt.jl
 @inline *(a, b) = Base.:*(a, b)
 @inline +(a, b) = Base.:+(a, b)
 @inline -(a, b) = Base.:-(a, b)
@@ -51,19 +52,19 @@ struct Tensor{T, N, Tx, Ty, Tz} <: AbstractTensor{T, N}
         Tx = typeof(x)
         Ty = typeof(y)
         Tz = typeof(z)
-        Tf = promote_type_ignoring_Zero(Tx, Ty, Tz)
+        Tf = promote_type_ignoring_Zero_and_One(Tx, Ty, Tz)
         xn = _my_convert(Tf, x)
         yn = _my_convert(Tf, y)
         zn = _my_convert(Tf, z)
         Txf = typeof(xn)
         Tyf = typeof(yn)
         Tzf = typeof(zn)
-        Tff = _final_type(Txf, Tyf, Tzf)
+        Tff = Union{Txf,Tyf,Tzf}
         return new{Tff, 1, Txf, Tyf, Tzf}(xn, yn, zn)
     end
 
     @inline function Tensor(x::AbstractTensor{Tx,N}, y::AbstractTensor{Ty,N}, z::AbstractTensor{Tz,N}) where {Tx, Ty, Tz, N}
-        Tf = promote_type_ignoring_Zero(_non_zero_type(Tx), _non_zero_type(Ty), _non_zero_type(Tz))
+        Tf = promote_type_ignoring_Zero_and_One(_non_StaticBool_type(Tx), _non_StaticBool_type(Ty), _non_StaticBool_type(Tz))
         xf = Tensor(_eltype_convert(Tf, x.x), _eltype_convert(Tf, x.y), _eltype_convert(Tf, x.z))
         yf = Tensor(_eltype_convert(Tf, y.x), _eltype_convert(Tf, y.y), _eltype_convert(Tf, y.z))
         zf = Tensor(_eltype_convert(Tf, z.x), _eltype_convert(Tf, z.y), _eltype_convert(Tf, z.z))
