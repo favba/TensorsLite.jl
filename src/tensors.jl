@@ -132,8 +132,3 @@ end
 )
 
 const ⊗ = otimes
-
-@inline inner(A::AbstractTen, B::AbstractTen) = dotadd(conj(A.x), B.x, dotadd(conj(A.y), B.y, dot(conj(A.z), B.z)))
-
-@inline Base.sum(T::AbstractTen) = sum(T.x) + sum(T.y) + sum(T.z)
-@inline Base.sum(op::F, T::AbstractTen) where {F <: Function} = sum(op, T.x) + sum(op, T.y) + sum(op, T.z)
