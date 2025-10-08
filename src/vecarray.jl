@@ -142,6 +142,13 @@ Tensor1DzArray(a::AbstractArray{T,N}) where {T,N} = TensorArray(ZeroTensorArray(
 Tensor1DzArray(::Type{T}, ::Val{1}, I::Vararg{Integer,N}) where {T, N} = Tensor1DzArray(Array{T}(undef, I...))
 Tensor1DzArray(::Type{T}, ::Val{NT}, I::Vararg{Integer,N}) where {T, NT, N} = Tensor1DzArray(Tensor1DzArray(T, Val{NT-1}(), I...))
 
+
+VecArray(a::AbstractArray{Ta,N}, b::AbstractArray{Tb,N}, c::AbstractArray{Tc,N}) where {Ta,Tb,Tc,N} = TensorArray(a, b, c)
+VecArray(;x = 𝟎, y= 𝟎, z = 𝟎) = TensorArray(x=x,y=y,z=z)
+
+Vec3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N}) where {T,N} = TensorArray(a, b, c)
+Vec3DArray{T}(I::Vararg{Integer,N}) where {T,N} = Vec3DArray(Array{T}(undef,I...), Array{T}(undef,I...), Array{T}(undef,I...))
+
 Vec2DxyArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = Tensor2DxyArray(a, b)
 Vec2DxyArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor2DxyArray(T,Val{1}(),I...)
 
@@ -159,6 +166,8 @@ Vec1DyArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor1DyArray(T,Val{1}(),I..
 
 Vec1DzArray(a::AbstractArray{T,N}) where {T,N} = Tensor1DzArray(a)
 Vec1DzArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor1DzArray(T,Val{1}(),I...)
+
+Ten3DArray{T}(I::Vararg{Integer,N}) where {T,N} = TensorArray{T,2}(I...)
 
 Ten2DxyArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T<:Vec2Dxy,N} = Tensor2DxyArray(a, b)
 Ten2DxyArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor2DxyArray(T,Val{2}(),I...)
@@ -179,26 +188,10 @@ Ten1DzArray(a::AbstractArray{T,N}) where {T<:Vec1Dz,N} = Tensor1DzArray(a)
 Ten1DzArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor1DzArray(T,Val{2}(),I...)
 
 
-VecArray(a::AbstractArray{Ta,N}, b::AbstractArray{Tb,N}, c::AbstractArray{Tc,N}) where {Ta,Tb,Tc,N} = TensorArray(a, b, c)
-#VecArray{T}(I::Vararg{Integer,N}) where {T,N} = TensorArray{T,1}(I...)
-Vec3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N}) where {T,N} = TensorArray(a, b, c)
-Vec3DArray{T}(I::Vararg{Integer,N}) where {T,N} = TensorArray(Array{T}(undef,I...), Array{T}(undef,I...), Array{T}(undef,I...))
-
-_if_zero_to_Array(s::NTuple{N, Int}, ::Zero) where {N} = ZeroArray(s)
-_if_zero_to_Array(::NTuple{N, Int}, x::AbstractArray) where {N} = x
-
-VecArray(;x = 𝟎, y= 𝟎, z = 𝟎) = TensorArray(x=x,y=y,z=z)
-
-#Tensor3DArray(a::AbstractArray{Ta,N}, b::AbstractArray{Tb,N}, c::AbstractArray{Tc,N}) where {Ta,Tb,Tc,N} = TensorArray(a, b, c)
-
-#Tensor3DArray{T,NT}(I::Vararg{Integer,N}) where {T,NT,N} = TensorArray{T,NT}(I...)
-
-
 ####################################
 
 
 ######################### Special Second Order Tensor constructors ###############################
-
 
 
 @inline function TenArray(xx::AbstractArray{Txx,N}, xy::AbstractArray{Txy,N}, xz::AbstractArray{Txz,N},
@@ -211,6 +204,9 @@ VecArray(;x = 𝟎, y= 𝟎, z = 𝟎) = TensorArray(x=x,y=y,z=z)
     z = TensorArray(xz, yz, zz)
     return TensorArray(x, y, z)
 end
+
+_if_zero_to_Array(s::NTuple{N, Int}, ::Zero) where {N} = ZeroArray(s)
+_if_zero_to_Array(::NTuple{N, Int}, x::AbstractArray) where {N} = x
 
 function TenArray(;
         xx = 𝟎, xy = 𝟎, xz = 𝟎,
@@ -244,10 +240,6 @@ function TenArray(;
 
     return TensorArray(xv, yv, zv)
 end
-
-#TenArray{T}(I::Vararg{Integer,N}) where {T,N} = TensorArray{T,2}(I...)
-
-Ten3DArray{T}(I::Vararg{Integer,N}) where {T,N} = TensorArray{T,2}(I...)
 
 
 Ten2DxyArray(xx::AbstractArray, xy::AbstractArray, yx::AbstractArray, yy::AbstractArray) = Ten2DxyArray(Vec2DxyArray(xx,yx), Vec2DxyArray(xy,yy))
