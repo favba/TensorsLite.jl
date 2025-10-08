@@ -12,7 +12,7 @@ export tensor_type_1Dx, tensor_type_1Dy, tensor_type_1Dz
 export Vec, Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec2D, Vec1Dx, Vec1Dy, Vec1Dz, Vec1D, VecND
 export Ten, Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten2D, Ten1Dx, Ten1Dy, Ten1Dz, Ten1D, TenND
 export DiagTen3D, DiagTen2Dxy, DiagTen2Dxz, DiagTen2Dyz
-export dotadd, inner, otimes, ⊗
+export dotadd, inner, inneradd, otimes, ⊗
 export 𝐢, 𝐣, 𝐤, 𝐈
 export SymTen
 export SymTen3D, SymTen2Dxy, SymTen2Dxz, SymTen2Dyz, SymTen1Dx, SymTen1Dy, SymTen1Dz
