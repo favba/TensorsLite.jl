@@ -114,6 +114,14 @@ end
     @test Ten1Dz(1) === Ten(zz=1)
 
     @test typeof(rand(Ten2Dyz{Float16})) === Ten2Dyz{Float16}
+    @test typeof(rand(tensor_type_3D(Val(2),Float32))) === Ten3D{Float32}
+    @test typeof(rand(tensor_type_2Dxy(Val(2),Float32))) === Ten2Dxy{Float32}
+    @test typeof(rand(tensor_type_2Dxz(Val(2),Float32))) === Ten2Dxz{Float32}
+    @test typeof(rand(tensor_type_2Dyz(Val(2),Float32))) === Ten2Dyz{Float32}
+    @test typeof(rand(tensor_type_1Dx(Val(2),Float32))) === Ten1Dx{Float32}
+    @test typeof(rand(tensor_type_1Dy(Val(2),Float32))) === Ten1Dy{Float32}
+    @test typeof(rand(tensor_type_1Dz(Val(2),Float32))) === Ten1Dz{Float32}
+    @test typeof(rand(tensor_type_2Dxy(Val(3),Float16))) === Tensor{Union{Zero,Float16}, 3, Ten2Dxy{Float16}, Ten2Dxy{Float16}, Ten3D{Zero}}
 end
 
 @testset "Vec size and length" begin
@@ -279,6 +287,11 @@ end
                 end
             end
         end
+    end
+    
+    let T1 = Ten(xx=1, xy=2, yx=3, yy=4), T2 = Ten(xx=5, xy=6, yx=7, yy=8)
+        @test inner(T1,T2) === (1*5 + 2*6 + 3*7 + 4*8)
+        @test inneradd(T1,T2,10.0) === (1*5 + 2*6 + 3*7 + 4*8 + 10.0)
     end
 end
 
@@ -486,6 +499,64 @@ end
         @test TensorArray(x = Vec1DxArray(xx)) == Ten1DxArray(xx)
         @test TensorArray(y = Vec1DyArray(yy)) == Ten1DyArray(yy)
         @test TensorArray(z = Vec1DzArray(zz)) == Ten1DzArray(zz)
+    end
+
+    let a = Vec3DArray{Float32}(2,3)
+        @test eltype(a) === Vec3D{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = Vec2DxyArray{Float32}(2,3)
+        @test eltype(a) === Vec2Dxy{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = Vec2DxzArray{Float32}(2,3)
+        @test eltype(a) === Vec2Dxz{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = Vec2DyzArray{Float32}(2,3)
+        @test eltype(a) === Vec2Dyz{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = Vec1DxArray{Float32}(2,3)
+        @test eltype(a) === Vec1Dx{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = Vec1DyArray{Float32}(2,3)
+        @test eltype(a) === Vec1Dy{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = Vec1DzArray{Float32}(2,3)
+        @test eltype(a) === Vec1Dz{Float32}
+        @test size(a) === (2,3)
+    end
+
+    let a = Ten3DArray{Float32}(2,3)
+        @test eltype(a) === Ten3D{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = Ten2DxyArray{Float32}(2,3)
+        @test eltype(a) === Ten2Dxy{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = Ten2DxzArray{Float32}(2,3)
+        @test eltype(a) === Ten2Dxz{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = Ten2DyzArray{Float32}(2,3)
+        @test eltype(a) === Ten2Dyz{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = Ten1DxArray{Float32}(2,3)
+        @test eltype(a) === Ten1Dx{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = Ten1DyArray{Float32}(2,3)
+        @test eltype(a) === Ten1Dy{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = Ten1DzArray{Float32}(2,3)
+        @test eltype(a) === Ten1Dz{Float32}
+        @test size(a) === (2,3)
     end
 
 end
