@@ -91,7 +91,7 @@ const VecND{T} = Union{Vec3D{T}, Vec2D{T}, Vec1D{T}}
 const Vec0D = Vec3D{Zero}
 
 # This ends up also being a VecMaybe1Dz{T, Tz}, if T===Zero and Tz != Zero
-const VecMaybe2Dxy{T, Tz} = Tensor{Union{T, Tz}, T, T, Tz}
+const VecMaybe2Dxy{T, Tz} = Tensor{Union{T, Tz},1, T, T, Tz}
 
 #const Ten{Tf,Tvx,Tvy,Tvz} = Tensor{Tf,2,Tvx,Tvy, Tvz}
 const Ten3D{T} = Tensor{T,2,Vec3D{T},Vec3D{T},Vec3D{T}}
