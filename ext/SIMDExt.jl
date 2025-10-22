@@ -81,7 +81,7 @@ end
 
 @inline Base.:*(v::AbstractTensor, b::SIMD.Vec) = b * v
 
-@inline TensorsLite.dotadd(u::AbstractVec, v::AbstractVec, a::SIMD.Vec) = TensorsLite._muladd(u.x, v.x, TensorsLite._muladd(u.y, v.y, TensorsLite._muladd(u.z, v.z, a)))
+@inline TensorsLite.dotadd(u::Vec, v::Vec, a::SIMD.Vec) = TensorsLite._muladd(u.x, v.x, TensorsLite._muladd(u.y, v.y, TensorsLite._muladd(u.z, v.z, a)))
 
 @inline _getindex(::Type{Zero}, x, idx, rest::Vararg) = Zeros.Zero()
 Base.@propagate_inbounds _getindex(::Type, x, idx, rest::Vararg) = Base.getindex(x, idx, rest...)

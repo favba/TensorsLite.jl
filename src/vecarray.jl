@@ -1,4 +1,10 @@
-struct TensorArray{T, N, Tx, Ty, Tz} <: AbstractArray{T, N}
+abstract type AbstractTensorArray{T, N} <: AbstractArray{T, N} end
+
+const VecArray{T,Tx,Ty,Tz,N} = AbstractTensorArray{Tensor{T,1,Tx,Ty,Tz},N}
+
+const TenArray{T,Tx,Ty,Tz,N} = AbstractTensorArray{Tensor{T,2,Tx,Ty,Tz},N}
+
+struct TensorArray{T, N, Tx, Ty, Tz} <: AbstractTensorArray{T, N}
     x::Tx
     y::Ty
     z::Tz
@@ -73,9 +79,6 @@ const Ten1DzArray{T,N} = TensorArray{Ten1Dz{T},N,Vec0DArray{N},Vec0DArray{N},Vec
 const Ten1DArray{T, N} = Union{Ten1DxArray{T, N}, Ten1DyArray{T, N}, Ten1DzArray{T, N}}
 const TenNDArray{T, N} = Union{Ten3DArray{T, N}, Ten2DArray{T, N}, Ten1DArray{T, N}}
 
-#const Tensor3DGenericArray{T, NT, Tx, Ty, Tz} = TensorArray{Tensor3D{T,NT}, Tx,Ty,Tz}
-#const Tensor3DArray{T, NT, TA} = Tensor3DGenericArray{T,NT,TA,TA,TA}
-
 const VecMaybe2DxyArray{T, Tz, N} = TensorArray{VecMaybe2Dxy{T, Tz}, N, Array{T, N}, Array{T, N}, Array{Tz, N}}
 const TenMaybe2DxyArray{T, Tz, N} = TensorArray{TenMaybe2Dxy{T, Tz}, N, VecMaybe2DxyArray{T, Tz, N}, VecMaybe2DxyArray{T, Tz, N}, Vec3DArray{Tz, N}}
 
@@ -148,6 +151,7 @@ VecArray(;x = 𝟎, y= 𝟎, z = 𝟎) = TensorArray(x=x,y=y,z=z)
 
 Vec3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N}) where {T,N} = TensorArray(a, b, c)
 Vec3DArray{T}(I::Vararg{Integer,N}) where {T,N} = Vec3DArray(Array{T}(undef,I...), Array{T}(undef,I...), Array{T}(undef,I...))
+VecArray{T}(I::Vararg{Integer,N}) where {T,N} = Vec3DArray{T}(I...)
 
 Vec2DxyArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = Tensor2DxyArray(a, b)
 Vec2DxyArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor2DxyArray(T,Val{1}(),I...)
@@ -168,6 +172,7 @@ Vec1DzArray(a::AbstractArray{T,N}) where {T,N} = Tensor1DzArray(a)
 Vec1DzArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor1DzArray(T,Val{1}(),I...)
 
 Ten3DArray{T}(I::Vararg{Integer,N}) where {T,N} = TensorArray{T,2}(I...)
+TenArray{T}(I::Vararg{Integer,N}) where {T,N} = Ten3DArray{T}(I...)
 
 Ten2DxyArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T<:Vec2Dxy,N} = Tensor2DxyArray(a, b)
 Ten2DxyArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor2DxyArray(T,Val{2}(),I...)
@@ -317,7 +322,7 @@ end
 
 #Definitons so broadcast return a VecArray =======================================
 
-@inline function Base.getproperty(T::TenNDArray, s::Symbol)
+@inline function Base.getproperty(T::TenArray, s::Symbol)
     if s === :xx
         return getfield(getfield(T, :x), :x)
     elseif s === :xy

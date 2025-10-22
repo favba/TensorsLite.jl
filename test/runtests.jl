@@ -66,6 +66,7 @@ const sz = SIMD.Vec(3.0, 4.0)
     @test Tensor(x=1,y=2.0) === Tensor(1.0,2.0,Zero())
 
     @test Vec3D{Float64}(1,2,3) === Tensor(1.0,2.0,3.0)
+    @test Vec{Float64}(1,2,3) === Tensor(1.0,2.0,3.0)
 
     @test typeof(rand(Tensor{Union{One,Zero,Float64},1,Float64,One,Zero})) === Tensor{Union{One,Zero,Float64},1,Float64,One,Zero}
 
@@ -105,6 +106,7 @@ end
     @test typeof(Tensor(z=Vec1Dz(1.0))) === Ten1Dz{Float64}
 
     @test Ten3D(1,2,3,4,5,6,7,8,9) === Ten(1,2,3,4,5,6,7,8,9)
+    @test Ten{Float64}(1,2,3,4,5,6,7,8,9) === Ten(1.,2.,3.,4.,5.,6.,7.,8.,9.)
     @test Ten2Dxy(1,2,3,4.) === Ten(xx=1.0, xy=2.0, yx=3.0, yy=4.0)
     @test Ten2Dxz(1,2,3,4.) === Ten(xx=1.0, xz=2.0, zx=3.0, zz=4.0)
     @test Ten2Dyz(1,2,3,4.) === Ten(yy=1.0, yz=2.0, zy=3.0, zz=4.0)
@@ -437,6 +439,9 @@ end
     @test size(TensorArray{Float32,3}(4, 3)) === (4, 3)
     @test eltype(TensorArray{Float32,1}(4, 3)) === Vec3D{Float32}
 
+    @test size(VecArray{Float64}(2,3)) === (2,3)
+    @test eltype(VecArray{Int}(2,3)) === Vec3D{Int}
+
     @test Vec1DxArray(ones(1, 1))[1] === Vec1Dx(1.0)
     @test Vec1DyArray(ones(1, 1))[1] === Vec1Dy(1.0)
     @test Vec1DzArray(ones(1, 1))[1] === Vec1Dz(1.0)
@@ -531,6 +536,10 @@ end
     end
 
     let a = Ten3DArray{Float32}(2,3)
+        @test eltype(a) === Ten3D{Float32}
+        @test size(a) === (2,3)
+    end
+    let a = TenArray{Float32}(2,3)
         @test eltype(a) === Ten3D{Float32}
         @test size(a) === (2,3)
     end

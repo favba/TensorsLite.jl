@@ -3,14 +3,14 @@ module TensorsLite
 using Zeros
 
 export Zero, One
-export Tensor, AbstractTensor, AbstractVec, AbstractTen
+export Tensor, AbstractTensor, Vec, Ten
 
 export tensor_type_3D
 export tensor_type_2Dxy, tensor_type_2Dxz, tensor_type_2Dyz
 export tensor_type_1Dx, tensor_type_1Dy, tensor_type_1Dz
 
-export Vec, Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec2D, Vec1Dx, Vec1Dy, Vec1Dz, Vec1D, VecND
-export Ten, Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten2D, Ten1Dx, Ten1Dy, Ten1Dz, Ten1D, TenND
+export Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec2D, Vec1Dx, Vec1Dy, Vec1Dz, Vec1D, VecND
+export Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten2D, Ten1Dx, Ten1Dy, Ten1Dz, Ten1D, TenND
 export DiagTen3D, DiagTen2Dxy, DiagTen2Dxz, DiagTen2Dyz
 export dotadd, inner, inneradd, otimes, ⊗
 export 𝐢, 𝐣, 𝐤, 𝐈
@@ -19,7 +19,6 @@ export SymTen3D, SymTen2Dxy, SymTen2Dxz, SymTen2Dyz, SymTen1Dx, SymTen1Dy, SymTe
 export AntiSymTen
 export AntiSymTen3D, AntiSymTen2Dxy, AntiSymTen2Dxz, AntiSymTen2Dyz
 export TensorArray, VecArray, TenArray, SymTenArray, AntiSymTenArray
-#export Tensor3DArray, Tensor2DxyArray, Tensor2DxzArray, Tensor2DyzArray, Tensor1DxArray, Tensor1DyArray, Tensor1DzArray
 export Vec3DArray, Vec2DxyArray, Vec2DxzArray, Vec2DyzArray, Vec1DxArray, Vec1DyArray, Vec1DzArray
 export Ten3DArray, Ten2DxyArray, Ten2DxzArray, Ten2DyzArray, Ten1DxArray, Ten1DyArray, Ten1DzArray
 export SymTen3DArray, SymTen2DxyArray, SymTen2DxzArray, SymTen2DyzArray, SymTen1DxArray, SymTen1DyArray, SymTen1DzArray
@@ -37,11 +36,23 @@ export nonzero_eltype
 
 include("type_utils.jl")
 
+"""
+    AbstractTensor{T, N} <: AbstractArray{T, N}
+
+Supertype of all Tensor types. Represents any `N`th order tensor with eltype `T`.
+"""
 abstract type AbstractTensor{T, N} <: AbstractArray{T, N} end
 
 # Treat Vec's as scalar when broadcasting
 Base.Broadcast.broadcastable(u::AbstractTensor) = (u,)
 
+"""
+    Tensor{T, N, Tx, Ty, Tz} <: AbstractTensor{T, N}
+
+A `N`th order tensor with eltype `T`.
+Higher order tensors are implemented as vectors of lower order tensors.
+
+"""
 struct Tensor{T, N, Tx, Ty, Tz} <: AbstractTensor{T, N}
     x::Tx
     y::Ty
@@ -74,11 +85,9 @@ end
 
 ########################## aliases ###########################
 
-const AbstractVec{T} = AbstractTensor{T, 1}
-const AbstractTen{T} = AbstractTensor{T, 2}
-#const Vec{T,Tx,Ty,Tz} = Tensor{T,1,Tx,Ty,Tz}
-const Vec3D{T} = Tensor{T,1,T,T,T}
+const Vec{T} = AbstractTensor{T, 1}
 
+const Vec3D{T} = Tensor{T,1,T,T,T}
 const Vec2Dxy{T} = Tensor{Union{Zero, T}, 1, T, T, Zero}
 const Vec2Dxz{T} = Tensor{Union{Zero, T}, 1, T, Zero, T}
 const Vec2Dyz{T} = Tensor{Union{Zero, T}, 1, Zero, T, T}
@@ -93,7 +102,8 @@ const Vec0D = Vec3D{Zero}
 # This ends up also being a VecMaybe1Dz{T, Tz}, if T===Zero and Tz != Zero
 const VecMaybe2Dxy{T, Tz} = Tensor{Union{T, Tz},1, T, T, Tz}
 
-#const Ten{Tf,Tvx,Tvy,Tvz} = Tensor{Tf,2,Tvx,Tvy, Tvz}
+const Ten{T} = AbstractTensor{T, 2}
+
 const Ten3D{T} = Tensor{T,2,Vec3D{T},Vec3D{T},Vec3D{T}}
 const Ten2Dxy{T} = Tensor{Union{Zero, T}, 2, Vec2Dxy{T}, Vec2Dxy{T}, Vec0D}
 const Ten2Dxz{T} = Tensor{Union{Zero, T}, 2, Vec2Dxz{T}, Vec0D, Vec2Dxz{T}}
@@ -111,13 +121,6 @@ const DiagTen2Dxz{T} = Tensor{Union{Zero, T}, 2, Vec1Dx{T}, Vec0D, Vec1Dz{T}}
 const DiagTen2Dyz{T} = Tensor{Union{Zero, T}, 2, Vec0D, Vec1Dy{T}, Vec1Dz{T}}
 
 const TenMaybe2Dxy{T, Tz} = Tensor{Union{T, Tz}, 2, VecMaybe2Dxy{T, Tz}, VecMaybe2Dxy{T, Tz}, Vec3D{Tz}}
-
-const Tensor3D{Tf,N,T} = Tensor{Tf,N,T,T,T}
-## These also ends up being a Tensor1Dn if T===Zero and Tz != Zero
-const Tensor2Dxy{Tf,N,T,Tz} = Tensor{Tf,N,T,T,Tz}
-const Tensor2Dxz{Tf,N,T,Tz} = Tensor{Tf,N,T,Tz,T}
-const Tensor2Dyz{Tf,N,T,Tz} = Tensor{Tf,N,Tz,T,T}
-
 
 ########################## aliases ###########################
 
@@ -162,6 +165,7 @@ end
 end
 
 Vec(x,y,z) = Tensor(x,y,z)
+Vec{T}(a, b, c) where {T} = Tensor(convert(T, a), convert(T, b), convert(T, c))
 Vec(;x=𝟎,y=𝟎,z=𝟎) = Vec(x,y,z)
 
 Vec3D{T}(a, b, c) where {T} = Tensor(convert(T, a), convert(T, b), convert(T, c))

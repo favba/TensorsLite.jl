@@ -7,7 +7,7 @@ import TensorsLite: dot, *, +, -, _muladd, transpose, adjoint
 import LinearAlgebra: LinearAlgebra, norm
 
 @inline LinearAlgebra.dot(a::AbstractTensor, b::AbstractTensor) = dot(a, b)
-@inline LinearAlgebra.dot(x::AbstractVec, A::AbstractTen, y::AbstractVec) = dot(dot(x, A), y)
+@inline LinearAlgebra.dot(x::Vec, A::Ten, y::Vec) = dot(dot(x, A), y)
 
 @inline fsqrt(x) = @fastmath sqrt(x)
 
@@ -24,7 +24,7 @@ import LinearAlgebra: LinearAlgebra, norm
 @inline LinearAlgebra.normalize(u::AbstractTensor) = u / norm(u)
 @inline LinearAlgebra.normalize(u::AbstractTensor{Zero}) = u
 
-@inline function LinearAlgebra.cross(a::AbstractVec, b::AbstractVec)
+@inline function LinearAlgebra.cross(a::Vec, b::Vec)
     ax = a.x
     ay = a.y
     az = a.z
@@ -36,7 +36,7 @@ end
 
 @inline Base.isapprox(x::AbstractTensor{<:Any,N}, y::AbstractTensor{<:Any,N}) where {N} = norm(x - y) <= max(Base.rtoldefault(nonzero_eltype(x)), Base.rtoldefault(nonzero_eltype(y))) * max(norm(x), norm(y))
 
-@inline LinearAlgebra.transpose(T::AbstractTen) = transpose(T)
-@inline LinearAlgebra.adjoint(T::AbstractTen) = adjoint(T)
+@inline LinearAlgebra.transpose(T::Ten) = transpose(T)
+@inline LinearAlgebra.adjoint(T::Ten) = adjoint(T)
 
 end

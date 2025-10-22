@@ -1,4 +1,4 @@
-struct SymTen{T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTen{T}
+struct SymTen{T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: Ten{T}
     xx::Txx
     xy::Tyx
     xz::Tzx

@@ -1,4 +1,4 @@
-struct SymTenArray{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractArray{T, N}
+struct SymTenArray{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTensorArray{T, N}
     xx::Txx
     xy::Tyx
     xz::Tzx
@@ -223,7 +223,7 @@ end
     return r
 end
 
-@inline function Base.setindex!(A::SymTenArray{T}, s::AbstractTen, i::Int) where {T}
+@inline function Base.setindex!(A::SymTenArray{T}, s::Ten, i::Int) where {T}
     @boundscheck checkbounds(A, i)
 
     sym_s = convert(T, s)
@@ -239,7 +239,7 @@ end
     return A
 end
 
-@inline function Base.setindex!(A::SymTenArray{T, N}, s::AbstractTen, I::Vararg{Int, N}) where {T, N}
+@inline function Base.setindex!(A::SymTenArray{T, N}, s::Ten, I::Vararg{Int, N}) where {T, N}
     @boundscheck checkbounds(A, I...)
 
     sym_s = convert(T, s)
@@ -297,7 +297,7 @@ end
 
 ############################ AntiSymTenArray ###########################
 
-struct AntiSymTenArray{T, N, Tyx, Tzx, Tzy} <: AbstractArray{T, N}
+struct AntiSymTenArray{T, N, Tyx, Tzx, Tzy} <: AbstractTensorArray{T, N}
     xy::Tyx
     xz::Tzx
     yz::Tzy
@@ -398,7 +398,7 @@ end
     return r
 end
 
-@inline function Base.setindex!(A::AntiSymTenArray{T}, s::AbstractTen, i::Int) where {T}
+@inline function Base.setindex!(A::AntiSymTenArray{T}, s::Ten, i::Int) where {T}
     @boundscheck checkbounds(A, i)
 
     sym_s = convert(T, s)
@@ -411,7 +411,7 @@ end
     return A
 end
 
-@inline function Base.setindex!(A::AntiSymTenArray{T, N}, s::AbstractTen, I::Vararg{Int, N}) where {T, N}
+@inline function Base.setindex!(A::AntiSymTenArray{T, N}, s::Ten, I::Vararg{Int, N}) where {T, N}
     @boundscheck checkbounds(A, I...)
 
     sym_s = convert(T, s)

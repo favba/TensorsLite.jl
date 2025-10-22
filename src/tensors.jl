@@ -15,6 +15,11 @@ end
         yx, yy, yz,
         zx, zy, zz)
 
+Ten{T}(xx, xy, xz, yx, yy, yz, zx, zy, zz) where {T} = 
+    Ten(convert(T, xx), convert(T, xy), convert(T, xz),
+        convert(T, yx), convert(T, yy), convert(T, yz),
+        convert(T, zx), convert(T, zy), convert(T, zz))
+
 Ten3D{T}(xx, xy, xz, yx, yy, yz, zx, zy, zz) where {T} = 
     Ten(convert(T, xx), convert(T, xy), convert(T, xz),
         convert(T, yx), convert(T, yy), convert(T, yz),
@@ -82,10 +87,10 @@ Ten1Dz(zz) = Ten1Dz{typeof(zz)}(zz)
 
 #################### AbstractMatrix interface ############################
 
-@inline Base.:*(T::AbstractTen, v::AbstractTensor{<:Any, 1}) = dot(T, v)
-@inline Base.:*(v::AbstractTensor{<:Any, 1}, T::AbstractTen) = dot(v, T)
+@inline Base.:*(T::Ten, v::AbstractTensor{<:Any, 1}) = dot(T, v)
+@inline Base.:*(v::AbstractTensor{<:Any, 1}, T::Ten) = dot(v, T)
 
-@inline function transpose(T::AbstractTen)
+@inline function transpose(T::Ten)
     x = T.x
     y = T.y
     z = T.z
@@ -95,7 +100,7 @@ Ten1Dz(zz) = Ten1Dz{typeof(zz)}(zz)
     return Tensor(nx, ny, nz)
 end
 
-@inline function adjoint(T::AbstractTen)
+@inline function adjoint(T::Ten)
     x = T.x
     y = T.y
     z = T.z
@@ -105,25 +110,25 @@ end
     return Tensor(nx, ny, nz)
 end
 
-@inline dot(v::AbstractTensor{<:Any, 1}, T::AbstractTen) = dot(transpose(T), v)
+@inline dot(v::AbstractTensor{<:Any, 1}, T::Ten) = dot(transpose(T), v)
 
-@inline function _muladd(T::AbstractTen, v::AbstractTensor{<:Any, 1}, u::AbstractTensor{<:Any, 1})
+@inline function _muladd(T::Ten, v::AbstractTensor{<:Any, 1}, u::AbstractTensor{<:Any, 1})
     Tt = transpose(T)
     return Tensor(dotadd(Tt.x, v, u.x), dotadd(Tt.y, v, u.y), dotadd(Tt.z, v, u.z))
 end
-@inline muladd(T::AbstractTen, v::AbstractTensor{<:Any, 1}, u::AbstractTensor{<:Any, 1}) = _muladd(T, v, u)
-@inline dotadd(T::AbstractTen, v::AbstractTensor{<:Any, 1}, u::AbstractTensor{<:Any, 1}) = _muladd(T, v, u)
+@inline muladd(T::Ten, v::AbstractTensor{<:Any, 1}, u::AbstractTensor{<:Any, 1}) = _muladd(T, v, u)
+@inline dotadd(T::Ten, v::AbstractTensor{<:Any, 1}, u::AbstractTensor{<:Any, 1}) = _muladd(T, v, u)
 
-@inline _muladd(v::AbstractTensor{<:Any, 1}, T::AbstractTen, u::AbstractTensor{<:Any, 1}) = Tensor(dotadd(T.x, v, u.x), dotadd(T.y, v, u.y), dotadd(T.z, v, u.z))
-@inline muladd(v::AbstractTensor{<:Any, 1}, T::AbstractTen, u::AbstractTensor{<:Any, 1}) = _muladd(v, T, u)
-@inline dotadd(v::AbstractTensor{<:Any, 1}, T::AbstractTen, u::AbstractTensor{<:Any, 1}) = _muladd(v, T, u)
+@inline _muladd(v::AbstractTensor{<:Any, 1}, T::Ten, u::AbstractTensor{<:Any, 1}) = Tensor(dotadd(T.x, v, u.x), dotadd(T.y, v, u.y), dotadd(T.z, v, u.z))
+@inline muladd(v::AbstractTensor{<:Any, 1}, T::Ten, u::AbstractTensor{<:Any, 1}) = _muladd(v, T, u)
+@inline dotadd(v::AbstractTensor{<:Any, 1}, T::Ten, u::AbstractTensor{<:Any, 1}) = _muladd(v, T, u)
 
-@inline Base.:*(T::AbstractTen, B::AbstractTen) = Tensor(T * B.x, T * B.y, T * B.z)
-@inline dot(T::AbstractTen, B::AbstractTen) = T * B
+@inline Base.:*(T::Ten, B::Ten) = Tensor(T * B.x, T * B.y, T * B.z)
+@inline dot(T::Ten, B::Ten) = T * B
 
-@inline _muladd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = Tensor(_muladd(A, B.x, C.x), _muladd(A, B.y, C.y), _muladd(A, B.z, C.z))
-@inline muladd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = _muladd(A, B, C)
-@inline dotadd(A::AbstractTen, B::AbstractTen, C::AbstractTen) = _muladd(A, B, C)
+@inline _muladd(A::Ten, B::Ten, C::Ten) = Tensor(_muladd(A, B.x, C.x), _muladd(A, B.y, C.y), _muladd(A, B.z, C.z))
+@inline muladd(A::Ten, B::Ten, C::Ten) = _muladd(A, B, C)
+@inline dotadd(A::Ten, B::Ten, C::Ten) = _muladd(A, B, C)
 
 @inline otimes(u::AbstractTensor{<:Any, 1}, v::AbstractTensor{<:Any, 1}) = Ten(
     u.x * v.x, u.x * v.y, u.x * v.z,

@@ -48,20 +48,20 @@ end
 
 @inline dot(a::AbstractTensor, b::AbstractTensor) = _muladd(a.x, b.x, _muladd(a.y, b.y, a.z * b.z))
 
-@inline dotadd(a::AbstractVec, b::AbstractVec, c) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
+@inline dotadd(a::Vec, b::Vec, c) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
 
-@inline inner(u::AbstractVec, v::AbstractVec) = dot(conj(u), v)
-@inline inneradd(u::AbstractVec, v::AbstractVec, c) = dotadd(conj(u), v, c)
+@inline inner(u::Vec, v::Vec) = dot(conj(u), v)
+@inline inneradd(u::Vec, v::Vec, c) = dotadd(conj(u), v, c)
 
 @inline inneradd(T1::AbstractTensor{<:Any,N}, T2::AbstractTensor{<:Any,N}, c) where {N} =
     inneradd(T1.x, T2.x, inneradd(T1.y, T2.y, inneradd(T1.z, T2.z, c)))
 @inline inner(T1::AbstractTensor{<:Any,N}, T2::AbstractTensor{<:Any,N}) where {N} = inneradd(T1.x, T2.x,
                                                                                  inneradd(T1.y, T2.y, inner(T1.z,T2.z)))
 
-@inline Base.sum(v::AbstractVec) = v.x + v.y + v.z
+@inline Base.sum(v::Vec) = v.x + v.y + v.z
 @inline Base.sum(v::AbstractTensor) = sum(v.x) + sum(v.y) + sum(v.z)
 
-@inline Base.sum(op::F, v::AbstractVec) where {F <: Function} = @inline op(v.x) + op(v.y) + op(v.z)
+@inline Base.sum(op::F, v::Vec) where {F <: Function} = @inline op(v.x) + op(v.y) + op(v.z)
 
 @inline Base.sum(op::F, v::AbstractTensor) where {F <: Function} = @inline sum(op,v.x) + sum(op,v.y) + sum(op,v.z)
 
