@@ -39,4 +39,29 @@ end
 @inline LinearAlgebra.transpose(T::Ten) = transpose(T)
 @inline LinearAlgebra.adjoint(T::Ten) = adjoint(T)
 
+@inline LinearAlgebra.tr(T::Ten) = T.x.x + T.y.y + T.z.z
+
+@inline function LinearAlgebra.det(T::Ten)
+
+    Tx = T.x
+    Txx = Tx.x
+    Tyx = Tx.y
+    Tzx = Tx.z
+
+    Ty = T.y
+    Txy = Ty.x
+    Tyy = Ty.y
+    Tzy = Ty.z
+
+    Tz = T.z
+    Txz = Tz.x
+    Tyz = Tz.y
+    Tzz = Tz.z
+
+    return muladd((Txy*Tyz - Txz*Tyy), Tzx, muladd((Tzy*Txz - Tzz*Txy), Tyx, (Tzz*Tyy - Tzy*Tyz )*Txx))
+
+end
+
+@inline LinearAlgebra.det(::AntiSymTen) = 𝟎
+
 end

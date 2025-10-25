@@ -257,7 +257,7 @@ end
         )
         for u in un
             Au = Array{nonzero_eltype(u)}(u)
-            for op in (+, -, normalize, sum, x -> sum(exp, x), x -> map(exp, x))
+            for op in (+, -, normalize, sum, x -> sum(exp, x), x -> map(exp, x), tr, det)
                 @test op(u) ≈ op(Au)
             end
             @test norm(u) ≈ norm(Au)
@@ -426,6 +426,8 @@ end
     W2 = AntiSymTen(rand(), rand(), rand())
 
     @test inner(W1, W2) ≈ dot(Array(W1), Array(W2))
+
+    @test det(W1) === Zero()
 
     @test typeof(rand(AntiSymTen2Dyz{Float16})) === AntiSymTen2Dyz{Float16}
 end
