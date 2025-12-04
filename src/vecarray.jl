@@ -1,8 +1,8 @@
 abstract type AbstractTensorArray{T, N} <: AbstractArray{T, N} end
 
-const VecArray{T,Tx,Ty,Tz,N} = AbstractTensorArray{Tensor{T,1,Tx,Ty,Tz},N}
+const VecArray{T,N,Tx,Ty,Tz} = AbstractTensorArray{Tensor{T,1,Tx,Ty,Tz},N}
 
-const TenArray{T,Tx,Ty,Tz,N} = AbstractTensorArray{Tensor{T,2,Tx,Ty,Tz},N}
+const TenArray{T,N,Tx,Ty,Tz} = AbstractTensorArray{Tensor{T,2,Tx,Ty,Tz},N}
 
 struct TensorArray{T, N, Tx, Ty, Tz} <: AbstractTensorArray{T, N}
     x::Tx
