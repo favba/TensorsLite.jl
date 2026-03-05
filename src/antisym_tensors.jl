@@ -1,4 +1,4 @@
-struct AntiSymTen{T, Tyx, Tzx, Tzy} <: AbstractTensor{T, 2}
+struct AntiSymTen{T, Tyx, Tzx, Tzy} <: AbstractTensor{2, T}
     xy::Tyx
     xz::Tzx
     yz::Tzy
@@ -30,12 +30,6 @@ end
     @inline begin
         at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
         W = AntiSymTen(map(_muladd, ntuple(i -> at, Val(3)), fields(v), fields(u))...)
-    end
-    return W
-end
-@inline function _muladd(a::Union{Zero, One}, v::AntiSymTen, u::AntiSymTen)
-    @inline begin
-        W = AntiSymTen(map(_muladd, ntuple(i -> a, Val(3)), fields(v), fields(u))...)
     end
     return W
 end
@@ -114,15 +108,12 @@ end
     end
 end
 
-@inline transpose(W::AntiSymTen) = -W
-@inline adjoint(W::AntiSymTen) = -conj(W)
-
 @inline function Base.convert(::Type{AntiSymTen{T, Tyx, Tzx, Tzy}}, v::AntiSymTen) where {T, Tyx, Tzx, Tzy}
     @inline nfields = map(convert, (Tyx, Tzx, Tzy), fields(v))
     return AntiSymTen(nfields...)
 end
 
-@inline function Base.convert(::Type{Tensor{T, 2, Tensor{_Tx, 1, Txx, Tyx, Tzx}, Tensor{_Ty, 1, Txy, Tyy, Tzy}, Tensor{_Tz, 1, Txz, Tyz, Tzz}}}, v::AntiSymTen) where {T, _Tx, _Ty, _Tz, Txx, Tyx, Tzx, Txy, Tyy, Tzy, Txz, Tyz, Tzz}
+@inline function Base.convert(::Type{Tensor{2, T, Tensor{1, _Tx, Txx, Tyx, Tzx}, Tensor{1, _Ty, Txy, Tyy, Tzy}, Tensor{1, _Tz, Txz, Tyz, Tzz}}}, v::AntiSymTen) where {T, _Tx, _Ty, _Tz, Txx, Tyx, Tzx, Txy, Tyy, Tzy, Txz, Tyz, Tzz}
     @inline xx, yx, zx, xy, yy, zy, xz, yz, zz = map(convert, (Txx, Tyx, Tzx, Txy, Tyy, Tzy, Txz, Tyz, Tzz), map(getproperty, (v, v, v, v, v, v, v, v, v), (:xx, :yx, :zx, :xy, :yy, :zy, :xz, :yz, :zz)))
     return Ten(xx, xy, xz,
                yx, yy, yz,
@@ -131,8 +122,8 @@ end
 
 @inline inner(a::AntiSymTen{T1}, b::AntiSymTen{T2}) where {T1<:Real, T2<:Real} = 2 * muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz * b.yz))
 
-@inline inner(::AntiSymTen, ::SymTen) = 𝟎
-@inline inner(::SymTen, ::AntiSymTen) = 𝟎
+@inline inner(::AntiSymTen, ::SymmetricTensor{2}) = 𝟎
+@inline inner(::SymmetricTensor{2}, ::AntiSymTen) = 𝟎
 
 Base.rand(::Type{AntiSymTen{T,Txy,Txz,Tyz}}) where {T,Txy,Txz,Tyz} = AntiSymTen(rand(Txy), rand(Txz), rand(Tyz))
 

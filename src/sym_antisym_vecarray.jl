@@ -6,7 +6,7 @@ struct SymTenArray{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTensorArray{T,
     yz::Tzy
     zz::Tzz
 
-    SymTenArray{T}(I::Vararg{Int, N}) where {T, N} = new{SymTen{T, T, T, T, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}, Array{T, N}, Array{T, N}, Array{T, N}}(
+    SymTenArray{T}(I::Vararg{Int, N}) where {T, N} = new{SymmetricTensor{2, T, T, T, T, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}, Array{T, N}, Array{T, N}, Array{T, N}}(
         Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...),
         Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...)
     )
@@ -48,7 +48,7 @@ struct SymTenArray{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTensorArray{T,
         Tff = Union{Txxf, Tyxf, Tzxf, Tyyf, Tzyf, Tzzf}
 
         return new{
-            SymTen{Tff, Txxf, Tyxf, Tzxf, Tyyf, Tzyf, Tzzf}, N,
+            SymmetricTensor{2, Tff, Txxf, Tyxf, Tzxf, Tyyf, Tzyf, Tzzf}, N,
             typeof(xx), typeof(yx), typeof(zx),
                         typeof(yy), typeof(zy),
                                     typeof(zz)
@@ -205,7 +205,7 @@ Base.dataids(A::SymTenArray) = (Base.dataids(A.xx)..., Base.dataids(A.xy)..., Ba
 
 @inline function Base.getindex(A::SymTenArray, i::Int)
     @boundscheck checkbounds(A, i)
-    @inbounds r = SymTen(
+    @inbounds r = SymmetricTensor(
         A.xx[i], A.xy[i], A.xz[i],
                  A.yy[i], A.yz[i],
                           A.zz[i]
@@ -215,7 +215,7 @@ end
 
 @inline function Base.getindex(A::SymTenArray{T, N}, I::Vararg{Int, N}) where {T, N}
     @boundscheck checkbounds(A, I...)
-    @inbounds r = SymTen(
+    @inbounds r = SymmetricTensor(
         A.xx[I...], A.xy[I...], A.xz[I...],
                     A.yy[I...], A.yz[I...],
                                 A.zz[I...]
@@ -255,7 +255,7 @@ end
     return A
 end
 
-Base.similar(A::SymTenArray, ::Type{SymTen{Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz, N2} = SymTenArray(similar(A.xx, Txx, dims), similar(A.xy, Tyx, dims), similar(A.xz, Tzx, dims), similar(A.yy, Tyy, dims), similar(A.yz, Tzy, dims), similar(A.zz, Tzz, dims))
+Base.similar(A::SymTenArray, ::Type{SymmetricTensor{2, Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz, N2} = SymTenArray(similar(A.xx, Txx, dims), similar(A.xy, Tyx, dims), similar(A.xz, Tzx, dims), similar(A.yy, Tyy, dims), similar(A.yz, Tzy, dims), similar(A.zz, Tzz, dims))
 
 @inline function Base.getproperty(S::SymTenArray, s::Symbol)
     if s === :x
@@ -284,7 +284,7 @@ Base.similar(A::SymTenArray, ::Type{SymTen{Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, d
     end
 end
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{SymTen{T, Txx, Txy, Txz, Tyy, Tyz, Tzz}}) where {T, Txx, Txy, Txz, Tyy, Tyz, Tzz}
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{SymmetricTensor{2, T, Txx, Txy, Txz, Tyy, Tyz, Tzz}}) where {T, Txx, Txy, Txz, Tyy, Tyz, Tzz}
     s = length.(axes(bc))
     xx = Array{Txx}(undef, s...)
     xy = Array{Txy}(undef, s...)

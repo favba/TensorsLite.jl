@@ -1,4 +1,8 @@
-struct SymTen{T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: Ten{T}
+abstract type AbstractSymmetricTensor{N,T} <: AbstractTensor{N, T} end
+
+const SymTen{T} = AbstractSymmetricTensor{2,T}
+
+struct SymmetricTensor{N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractSymmetricTensor{N, T}
     xx::Txx
     xy::Tyx
     xz::Tzx
@@ -6,11 +10,14 @@ struct SymTen{T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: Ten{T}
     yz::Tzy
     zz::Tzz
 
-    @inline function SymTen(
+    @inline function SymmetricTensor(
             xx, xy, xz,
                 yy, yz,
                     zz
         )
+
+        mapreduce(x->isa(x,AbstractTensor), &, (xx,xy,xz,yy,yz,zz)) && throw(DimensionMismatch())
+
         Txx = typeof(xx)
         Tyx = typeof(xy)
         Tzx = typeof(xz)
@@ -36,52 +43,91 @@ struct SymTen{T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: Ten{T}
         Tzyf = typeof(zyn)
         Tzzf = typeof(zzn)
         Tff = Union{Txxf, Tyxf, Tzxf, Tyyf, Tzyf, Tzzf}
-        return new{Tff, Txxf, Tyxf, Tzxf, Tyyf, Tzyf, Tzzf}(
+        return new{2, Tff, Txxf, Tyxf, Tzxf, Tyyf, Tzyf, Tzzf}(
             xxn, yxn, zxn,
                  yyn, zyn,
                       zzn
         )
     end
+
+    @inline function SymmetricTensor(
+            xx::AbstractTensor{N,Txx}, xy::AbstractTensor{N,Txy}, xz::AbstractTensor{N,Txz},
+                yy::AbstractTensor{N,Tyy}, yz::AbstractTensor{N,Tyz},
+                    zz::AbstractTensor{N,Tzz}
+        ) where {N, Txx, Txy, Txz, Tyy, Tyz, Tzz}
+
+        Tf = promote_type_ignoring_Zero_and_One(map(_non_StaticBool_type,Txx,Txy,Txz,Tyy,Tyz,Tzz)...)
+
+        f = x -> _eltype_convert(Tf,x)
+        xxf = Tensor(map(f, (xx.x, xx.y, xx.z))...)
+        xyf = Tensor(map(f, (xy.x, xy.y, xy.z))...)
+        xzf = Tensor(map(f, (xz.x, xz.y, xz.z))...)
+        yyf = Tensor(map(f, (yy.x, yy.y, yy.z))...)
+        yzf = Tensor(map(f, (yz.x, yz.y, yz.z))...)
+        zzf = Tensor(map(f, (zz.x, zz.y, zz.z))...)
+
+        return new{
+                   N+2,
+                   Union{map(eltype,(xxf,xyf,xzf,yyf,yzf,zzf))...},
+                   map(typeof,(xxf,xyf,xzf,yyf,yzf,zzf))...
+               }(xxf,xyf,xzf,yyf,yzf,zzf)
+    end
+
+    @inline function SymmetricTensor(
+            xx::AbstractSymmetricTensor{N,Txx}, xy::AbstractSymmetricTensor{N,Txy}, xz::AbstractSymmetricTensor{N,Txz},
+                yy::AbstractSymmetricTensor{N,Tyy}, yz::AbstractSymmetricTensor{N,Tyz},
+                    zz::AbstractSymmetricTensor{N,Tzz}
+        ) where {N, Txx, Txy, Txz, Tyy, Tyz, Tzz}
+
+        Tf = promote_type_ignoring_Zero_and_One(map(_non_StaticBool_type,Txx,Txy,Txz,Tyy,Tyz,Tzz)...)
+
+        f = x -> _eltype_convert(Tf,x)
+        xxf = SymmetricTensor(map(f, (xx.xx, xx.xy, xx.xz, xx.yy, xx.yz, xx.zz))...)
+        xyf = SymmetricTensor(map(f, (xy.xx, xy.xy, xy.xz, xy.yy, xy.yz, xy.zz))...)
+        xzf = SymmetricTensor(map(f, (xz.xx, xz.xy, xz.xz, xz.yy, xz.yz, xz.zz))...)
+        yyf = SymmetricTensor(map(f, (yy.xx, yy.xy, yy.xz, yy.yy, yy.yz, yy.zz))...)
+        yzf = SymmetricTensor(map(f, (yz.xx, yz.xy, yz.xz, yz.yy, yz.yz, yz.zz))...)
+        zzf = SymmetricTensor(map(f, (zz.xx, zz.xy, zz.xz, zz.yy, zz.yz, zz.zz))...)
+
+        return new{
+                   N+2,
+                   Union{map(eltype,(xxf,xyf,xzf,yyf,yzf,zzf))...},
+                   map(typeof,(xxf,xyf,xzf,yyf,yzf,zzf))...
+               }(xxf,xyf,xzf,yyf,yzf,zzf)
+    end
 end
 
-@inline SymTen(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎) = SymTen(xx, xy, xz, yy, yz, zz)
+@inline constructor(::Type{T}) where {T <: SymmetricTensor} = SymmetricTensor
 
-@inline function Base.convert(::Type{SymTen{T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, v::SymTen) where {T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}
+@inline SymmetricTensor{2}() = SymmetricTensor(Zero(),Zero(),Zero(),Zero(),Zero(),Zero())
+@inline function SymmetricTensor{N}() where N
+    iseven(N) || throw(DomainError(N))
+    N2 = N-2
+    SymmetricTensor(SymmetricTensor{N2}(), SymmetricTensor{N2}(), SymmetricTensor{N2}(),SymmetricTensor{N2}(), SymmetricTensor{N2}(), SymmetricTensor{N2}())
+end
+
+@inline SymTen(xx, xy, xz, yy, yz, zz) = SymmetricTensor(xx, xy, xz, yy, yz, zz)
+@inline SymTen(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎) = SymmetricTensor(xx, xy, xz, yy, yz, zz)
+
+@inline function Base.convert(::Type{SymmetricTensor{N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, v::SymmetricTensor{N}) where {N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}
     @inline nfields = map(convert, (Txx, Tyx, Tzx, Tyy, Tzy, Tzz), fields(v))
-    return SymTen(nfields...)
+    return SymmetricTensor(nfields...)
 end
 
-@inline function Base.convert(::Type{Tensor{T, 2, Tensor{_Tx, 1, Txx, Tyx, Tzx}, Tensor{_Ty, 1, Tyx, Tyy, Tzy}, Tensor{_Tz, 1, Tzx, Tzy, Tzz}}}, v::SymTen) where {T, _Tx, _Ty, _Tz, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}
-    @inline xx, yx, zx, yy, zy, zz = map(convert, (Txx, Tyx, Tzx, Tyy, Tzy, Tzz), fields(v))
-
-    return Ten(
-        xx, yx, zx,
-        yx, yy, zy,
-        zx, zy, zz
-    )
-end
-
-@inline constructor(::Type{T}) where {T <: SymTen} = SymTen
-@inline Base.:+(a::SymTen, b::SymTen) = @inline SymTen(map(+, fields(a), fields(b))...)
-@inline Base.:-(a::SymTen, b::SymTen) = @inline SymTen(map(-, fields(a), fields(b))...)
-@inline ==(a::SymTen, b::SymTen) = @inline reduce(&, map(==, fields(a), fields(b)))
-@inline function _muladd(a::Number, v::SymTen, u::SymTen)
+@inline Base.:+(a::SymmetricTensor, b::SymmetricTensor) = @inline SymmetricTensor(map(+, fields(a), fields(b))...)
+@inline Base.:-(a::SymmetricTensor, b::SymmetricTensor) = @inline SymmetricTensor(map(-, fields(a), fields(b))...)
+@inline ==(a::SymmetricTensor, b::SymmetricTensor) = @inline reduce(&, map(==, fields(a), fields(b)))
+@inline function _muladd(a::Number, v::SymmetricTensor, u::SymmetricTensor)
     @inline begin
         at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
-        S = SymTen(map(_muladd, ntuple(i -> at, Val(6)), fields(v), fields(u))...)
-    end
-    return S
-end
-@inline function _muladd(a::Union{One, Zero}, v::SymTen, u::SymTen)
-    @inline begin
-        S = SymTen(map(_muladd, ntuple(i -> a, Val(6)), fields(v), fields(u))...)
+        S = SymmetricTensor(map(_muladd, ntuple(i -> at, Val(6)), fields(v), fields(u))...)
     end
     return S
 end
 
-const SymTen3D{T} = SymTen{T, T, T, T, T, T, T}
+const SymTen3D{T} = SymmetricTensor{2, T, T, T, T, T, T, T}
 
-SymTen3D{T}(xx, xy, xz, yy, yz, zz) where {T} = SymTen(convert(T, xx), convert(T, xy), convert(T, xz),
+SymTen3D{T}(xx, xy, xz, yy, yz, zz) where {T} = SymmetricTensor(convert(T, xx), convert(T, xy), convert(T, xz),
                                                                        convert(T, yy), convert(T, yz),
                                                                                        convert(T, zz))
 
@@ -92,27 +138,27 @@ SymTen3D(xx, xy, xz, yy, yz, zz) = SymTen3D{promote_type(typeof(xx), typeof(xy),
                                                                                                       zz)
 
 
-const SymTen2Dxy{T} = SymTen{Union{Zero, T}, T, T, Zero, T, Zero, Zero}
+const SymTen2Dxy{T} = SymmetricTensor{2, Union{Zero, T}, T, T, Zero, T, Zero, Zero}
 
-SymTen2Dxy{T}(xx, xy, yy) where {T} = SymTen(convert(T, xx), convert(T, xy), Zero(),
+SymTen2Dxy{T}(xx, xy, yy) where {T} = SymmetricTensor(convert(T, xx), convert(T, xy), Zero(),
                                                              convert(T, yy), Zero(),
                                                                              Zero())
 
 SymTen2Dxy(xx, xy, yy) = SymTen2Dxy{promote_type(typeof(xx), typeof(xy), typeof(yy))}(xx, xy, yy)
 
 
-const SymTen2Dxz{T} = SymTen{Union{Zero, T}, T, Zero, T, Zero, Zero, T}
+const SymTen2Dxz{T} = SymmetricTensor{2, Union{Zero, T}, T, Zero, T, Zero, Zero, T}
 
-SymTen2Dxz{T}(xx, xz, zz) where {T} = SymTen(convert(T, xx), Zero(), convert(T, xz),
+SymTen2Dxz{T}(xx, xz, zz) where {T} = SymmetricTensor(convert(T, xx), Zero(), convert(T, xz),
                                                              Zero(), Zero(),
                                                                      convert(T, zz))
 
 SymTen2Dxz(xx, xz, zz) = SymTen2Dxz{promote_type(typeof(xx), typeof(xz), typeof(zz))}(xx, xz, zz)
 
 
-const SymTen2Dyz{T} = SymTen{Union{Zero, T}, Zero, Zero, Zero, T, T, T}
+const SymTen2Dyz{T} = SymmetricTensor{2, Union{Zero, T}, Zero, Zero, Zero, T, T, T}
 
-SymTen2Dyz{T}(yy, yz, zz) where {T} = SymTen(Zero(), Zero(),         Zero() ,
+SymTen2Dyz{T}(yy, yz, zz) where {T} = SymmetricTensor(Zero(), Zero(),         Zero() ,
                                                      convert(T, yy), convert(T, yz),
                                                                      convert(T, zz))
 
@@ -122,26 +168,26 @@ SymTen2Dyz(yy, yz, zz) = SymTen2Dyz{promote_type(typeof(yy), typeof(yz), typeof(
 const SymTen2D{T} = Union{SymTen2Dxy{T}, SymTen2Dxz{T}, SymTen2Dyz{T}}
 
 
-const SymTen1Dx{T} = SymTen{Union{Zero, T}, T, Zero, Zero, Zero, Zero, Zero}
+const SymTen1Dx{T} = SymmetricTensor{2, Union{Zero, T}, T, Zero, Zero, Zero, Zero, Zero}
 
-SymTen1Dx{T}(xx) where {T} = SymTen(convert(T, xx), Zero(), Zero(),
+SymTen1Dx{T}(xx) where {T} = SymmetricTensor(convert(T, xx), Zero(), Zero(),
                                                     Zero(), Zero(),
                                                             Zero())
 
 SymTen1Dx(xx) = SymTen1Dx{typeof(xx)}(xx)
 
 
-const SymTen1Dy{T} = SymTen{Union{Zero, T}, Zero, Zero, Zero, T, Zero, Zero}
+const SymTen1Dy{T} = SymmetricTensor{2, Union{Zero, T}, Zero, Zero, Zero, T, Zero, Zero}
 
-SymTen1Dy{T}(yy) where {T} = SymTen(Zero(), Zero(),         Zero(),
+SymTen1Dy{T}(yy) where {T} = SymmetricTensor(Zero(), Zero(),         Zero(),
                                             convert(T, yy), Zero(),
                                                             Zero())
 
 SymTen1Dy(yy) = SymTen1Dy{typeof(yy)}(yy)
 
 
-const SymTen1Dz{T} = SymTen{Union{Zero, T}, Zero, Zero, Zero, Zero, Zero, T}
-SymTen1Dz{T}(zz) where {T} = SymTen(Zero(), Zero(), Zero(),
+const SymTen1Dz{T} = SymmetricTensor{2, Union{Zero, T}, Zero, Zero, Zero, Zero, Zero, T}
+SymTen1Dz{T}(zz) where {T} = SymmetricTensor(Zero(), Zero(), Zero(),
                                             Zero(), Zero(),
                                                     convert(T, zz))
 
@@ -150,10 +196,11 @@ SymTen1Dz(zz) = SymTen1Dz{typeof(zz)}(zz)
 
 const SymTen1D{T} = Union{SymTen1Dx{T}, SymTen1Dy{T}, SymTen1Dz{T}}
 
-const SymTenMaybe2Dxy{T, Tz} = SymTen{Union{T, Tz}, T, T, Tz, T, Tz, Tz}
+const SymTenMaybe2Dxy{T, Tz} = SymmetricTensor{2, Union{T, Tz}, T, T, Tz, T, Tz, Tz}
 
-Base.IndexStyle(::Type{SymTen}) = IndexCartesian()
-Base.@constprop :aggressive function Base.getindex(S::SymTen, i::Integer, j::Integer)
+Base.IndexStyle(::Type{SymmetricTensor}) = IndexCartesian()
+
+Base.@constprop :aggressive function Base.getindex(S::SymmetricTensor{2}, i::Integer, j::Integer)
     t = (Int(i), Int(j))
     @boundscheck checkbounds(S, t...)
     t === (1, 1) && return S.xx
@@ -164,22 +211,35 @@ Base.@constprop :aggressive function Base.getindex(S::SymTen, i::Integer, j::Int
     return S.zz
 end
 
-@inline function Base.getproperty(S::SymTen, s::Symbol)
+Base.@constprop :aggressive function Base.getindex(S::SymmetricTensor{N}, I::Vararg{Integer,N}) where {N}
+    tI = map(Int, I)
+    @boundscheck checkbounds(S, tI...)
+    t = (tI[N-1], tI[N])
+    mtI = tI[Base.OneTo(N-2)]
+    t === (1, 1) && return @inbounds(S.xx[mtI...])
+    (t === (2, 1) || t === (1, 2)) && return @inbounds(S.xy[mtI...])
+    (t === (3, 1) || t === (1, 3)) && return @inbounds(S.xz[mtI...])
+    t === (2, 2) && return @inbounds(S.yy[mtI...])
+    (t === (3, 2) || t === (2, 3))  && return @inbounds(S.yz[mtI...])
+    return S.zz[mtI...]
+end
+
+@inline function Base.getproperty(S::SymmetricTensor, s::Symbol)
     if s === :x
         xx = getfield(S, :xx)
         yx = getfield(S, :xy)
         zx = getfield(S, :xz)
-        return Tensor(xx, yx, zx)
+        return Vec(xx, yx, zx)
     elseif s === :y
         xy = getfield(S, :xy)
         yy = getfield(S, :yy)
         zy = getfield(S, :yz)
-        return Tensor(xy, yy, zy)
+        return Vec(xy, yy, zy)
     elseif s === :z
         xz = getfield(S, :xz)
         yz = getfield(S, :yz)
         zz = getfield(S, :zz)
-        return Tensor(xz, yz, zz)
+        return Vec(xz, yz, zz)
     elseif s === :yx
         return getfield(S, :xy)
     elseif s === :zx
@@ -191,9 +251,6 @@ end
     end
 end
 
-@inline transpose(S::SymTen) = S
-@inline adjoint(S::SymTen) = conj(transpose(S))
+@inline inner(a::SymmetricTensor{2,T1}, b::SymmetricTensor{2,T2}) where {T1<:Real, T2<:Real} =  _muladd(2, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz*b.yz)), _muladd(a.xx, b.xx, _muladd(a.yy, b.yy, a.zz*b.zz)))
 
-@inline inner(a::SymTen{T1}, b::SymTen{T2}) where {T1<:Real, T2<:Real} =  muladd(2, muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz*b.yz)), muladd(a.xx, b.xx, muladd(a.yy, b.yy, a.zz*b.zz)))
-
-Base.rand(::Type{SymTen{T,Txx,Txy,Txz,Tyy,Tyz,Tzz}}) where {T,Txx,Txy,Txz,Tyy,Tyz,Tzz} = SymTen(rand(Txx), rand(Txy), rand(Txz), rand(Tyy), rand(Tyz), rand(Tzz))
+Base.rand(::Type{SymmetricTensor{N,T,Txx,Txy,Txz,Tyy,Tyz,Tzz}}) where {N,T,Txx,Txy,Txz,Tyy,Tyz,Tzz} = SymmetricTensor(rand(Txx), rand(Txy), rand(Txz), rand(Tyy), rand(Tyz), rand(Tzz))

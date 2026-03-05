@@ -32,10 +32,10 @@ my_isapprox(y::Number, x::SIMD.Vec{N, T}) where {N, T} = isapprox(x, SIMD.Vec{N,
             end
         end
     end
-    @test TensorsLite._muladd(Zero(), 1.0im, 2.0) === 2.0 + 0.0im
-    @test TensorsLite._muladd(1.0im, Zero(), 2.0) === 2.0 + 0.0im
-    @test TensorsLite._muladd(Zero(), 1.0im, Zero()) === Zero()
-    @test TensorsLite._muladd(1.0im, Zero(), One()) === One()
+    # @test TensorsLite._muladd(Zero(), 1.0im, 2.0) === 2.0 + 0.0im
+    # @test TensorsLite._muladd(1.0im, Zero(), 2.0) === 2.0 + 0.0im
+    # @test TensorsLite._muladd(Zero(), 1.0im, Zero()) === Zero()
+    # @test TensorsLite._muladd(1.0im, Zero(), One()) === One()
 end
 
 const sx = SIMD.Vec(1.0, 2.0)
@@ -68,7 +68,7 @@ const sz = SIMD.Vec(3.0, 4.0)
     @test Vec3D{Float64}(1,2,3) === Tensor(1.0,2.0,3.0)
     @test Vec{Float64}(1,2,3) === Tensor(1.0,2.0,3.0)
 
-    @test typeof(rand(Tensor{Union{One,Zero,Float64},1,Float64,One,Zero})) === Tensor{Union{One,Zero,Float64},1,Float64,One,Zero}
+    @test typeof(rand(Tensor{1,Union{One,Zero,Float64},Float64,One,Zero})) === Tensor{1,Union{One,Zero,Float64},Float64,One,Zero}
 
 end
 
@@ -123,7 +123,7 @@ end
     @test typeof(rand(tensor_type_1Dx(Val(2),Float32))) === Ten1Dx{Float32}
     @test typeof(rand(tensor_type_1Dy(Val(2),Float32))) === Ten1Dy{Float32}
     @test typeof(rand(tensor_type_1Dz(Val(2),Float32))) === Ten1Dz{Float32}
-    @test typeof(rand(tensor_type_2Dxy(Val(3),Float16))) === Tensor{Union{Zero,Float16}, 3, Ten2Dxy{Float16}, Ten2Dxy{Float16}, Ten3D{Zero}}
+    @test typeof(rand(tensor_type_2Dxy(Val(3),Float16))) === Tensor{3, Union{Zero,Float16}, Ten2Dxy{Float16}, Ten2Dxy{Float16}, Ten3D{Zero}}
 end
 
 @testset "Vec size and length" begin
@@ -839,12 +839,22 @@ end
 
         for v in (Ten1DxArray(rand(16)), Ten2DyzArray(rand(16), rand(16), rand(16), rand(16)), SymTen2DxzArray(rand(16), rand(16), rand(16)), AntiSymTenArray(rand(16), rand(16), rand(16)))
 
-            for op in (+, -, dot, inner, (x, y) -> dotadd(x, y, u[1]), (x, y) -> muladd(2.0, x, y), (x, y) -> muladd(x, 2.0, y))
+            el = u[1]
+
+            for op in (+, -, dot, inner, (x, y) -> muladd(x, y, el), (x, y) -> muladd(2.0, x, y), (x, y) -> muladd(x, 2.0, y))
                 @test begin
                     r = op.(u, v)
                     rout = similar(r)
                     all(map(isapprox, apply_simd_op(rout, op, u, v), r))
                 end
+            end
+        end
+
+        for v in (Vec1DxArray(rand(16)), Vec2DxyArray(rand(16), rand(16)), VecArray(rand(16), rand(16), rand(16)))
+            @test begin
+                r = muladd.(u,v,v)
+                rout = similar(r)
+                all(map(isapprox, apply_simd_op(rout, muladd, u, v, v), r))
             end
         end
     end

@@ -14,7 +14,7 @@ export Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten2D, Ten1Dx, Ten1Dy, Ten1Dz, Ten1D, T
 export DiagTen3D, DiagTen2Dxy, DiagTen2Dxz, DiagTen2Dyz
 export dotadd, inner, inneradd, otimes, ⊗
 export 𝐢, 𝐣, 𝐤, 𝐈
-export SymTen
+export SymmetricTensor, SymTen
 export SymTen3D, SymTen2Dxy, SymTen2Dxz, SymTen2Dyz, SymTen1Dx, SymTen1Dy, SymTen1Dz
 export AntiSymTen
 export AntiSymTen3D, AntiSymTen2Dxy, AntiSymTen2Dxz, AntiSymTen2Dyz
@@ -25,41 +25,38 @@ export SymTen3DArray, SymTen2DxyArray, SymTen2DxzArray, SymTen2DyzArray, SymTen1
 export AntiSymTen3DArray, AntiSymTen2DxyArray, AntiSymTen2DxzArray, AntiSymTen2DyzArray
 export nonzero_eltype
 
-# define my own *, +, - so I can extend those operators without commiting type piracy (For SIMDExt.jl)
-# I'm also using my own `dot` function, and LinearAlgebra.dot is overloaded in ext/LinearAlgebraExt.jl
-@inline *(a, b) = Base.:*(a, b)
-@inline +(a, b) = Base.:+(a, b)
-@inline -(a, b) = Base.:-(a, b)
-@inline +(a) = Base.:+(a)
-@inline +(a::Vararg) = Base.:+(a...)
-@inline -(a) = Base.:-(a)
-
 include("type_utils.jl")
 
 """
-    AbstractTensor{T, N} <: AbstractArray{T, N}
+    AbstractTensor{N, T} <: AbstractArray{T, N}
 
 Supertype of all Tensor types. Represents any `N`th order tensor with eltype `T`.
 """
-abstract type AbstractTensor{T, N} <: AbstractArray{T, N} end
+abstract type AbstractTensor{N, T} <: AbstractArray{T, N} end
 
 # Treat Vec's as scalar when broadcasting
 Base.Broadcast.broadcastable(u::AbstractTensor) = (u,)
 
 """
-    Tensor{T, N, Tx, Ty, Tz} <: AbstractTensor{T, N}
+    Tensor{N, T, Tx, Ty, Tz} <: AbstractTensor{N, T}
 
 A `N`th order tensor with eltype `T`.
 Higher order tensors are implemented as vectors of lower order tensors.
 
 """
-struct Tensor{T, N, Tx, Ty, Tz} <: AbstractTensor{T, N}
+struct Tensor{N, T, Tx, Ty, Tz} <: AbstractTensor{N, T}
     x::Tx
     y::Ty
     z::Tz
 
     @inline function Tensor(x, y, z)
-        any(map(x->isa(x,AbstractTensor),(x,y,z))) && throw(DimensionMismatch())
+
+        # AbstractTensor are only valid as input when they are all of the same order
+        # Same order Tensors as input are dealt with in the next method definition
+        x isa AbstractTensor && throw(DimensionMismatch())
+        y isa AbstractTensor && throw(DimensionMismatch())
+        z isa AbstractTensor && throw(DimensionMismatch())
+
         Tx = typeof(x)
         Ty = typeof(y)
         Tz = typeof(z)
@@ -71,87 +68,26 @@ struct Tensor{T, N, Tx, Ty, Tz} <: AbstractTensor{T, N}
         Tyf = typeof(yn)
         Tzf = typeof(zn)
         Tff = Union{Txf,Tyf,Tzf}
-        return new{Tff, 1, Txf, Tyf, Tzf}(xn, yn, zn)
+        return new{1, Tff, Txf, Tyf, Tzf}(xn, yn, zn)
     end
 
-    @inline function Tensor(x::AbstractTensor{Tx,N}, y::AbstractTensor{Ty,N}, z::AbstractTensor{Tz,N}) where {Tx, Ty, Tz, N}
+    @inline function Tensor(x::AbstractTensor{N,Tx}, y::AbstractTensor{N,Ty}, z::AbstractTensor{N,Tz}) where {N, Tx, Ty, Tz}
         Tf = promote_type_ignoring_Zero_and_One(_non_StaticBool_type(Tx), _non_StaticBool_type(Ty), _non_StaticBool_type(Tz))
         xf = Tensor(_eltype_convert(Tf, x.x), _eltype_convert(Tf, x.y), _eltype_convert(Tf, x.z))
         yf = Tensor(_eltype_convert(Tf, y.x), _eltype_convert(Tf, y.y), _eltype_convert(Tf, y.z))
         zf = Tensor(_eltype_convert(Tf, z.x), _eltype_convert(Tf, z.y), _eltype_convert(Tf, z.z))
-        return new{Union{eltype(xf), eltype(yf), eltype(zf)}, N+1, typeof(xf), typeof(yf), typeof(zf)}(xf, yf, zf)
+        return new{N+1, Union{eltype(xf), eltype(yf), eltype(zf)}, typeof(xf), typeof(yf), typeof(zf)}(xf, yf, zf)
     end
 end
 
-########################## aliases ###########################
-
-const Vec{T} = AbstractTensor{T, 1}
-
-const Vec3D{T} = Tensor{T,1,T,T,T}
-const Vec2Dxy{T} = Tensor{Union{Zero, T}, 1, T, T, Zero}
-const Vec2Dxz{T} = Tensor{Union{Zero, T}, 1, T, Zero, T}
-const Vec2Dyz{T} = Tensor{Union{Zero, T}, 1, Zero, T, T}
-const Vec2D{T} = Union{Vec2Dxy{T}, Vec2Dxz{T}, Vec2Dyz{T}}
-const Vec1Dx{T} = Tensor{Union{Zero, T}, 1, T, Zero, Zero}
-const Vec1Dy{T} = Tensor{Union{Zero, T}, 1, Zero, T, Zero}
-const Vec1Dz{T} = Tensor{Union{Zero, T}, 1, Zero, Zero, T}
-const Vec1D{T} = Union{Vec1Dx{T}, Vec1Dy{T}, Vec1Dz{T}}
-const VecND{T} = Union{Vec3D{T}, Vec2D{T}, Vec1D{T}}
-const Vec0D = Vec3D{Zero}
-
-# This ends up also being a VecMaybe1Dz{T, Tz}, if T===Zero and Tz != Zero
-const VecMaybe2Dxy{T, Tz} = Tensor{Union{T, Tz},1, T, T, Tz}
-
-const Ten{T} = AbstractTensor{T, 2}
-
-const Ten3D{T} = Tensor{T,2,Vec3D{T},Vec3D{T},Vec3D{T}}
-const Ten2Dxy{T} = Tensor{Union{Zero, T}, 2, Vec2Dxy{T}, Vec2Dxy{T}, Vec0D}
-const Ten2Dxz{T} = Tensor{Union{Zero, T}, 2, Vec2Dxz{T}, Vec0D, Vec2Dxz{T}}
-const Ten2Dyz{T} = Tensor{Union{Zero, T}, 2, Vec0D, Vec2Dyz{T}, Vec2Dyz{T}}
-const Ten2D{T} = Union{Ten2Dxy{T}, Ten2Dxz{T}, Ten2Dyz{T}}
-const Ten1Dx{T} = Tensor{Union{Zero, T}, 2, Vec1Dx{T}, Vec0D, Vec0D}
-const Ten1Dy{T} = Tensor{Union{Zero, T}, 2, Vec0D, Vec1Dy{T}, Vec0D}
-const Ten1Dz{T} = Tensor{Union{Zero, T}, 2, Vec0D, Vec0D, Vec1Dz{T}}
-const Ten1D{T} = Union{Ten1Dx{T}, Ten1Dy{T}, Ten1Dz{T}}
-const TenND{T} = Union{Ten3D{T}, Ten2D{T}, Ten1D{T}}
-const Ten0D = Ten3D{Zero}
-const DiagTen3D{T} = Tensor{Union{Zero, T}, 2, Vec1Dx{T}, Vec1Dy{T}, Vec1Dz{T}}
-const DiagTen2Dxy{T} = Tensor{Union{Zero, T}, 2, Vec1Dx{T}, Vec1Dy{T}, Vec0D}
-const DiagTen2Dxz{T} = Tensor{Union{Zero, T}, 2, Vec1Dx{T}, Vec0D, Vec1Dz{T}}
-const DiagTen2Dyz{T} = Tensor{Union{Zero, T}, 2, Vec0D, Vec1Dy{T}, Vec1Dz{T}}
-
-const TenMaybe2Dxy{T, Tz} = Tensor{Union{T, Tz}, 2, VecMaybe2Dxy{T, Tz}, VecMaybe2Dxy{T, Tz}, Vec3D{Tz}}
-
-########################## aliases ###########################
-
+@inline constructor(::Type{T}) where {T <: Tensor} = Tensor
 
 ########################## constructors ###########################
 
 include("vec_type_utils.jl")
 
-@inline constructor(::Type{T}) where {T <: Tensor} = Tensor
-
 @inline Tensor{1}() = Tensor(Zero(),Zero(),Zero())
 @inline Tensor{N}() where N = Tensor(Tensor{N-1}(), Tensor{N-1}(), Tensor{N-1}())
-
-@inline check_args_ignoring_zeros(::Any,::Any,::Any) = nothing
-@inline function check_args_ignoring_zeros(::Union{<:AbstractTensor{<:Any,N},Zero},::Union{<:AbstractTensor{<:Any,N},Zero},::Union{<:AbstractTensor{<:Any,N},Zero}) where {N}
-    return nothing
-end
-
-@inline function check_args_ignoring_zeros(::Union{<:AbstractTensor{<:Any,N1},Zero},::Union{<:AbstractTensor{<:Any,N2},Zero},::Union{<:AbstractTensor{<:Any,N3},Zero}) where {N1,N2,N3}
-    return throw(DimensionMismatch())
-end
-
-@inline _get_ndims(::Any,::Any,::Any) = Val{0}()
-@inline function _get_ndims(::Union{<:AbstractTensor{<:Any,N},Zero},::Union{<:AbstractTensor{<:Any,N},Zero},::Union{<:AbstractTensor{<:Any,N},Zero}) where {N}
-    return Val{N}()
-end
-
-@inline if_zero_to_tensor(::Val{0}, ::Zero) = Zero()
-@inline if_zero_to_tensor(::Val{N}, ::Zero) where {N} = Tensor{N}()
-@inline if_zero_to_tensor(::Val{N}, x) where {N} = x
-@inline if_zero_to_tensor(v::Val{N},x,y,z) where {N} = (if_zero_to_tensor(v,x), if_zero_to_tensor(v,y), if_zero_to_tensor(v,z))
 
 @inline function Tensor(;x=𝟎,y=𝟎,z=𝟎)
     if (x === 𝟎) && (y == 𝟎) && (z == 𝟎)
@@ -164,62 +100,36 @@ end
     end
 end
 
-Vec(x,y,z) = Tensor(x,y,z)
-Vec{T}(a, b, c) where {T} = Tensor(convert(T, a), convert(T, b), convert(T, c))
-Vec(;x=𝟎,y=𝟎,z=𝟎) = Vec(x,y,z)
-
-Vec3D{T}(a, b, c) where {T} = Tensor(convert(T, a), convert(T, b), convert(T, c))
-
-Vec2Dxy{T}(a, b) where {T} = Tensor(convert(T, a), convert(T, b), Zero())
-Vec2Dxy(a, b) = Vec2Dxy{promote_type(typeof(a),typeof(b))}(a, b)
-
-Vec2Dxz{T}(a, b) where {T} = Tensor(convert(T, a), Zero(), convert(T, b))
-Vec2Dxz(a, b) = Vec2Dxz{promote_type(typeof(a),typeof(b))}(a, b)
-
-Vec2Dyz{T}(a, b) where {T} = Tensor(Zero(), convert(T, a), convert(T, b))
-Vec2Dyz(a, b) = Vec2Dyz{promote_type(typeof(a),typeof(b))}(a, b)
-
-Vec1Dx{T}(a) where {T} = Tensor(convert(T, a), Zero(), Zero())
-Vec1Dx(a) = Vec1Dx{typeof(a)}(a)
-
-Vec1Dy{T}(a) where {T} = Tensor(Zero(), convert(T, a), Zero())
-Vec1Dy(a) = Vec1Dy{typeof(a)}(a)
-
-Vec1Dz{T}(a) where {T} = Tensor(Zero(), Zero(), convert(T, a))
-Vec1Dz(a) = Vec1Dz{typeof(a)}(a)
-
+include("aliases.jl")
 
 ############################### AbstractArray interface #############################
 
-tensor_ndims(::Type{T}) where {T} = Val{0}()
-tensor_ndims(::Type{TV}) where {T,N,TV<:Tensor{T,N}} = Val{N}()
+@inline Base.convert(::Type{Tensor{N, T, Tx, Ty, Tz}}, u::AbstractTensor{N, T2}) where {T, N, Tx, Ty, Tz, T2} = Tensor(convert(Tx, u.x), convert(Ty, u.y), convert(Tz, u.z))
 
-@inline Base.convert(::Type{Tensor{T, N, Tx, Ty, Tz}}, u::AbstractTensor{T2, N}) where {T, N, Tx, Ty, Tz, T2} = Tensor(convert(Tx, u.x), convert(Ty, u.y), convert(Tz, u.z))
+Base.IndexStyle(::Type{T}) where {T <: Vec} = IndexLinear()
+Base.IndexStyle(::Type{T}) where {T <: AbstractTensor{N}} where {N} = IndexCartesian()
 
-Base.IndexStyle(::Type{T}) where {T <: AbstractTensor{<:Any, 1}} = IndexLinear()
-Base.IndexStyle(::Type{T}) where {T <: AbstractTensor{<:Any, N}} where {N} = IndexCartesian()
+Base.length(::Type{<:AbstractTensor{N}}) where {N} = 3^N
+Base.length(u::AbstractTensor) = length(typeof(u))
 
-Base.length(::Type{<:AbstractTensor{<:Any, N}}) where {N} = 3^N
-Base.length(u::AbstractTensor{<:Any, N}) where {N} = length(typeof(u))
-
-Base.size(::Type{<:AbstractTensor{T, N}}) where {T,N} = ntuple(i -> 3, Val{N}())
-Base.size(u::AbstractTensor{T, N}) where {T, N} = size(typeof(u))
+Base.size(::Type{<:AbstractTensor{N}}) where {N} = ntuple(i -> 3, Val{N}())
+Base.size(u::AbstractTensor) = size(typeof(u))
 
 @inline _x(u::AbstractTensor) = u.x
 @inline _y(u::AbstractTensor) = u.y
 @inline _z(u::AbstractTensor) = u.z
 
-Base.@constprop :aggressive function Base.getindex(u::Tensor{<:Any, 1}, i::Integer)
+Base.@constprop :aggressive function Base.getindex(u::Tensor{1}, i::Integer)
     return getfield(u, i)
 end
 
-Base.@constprop :aggressive function Base.getindex(u::Tensor{<:Any, N}, I::Vararg{Integer, N}) where {N}
+Base.@constprop :aggressive function Base.getindex(u::Tensor{N}, I::Vararg{Integer, N}) where {N}
     return getindex(getfield(u, @inbounds(I[N])), ntuple(i -> @inbounds(I[i]), Val{N-1}())...)
 end
 
 Base.rand(::Type{Zero}) = Zero()
 Base.rand(::Type{One}) = One()
-Base.rand(::Type{Tensor{T,N,Tx,Ty,Tz}}) where {T,N,Tx,Ty,Tz} = Tensor(rand(Tx), rand(Ty), rand(Tz))
+Base.rand(::Type{Tensor{N,T,Tx,Ty,Tz}}) where {T,N,Tx,Ty,Tz} = Tensor(rand(Tx), rand(Ty), rand(Tz))
 
 # useful compile time constant tensors
 const 𝐢 = Vec(One(), Zero(), Zero())
@@ -227,12 +137,40 @@ const 𝐣 = Vec(Zero(), One(), Zero())
 const 𝐤 = Vec(Zero(), Zero(), One())
 const 𝐈 = Tensor(Vec1Dx(One()), Vec1Dy(One()), Vec1Dz(One()))
 
+include("operations.jl")
 
-include("vec_arithmetic.jl")
-include("tensors.jl")
 include("symmetric_tensors.jl")
+
 include("antisym_tensors.jl")
+
 include("vecarray.jl")
+
 include("sym_antisym_vecarray.jl")
+
+#### some useful Base methods #######
+
+@inline Base.sum(v::AbstractTensor) = sum(v.x) + sum(v.y) + sum(v.z)
+
+@inline Base.sum(op::F, v::AbstractTensor) where {F <: Function} = @inline sum(op,v.x) + sum(op,v.y) + sum(op,v.z)
+
+@inline Base.map(f::F, vecs::Vararg{AbstractTensor{N}}) where {F <: Function, N} = @inline(Tensor(map(f, _x.(vecs)...), map(f, _y.(vecs)...), map(f, _z.(vecs)...)))
+
+#### AbstractMatrix interface #######
+
+@inline function Base.transpose(T::Ten)
+    x = T.x
+    y = T.y
+    z = T.z
+    nx = Tensor(x.x, y.x, z.x)
+    ny = Tensor(x.y, y.y, z.y)
+    nz = Tensor(x.z, y.z, z.z)
+    return Tensor(nx, ny, nz)
+end
+
+@inline Base.transpose(S::SymTen) = S
+
+@inline Base.transpose(W::AntiSymTen) = -W
+
+@inline Base.adjoint(T::Ten) = conj(transpose(T))
 
 end

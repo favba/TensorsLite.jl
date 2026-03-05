@@ -1,15 +1,16 @@
 abstract type AbstractTensorArray{T, N} <: AbstractArray{T, N} end
 
-const VecArray{T,N,Tx,Ty,Tz} = AbstractTensorArray{Tensor{T,1,Tx,Ty,Tz},N}
+const VecArray{T,N,Tx,Ty,Tz} = AbstractTensorArray{Tensor{1,T,Tx,Ty,Tz},N}
 
-const TenArray{T,N,Tx,Ty,Tz} = AbstractTensorArray{Tensor{T,2,Tx,Ty,Tz},N}
+const TenArray{T,N,Tx,Ty,Tz} = AbstractTensorArray{Tensor{2,T,Tx,Ty,Tz},N}
+
 
 struct TensorArray{T, N, Tx, Ty, Tz} <: AbstractTensorArray{T, N}
     x::Tx
     y::Ty
     z::Tz
 
-    TensorArray{T,1}(I::Vararg{Integer, N}) where {T, N} = new{Tensor{T, 1, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}}(Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...))
+    TensorArray{T,1}(I::Vararg{Integer, N}) where {T, N} = new{Tensor{1, T, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}}(Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...))
     function TensorArray{T,NT}(I::Vararg{Integer, N}) where {T,NT,N} 
         x = TensorArray{T,NT-1}(I...)
         y = TensorArray{T,NT-1}(I...)
@@ -37,10 +38,10 @@ struct TensorArray{T, N, Tx, Ty, Tz} <: AbstractTensorArray{T, N}
         fTz = _my_promote_type(Tf, eTz)
         Tff = Union{fTx,fTy,fTz}
 
-        return new{Tensor{Tff, 1, fTx, fTy, fTz}, N, Tx, Ty, Tz}(x, y, z)
+        return new{Tensor{1, Tff, fTx, fTy, fTz}, N, Tx, Ty, Tz}(x, y, z)
     end
 
-    function TensorArray(x::AbstractArray{Tx, N}, y::AbstractArray{Ty, N}, z::AbstractArray{Tz, N}) where {NV, eeTx, eeTy, eeTz, Tx<:AbstractTensor{eeTx, NV}, Ty<:AbstractTensor{eeTy, NV}, Tz<:AbstractTensor{eeTz, NV}, N}
+    function TensorArray(x::AbstractArray{Tx, N}, y::AbstractArray{Ty, N}, z::AbstractArray{Tz, N}) where {NV, eeTx, eeTy, eeTz, Tx<:AbstractTensor{NV, eeTx}, Ty<:AbstractTensor{NV, eeTy}, Tz<:AbstractTensor{NV, eeTz}, N}
 
         s = size(x)
         size(y) === s || throw(DimensionMismatch("Arrays must have the same size"))
@@ -92,12 +93,12 @@ ZeroArray(s) = Array{Zero}(undef, s)
 @inline ZeroTensorArray(::Val{N}, I::Vararg{Integer, NI}) where {N, NI} = TensorArray(ZeroTensorArray(Val{N-1}(), I...), ZeroTensorArray(Val{N-1}(), I...), ZeroTensorArray(Val{N-1}(), I...))
 
 _check_TensorArray_args(v::Vararg) = any(map(x->isa(x,AbstractArray{<:AbstractTensor}), v)) ? throw(DomainError("Tensor Array fields must be Arrays of  tensors with the same order")) : nothing
-_check_TensorArray_args(v::Vararg{T}) where {TE, N, T<:AbstractArray{<:AbstractTensor{TE,N}}} = nothing
+_check_TensorArray_args(v::Vararg{T}) where {TE, N, T<:AbstractArray{<:AbstractTensor{N,TE}}} = nothing
 check_TensorArray_args(x,y,z) = _check_TensorArray_args(_filter_zeros(x,y,z)...)
 
-_get_ndims(::Union{Zero,<:AbstractArray{<:AbstractTensor{<:Any,N}}},
-           ::Union{Zero,<:AbstractArray{<:AbstractTensor{<:Any,N}}},
-           ::Union{Zero,<:AbstractArray{<:AbstractTensor{<:Any,N}}}) where {N} = Val{N}()
+_get_ndims(::Union{Zero,<:AbstractArray{<:AbstractTensor{N}}},
+           ::Union{Zero,<:AbstractArray{<:AbstractTensor{N}}},
+           ::Union{Zero,<:AbstractArray{<:AbstractTensor{N}}}) where {N} = Val{N}()
 
 _get_size(v::Vararg) = size(v[1])
 get_size(x,y,z) = _get_size(_filter_zeros(x,y,z)...)
@@ -120,6 +121,9 @@ end
         return TensorArray(xf,yf,zf)
     end
 end
+
+tensor_ndims(::Type{T}) where {T} = Val{0}()
+tensor_ndims(::Type{TV}) where {T,N,TV<:Tensor{N,T}} = Val{N}()
 
 Tensor2DxyArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = TensorArray(a, b, ZeroTensorArray(tensor_ndims(T), size(a)...))
 Tensor2DxyArray(::Type{T}, ::Val{1}, I::Vararg{Integer,N}) where {T, N} = Tensor2DxyArray(Array{T}(undef, I...), Array{T}(undef, I...))
@@ -299,13 +303,13 @@ end
     return A
 end
 
-Base.similar(A::TensorArray, ::Type{Tensor{Tt, N, Tx, Ty, Tz}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, N, Tx, Ty, Tz, N2} = TensorArray(similar(A.x, Tx, dims), similar(A.y, Ty, dims), similar(A.z, Tz, dims))
+Base.similar(A::TensorArray, ::Type{Tensor{N, Tt, Tx, Ty, Tz}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, N, Tx, Ty, Tz, N2} = TensorArray(similar(A.x, Tx, dims), similar(A.y, Ty, dims), similar(A.z, Tz, dims))
 
 Base.resize!(A::TensorArray{T,1}, i::Integer) where T = begin resize!(A.x, i); resize!(A.y, i); resize!(A.z, i); A end
 
 #Definitons so broadcast return a VecArray =======================================
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{Tensor{T, 1, Tx, Ty, Tz}}) where {T, Tx, Ty, Tz}
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{Tensor{1, T, Tx, Ty, Tz}}) where {T, Tx, Ty, Tz}
     s = length.(axes(bc))
     x = Array{Tx}(undef, s...)
     y = Array{Ty}(undef, s...)
@@ -313,7 +317,7 @@ function Base.similar(bc::Broadcast.Broadcasted, ::Type{Tensor{T, 1, Tx, Ty, Tz}
     return TensorArray(x, y, z)
 end
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{Tensor{T, N, Tx, Ty, Tz}}) where {T, N, Tx, Ty, Tz}
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{Tensor{N, T, Tx, Ty, Tz}}) where {T, N, Tx, Ty, Tz}
     xv = similar(bc, Tx)
     yv = similar(bc, Ty)
     zv = similar(bc, Tz)
