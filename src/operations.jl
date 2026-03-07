@@ -14,26 +14,31 @@ using Zeros: StaticBool
 @inline +(x, ::Zero) = x
 @inline +(::Zero, x) = x
 @inline +(::Zero, x::Zero) = x
-@inline +(::AbstractTensor, ::Zero) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
-@inline +(::Zero, ::AbstractTensor) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
+
+##Useful for debuging only, should never happen
+#@inline +(::AbstractTensor, ::Zero) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
+#@inline +(::Zero, ::AbstractTensor) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
 @inline +(x, ::One) = x + oneunit(x)
 @inline +(::One, x) = oneunit(x) + x
 @inline +(::One, x::One) = 2
-@inline +(::AbstractTensor, ::One) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
-@inline +(::One, ::AbstractTensor) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
+##Useful for debuging only, should never happen
+#@inline +(::AbstractTensor, ::One) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
+#@inline +(::One, ::AbstractTensor) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
 @inline +(::One, ::Zero) = One()
 @inline +(::Zero, ::One) = One()
 
 @inline -(x, ::Zero) = x
 @inline -(::Zero, x) = -x
 @inline -(::Zero, x::Zero) = x
-@inline -(::AbstractTensor, ::Zero) = throw(DimensionMismatch("Cannot subtract Tensor and scalar"))
-@inline -(::Zero, ::AbstractTensor) = throw(DimensionMismatch("Cannot subtract Tensor and scalar"))
+##Useful for debuging only, should never happen
+#@inline -(::AbstractTensor, ::Zero) = throw(DimensionMismatch("Cannot subtract Tensor and scalar"))
+#@inline -(::Zero, ::AbstractTensor) = throw(DimensionMismatch("Cannot subtract Tensor and scalar"))
 @inline -(x, ::One) = x - oneunit(x)
 @inline -(::One, x) = oneunit(x) - x
 @inline -(::One, x::One) = Zero()
-@inline -(::AbstractTensor, ::One) = throw(DimensionMismatch("Cannot subtract Tensor and scalar"))
-@inline -(::One, ::AbstractTensor) = throw(DimensionMismatch("Cannot subtract Tensor and scalar"))
+##Useful for debuging only, should never happen
+#@inline -(::AbstractTensor, ::One) = throw(DimensionMismatch("Cannot subtract Tensor and scalar"))
+#@inline -(::One, ::AbstractTensor) = throw(DimensionMismatch("Cannot subtract Tensor and scalar"))
 @inline -(::One, ::Zero) = One()
 @inline -(::Zero, ::One) = -1
 
@@ -56,21 +61,16 @@ using Zeros: StaticBool
     )...
 )
 @inline *(v::T, ::Zero) where {T<:AbstractTensor} = Zero() * v
-@inline *(::One, v::T) where {T<:AbstractTensor} = constructor(T)(
-    map(
-        *,
-        ntuple(
-               i->One(),
-               Val(fieldcount(T))
-        ),
-        fields(v) 
-    )...
-)
+@inline *(::One, v::T) where {T<:AbstractTensor} = v
 @inline *(v::T, ::One) where {T<:AbstractTensor} = v
 
-@inline function __muladd(::Type{T1}, ::Type{T2}, ::Type{T3}, a, b, c) where {T1,T2,T3}
-    (T1<:StaticBool || T2<:StaticBool || T3<:StaticBool) && return a * b + c # `*` and `+` as defined in this module
-    return Base.muladd(a,b,c)
+#Using generated is easier than dealing with all the amibiguities...
+@inline @generated function __muladd(::Type{T1}, ::Type{T2}, ::Type{T3}, a, b, c) where {T1,T2,T3}
+    if (T1<:StaticBool || T2<:StaticBool || T3<:StaticBool) 
+        :(return a * b + c) # `*` and `+` as defined in this module
+    else
+        :(return Base.muladd(a,b,c))
+    end
 end
 
 @inline function _muladd(a, b, c)
@@ -143,7 +143,6 @@ end
 @inline otimes(a::AbstractTensor, b::AbstractTensor) = _otimes(a,b)
 const ⊗ = otimes
 
-@inline dot(a,b) = a*b
 @inline dot(a::AbstractTensor,b::Vec) = _muladd(a.x, b.x, _muladd(a.y, b.y, a.z*b.z))
 @inline dot(A::AbstractTensor, B::AbstractTensor) = Tensor(dot(A,B.x), dot(A, B.y), dot(A, B.z)) 
 @inline Base.:*(T::AbstractTensor, B::AbstractTensor) = dot(T,B)

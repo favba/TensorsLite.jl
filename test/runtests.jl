@@ -233,6 +233,7 @@ _rand(::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
                     @test muladd(2.0, u, v) ≈ (2.0 * Au + Av)
                     @test muladd(u, 2.0, v) ≈ (2.0 * Au + Av)
                     @test inner(u, v) ≈ dot(Au, Av)
+                    @test inneradd(u, v, 2.0) ≈ (dot(Au, Av) + 2.0)
                     @test u ⊗ v ≈ Au * transpose(Av)
                 end
             end
@@ -286,6 +287,7 @@ end
                     @test muladd(u, v, v) ≈ (Au * Av + Av)
                     @test dotadd(u, v, v) ≈ (Au * Av + Av)
                     @test inner(u, v) ≈ dot(Au, Av)
+                    @test inneradd(u, v, 3.0) ≈ (dot(Au, Av) + 3.0)
                 end
             end
         end
@@ -380,8 +382,13 @@ end
     S1 = SymTen(rand(),rand(),rand(),rand(),rand(),rand())
     S2 = SymTen(rand(),rand(),rand(),rand(),rand(),rand())
     @test inner(S1, S2) ≈ dot(Array(S1), Array(S2))
+    @test inneradd(S1, S2, 2.0) ≈ (dot(Array(S1), Array(S2)) + 2.0)
 
     @test typeof(rand(SymTen2Dyz{Float16})) === SymTen2Dyz{Float16}
+
+    let S3 = SymmetricTensor(rand(Vec3D{Float64}),rand(Vec3D{Float64}),rand(Vec3D{Float64}),rand(Vec3D{Float64}),rand(Vec3D{Float64}),rand(Vec3D{Float64})) 
+        @test norm(S3) ≈ norm(Array(S3))
+    end
 end
 
 @testset "AntiSymTen" begin
@@ -426,6 +433,7 @@ end
     W2 = AntiSymTen(rand(), rand(), rand())
 
     @test inner(W1, W2) ≈ dot(Array(W1), Array(W2))
+    @test inneradd(W1, W2, 1.0) ≈ (dot(Array(W1), Array(W2)) + 1.0)
 
     @test det(W1) === Zero()
 
@@ -840,7 +848,7 @@ end
         el = u[1]
 
         for v in (Ten1DxArray(rand(16)), Ten2DyzArray(rand(16), rand(16), rand(16), rand(16)), SymTen2DxzArray(rand(16), rand(16), rand(16)), AntiSymTenArray(rand(16), rand(16), rand(16)))
-            for op in (+, -, dot, inner, (x, y) -> muladd(x, y, el), (x, y) -> muladd(2.0, x, y), (x, y) -> muladd(x, 2.0, y))
+            for op in (+, -, dot, inner, (x,y) -> inneradd(x,y,2.0), (x, y) -> muladd(x, y, el), (x, y) -> muladd(2.0, x, y), (x, y) -> muladd(x, 2.0, y))
                 @test begin
                     r = op.(u, v)
                     rout = similar(r)
