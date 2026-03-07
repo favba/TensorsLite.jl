@@ -73,9 +73,9 @@ struct Tensor{N, T, Tx, Ty, Tz} <: AbstractTensor{N, T}
 
     @inline function Tensor(x::AbstractTensor{N,Tx}, y::AbstractTensor{N,Ty}, z::AbstractTensor{N,Tz}) where {N, Tx, Ty, Tz}
         Tf = promote_type_ignoring_Zero_and_One(_non_StaticBool_type(Tx), _non_StaticBool_type(Ty), _non_StaticBool_type(Tz))
-        xf = Tensor(_eltype_convert(Tf, x.x), _eltype_convert(Tf, x.y), _eltype_convert(Tf, x.z))
-        yf = Tensor(_eltype_convert(Tf, y.x), _eltype_convert(Tf, y.y), _eltype_convert(Tf, y.z))
-        zf = Tensor(_eltype_convert(Tf, z.x), _eltype_convert(Tf, z.y), _eltype_convert(Tf, z.z))
+        xf = _eltype_convert(Tf, x)
+        yf = _eltype_convert(Tf, y)
+        zf = _eltype_convert(Tf, z)
         return new{N+1, Union{eltype(xf), eltype(yf), eltype(zf)}, typeof(xf), typeof(yf), typeof(zf)}(xf, yf, zf)
     end
 end

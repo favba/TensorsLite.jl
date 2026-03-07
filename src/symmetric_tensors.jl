@@ -56,38 +56,14 @@ struct SymmetricTensor{N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractSymmetricT
                     zz::AbstractTensor{N,Tzz}
         ) where {N, Txx, Txy, Txz, Tyy, Tyz, Tzz}
 
-        Tf = promote_type_ignoring_Zero_and_One(map(_non_StaticBool_type,Txx,Txy,Txz,Tyy,Tyz,Tzz)...)
+        Tf = promote_type_ignoring_Zero_and_One(map(_non_StaticBool_type,(Txx,Txy,Txz,Tyy,Tyz,Tzz))...)
 
-        f = x -> _eltype_convert(Tf,x)
-        xxf = Tensor(map(f, (xx.x, xx.y, xx.z))...)
-        xyf = Tensor(map(f, (xy.x, xy.y, xy.z))...)
-        xzf = Tensor(map(f, (xz.x, xz.y, xz.z))...)
-        yyf = Tensor(map(f, (yy.x, yy.y, yy.z))...)
-        yzf = Tensor(map(f, (yz.x, yz.y, yz.z))...)
-        zzf = Tensor(map(f, (zz.x, zz.y, zz.z))...)
-
-        return new{
-                   N+2,
-                   Union{map(eltype,(xxf,xyf,xzf,yyf,yzf,zzf))...},
-                   map(typeof,(xxf,xyf,xzf,yyf,yzf,zzf))...
-               }(xxf,xyf,xzf,yyf,yzf,zzf)
-    end
-
-    @inline function SymmetricTensor(
-            xx::AbstractSymmetricTensor{N,Txx}, xy::AbstractSymmetricTensor{N,Txy}, xz::AbstractSymmetricTensor{N,Txz},
-                yy::AbstractSymmetricTensor{N,Tyy}, yz::AbstractSymmetricTensor{N,Tyz},
-                    zz::AbstractSymmetricTensor{N,Tzz}
-        ) where {N, Txx, Txy, Txz, Tyy, Tyz, Tzz}
-
-        Tf = promote_type_ignoring_Zero_and_One(map(_non_StaticBool_type,Txx,Txy,Txz,Tyy,Tyz,Tzz)...)
-
-        f = x -> _eltype_convert(Tf,x)
-        xxf = SymmetricTensor(map(f, (xx.xx, xx.xy, xx.xz, xx.yy, xx.yz, xx.zz))...)
-        xyf = SymmetricTensor(map(f, (xy.xx, xy.xy, xy.xz, xy.yy, xy.yz, xy.zz))...)
-        xzf = SymmetricTensor(map(f, (xz.xx, xz.xy, xz.xz, xz.yy, xz.yz, xz.zz))...)
-        yyf = SymmetricTensor(map(f, (yy.xx, yy.xy, yy.xz, yy.yy, yy.yz, yy.zz))...)
-        yzf = SymmetricTensor(map(f, (yz.xx, yz.xy, yz.xz, yz.yy, yz.yz, yz.zz))...)
-        zzf = SymmetricTensor(map(f, (zz.xx, zz.xy, zz.xz, zz.yy, zz.yz, zz.zz))...)
+        xxf = _eltype_convert(Tf,xx)
+        xyf = _eltype_convert(Tf,xy)
+        xzf = _eltype_convert(Tf,xz)
+        yyf = _eltype_convert(Tf,yy)
+        yzf = _eltype_convert(Tf,yz)
+        zzf = _eltype_convert(Tf,zz)
 
         return new{
                    N+2,
@@ -95,6 +71,7 @@ struct SymmetricTensor{N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractSymmetricT
                    map(typeof,(xxf,xyf,xzf,yyf,yzf,zzf))...
                }(xxf,xyf,xzf,yyf,yzf,zzf)
     end
+
 end
 
 @inline constructor(::Type{T}) where {T <: SymmetricTensor} = SymmetricTensor
