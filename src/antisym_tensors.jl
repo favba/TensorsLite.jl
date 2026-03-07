@@ -120,10 +120,15 @@ end
                zx, zy, zz)
 end
 
-@inline inner(a::AntiSymTen{T1}, b::AntiSymTen{T2}) where {T1<:Real, T2<:Real} = 2 * muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz * b.yz))
+@inline inner(a::AntiSymTen{<:Real}, b::AntiSymTen{<:Real}) = 2 * _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz * b.yz))
+
+@inline inneradd(a::AntiSymTen{<:Real}, b::AntiSymTen{:Real}, c::Real) = _muladd(2, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz * b.yz)), c)
 
 @inline inner(::AntiSymTen, ::SymmetricTensor{2}) = 𝟎
 @inline inner(::SymmetricTensor{2}, ::AntiSymTen) = 𝟎
+
+@inline inneradd(::AntiSymTen, ::SymmetricTensor{2}, c) = c
+@inline inneradd(::SymmetricTensor{2}, ::AntiSymTen, c) = c
 
 Base.rand(::Type{AntiSymTen{T,Txy,Txz,Tyz}}) where {T,Txy,Txz,Tyz} = AntiSymTen(rand(Txy), rand(Txz), rand(Tyz))
 

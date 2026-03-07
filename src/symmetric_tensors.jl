@@ -206,17 +206,17 @@ end
         xx = getfield(S, :xx)
         yx = getfield(S, :xy)
         zx = getfield(S, :xz)
-        return Vec(xx, yx, zx)
+        return Tensor(xx, yx, zx)
     elseif s === :y
         xy = getfield(S, :xy)
         yy = getfield(S, :yy)
         zy = getfield(S, :yz)
-        return Vec(xy, yy, zy)
+        return Tensor(xy, yy, zy)
     elseif s === :z
         xz = getfield(S, :xz)
         yz = getfield(S, :yz)
         zz = getfield(S, :zz)
-        return Vec(xz, yz, zz)
+        return Tensor(xz, yz, zz)
     elseif s === :yx
         return getfield(S, :xy)
     elseif s === :zx
@@ -228,6 +228,8 @@ end
     end
 end
 
-@inline inner(a::SymmetricTensor{2,T1}, b::SymmetricTensor{2,T2}) where {T1<:Real, T2<:Real} =  _muladd(2, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz*b.yz)), _muladd(a.xx, b.xx, _muladd(a.yy, b.yy, a.zz*b.zz)))
+@inline inner(a::SymmetricTensor{2,<:Real}, b::SymmetricTensor{2,<:Real}) =  _muladd(2, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz*b.yz)), _muladd(a.xx, b.xx, _muladd(a.yy, b.yy, a.zz*b.zz)))
+
+@inline inneradd(a::SymmetricTensor{2,<:Real}, b::SymmetricTensor{2,<:Real}, c::Real) =  _muladd(2, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz*b.yz)), _muladd(a.xx, b.xx, _muladd(a.yy, b.yy, _muladd(a.zz,b.zz, c))))
 
 Base.rand(::Type{SymmetricTensor{N,T,Txx,Txy,Txz,Tyy,Tyz,Tzz}}) where {N,T,Txx,Txy,Txz,Tyy,Tyz,Tzz} = SymmetricTensor(rand(Txx), rand(Txy), rand(Txz), rand(Tyy), rand(Tyz), rand(Tzz))
