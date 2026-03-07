@@ -837,10 +837,9 @@ end
             end
         end
 
+        el = u[1]
+
         for v in (Ten1DxArray(rand(16)), Ten2DyzArray(rand(16), rand(16), rand(16), rand(16)), SymTen2DxzArray(rand(16), rand(16), rand(16)), AntiSymTenArray(rand(16), rand(16), rand(16)))
-
-            el = u[1]
-
             for op in (+, -, dot, inner, (x, y) -> muladd(x, y, el), (x, y) -> muladd(2.0, x, y), (x, y) -> muladd(x, 2.0, y))
                 @test begin
                     r = op.(u, v)

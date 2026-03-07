@@ -109,4 +109,7 @@ Base.@propagate_inbounds function Base.setindex!(::AbstractArray{One, N}, v::One
     return v
 end
 
+# Type piracy? Needed while https://github.com/eschnett/SIMD.jl/pull/157 isn't accepted.
+Base.@propagate_inbounds Base.setindex!(a::AbstractArray{T}, s::Number, indx::SIMDIndex{N}, I::Vararg) where {T,N} = Base.setindex!(a, SIMD.Vec{N,T}(s), indx, I...)
+
 end
