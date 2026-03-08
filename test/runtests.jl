@@ -438,6 +438,11 @@ end
     @test det(W1) === Zero()
 
     @test typeof(rand(AntiSymTen2Dyz{Float16})) === AntiSymTen2Dyz{Float16}
+
+    let u=rand(Vec3D{Float64}), v=rand(Vec3D{Float64}), w=rand(Vec3D{Float64})
+        W = AntiSymTen(u,v,w)
+        @test norm(W) ≈ norm(Array(W))
+    end
 end
 
 @testset "VecArray" begin

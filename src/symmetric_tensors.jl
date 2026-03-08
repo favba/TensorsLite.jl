@@ -177,17 +177,6 @@ const SymTenMaybe2Dxy{T, Tz} = SymmetricTensor{2, Union{T, Tz}, T, T, Tz, T, Tz,
 
 Base.IndexStyle(::Type{SymmetricTensor}) = IndexCartesian()
 
-Base.@constprop :aggressive function Base.getindex(S::SymmetricTensor{2}, i::Integer, j::Integer)
-    t = (Int(i), Int(j))
-    @boundscheck checkbounds(S, t...)
-    t === (1, 1) && return S.xx
-    (t === (2, 1) || t === (1, 2)) && return S.xy
-    (t === (3, 1) || t === (1, 3)) && return S.xz
-    t === (2, 2) && return S.yy
-    (t === (3, 2) || t === (2, 3))  && return S.yz
-    return S.zz
-end
-
 Base.@constprop :aggressive function Base.getindex(S::SymmetricTensor{N}, I::Vararg{Integer,N}) where {N}
     tI = map(Int, I)
     @boundscheck checkbounds(S, tI...)

@@ -16,7 +16,7 @@ export dotadd, inner, inneradd, otimes, ⊗
 export 𝐢, 𝐣, 𝐤, 𝐈
 export SymmetricTensor, SymTen
 export SymTen3D, SymTen2Dxy, SymTen2Dxz, SymTen2Dyz, SymTen1Dx, SymTen1Dy, SymTen1Dz
-export AntiSymTen
+export AntiSymmetricTensor, AntiSymTen
 export AntiSymTen3D, AntiSymTen2Dxy, AntiSymTen2Dxz, AntiSymTen2Dyz
 export TensorArray, VecArray, TenArray, SymTenArray, AntiSymTenArray
 export Vec3DArray, Vec2DxyArray, Vec2DxzArray, Vec2DyzArray, Vec1DxArray, Vec1DyArray, Vec1DzArray
@@ -86,6 +86,7 @@ end
 
 include("vec_type_utils.jl")
 
+@inline Tensor{0}() = 𝟎
 @inline Tensor{1}() = Tensor(Zero(),Zero(),Zero())
 @inline Tensor{N}() where N = Tensor(Tensor{N-1}(), Tensor{N-1}(), Tensor{N-1}())
 

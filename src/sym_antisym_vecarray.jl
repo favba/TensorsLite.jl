@@ -302,7 +302,7 @@ struct AntiSymTenArray{T, N, Tyx, Tzx, Tzy} <: AbstractTensorArray{T, N}
     xz::Tzx
     yz::Tzy
 
-    AntiSymTenArray{T}(I::Vararg{Int, N}) where {T, N} = new{AntiSymTen{T, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}}(
+    AntiSymTenArray{T}(I::Vararg{Int, N}) where {T, N} = new{AntiSymmetricTensor{2, Union{Zero,T}, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}}(
         Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...)
     )
 
@@ -326,7 +326,7 @@ struct AntiSymTenArray{T, N, Tyx, Tzx, Tzy} <: AbstractTensorArray{T, N}
         Tff = Union{Tyxf, Tzxf, Tzyf}
 
         return new{
-            AntiSymTen{Tff, Tyxf, Tzxf, Tzyf}, N,
+            AntiSymmetricTensor{2, Union{Tff,Zero}, Tyxf, Tzxf, Tzyf}, N,
             typeof(xy), typeof(xz), typeof(yz)
         }(xy, xz, yz)
     end
@@ -388,13 +388,13 @@ Base.dataids(A::AntiSymTenArray) = (Base.dataids(A.xy)..., Base.dataids(A.xz)...
 
 @inline function Base.getindex(A::AntiSymTenArray, i::Int)
     @boundscheck checkbounds(A, i)
-    @inbounds r = AntiSymTen(A.xy[i], A.xz[i], A.yz[i])
+    @inbounds r = AntiSymmetricTensor(A.xy[i], A.xz[i], A.yz[i])
     return r
 end
 
 @inline function Base.getindex(A::AntiSymTenArray{T, N}, I::Vararg{Int, N}) where {T, N}
     @boundscheck checkbounds(A, I...)
-    @inbounds r = AntiSymTen(A.xy[I...], A.xz[I...], A.yz[I...])
+    @inbounds r = AntiSymmetricTensor(A.xy[I...], A.xz[I...], A.yz[I...])
     return r
 end
 
@@ -424,7 +424,7 @@ end
     return A
 end
 
-Base.similar(A::AntiSymTenArray, ::Type{AntiSymTen{Tt, Tyx, Tzx, Tzy}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, Tyx, Tzx, Tzy, N2} = AntiSymTenArray(similar(A.xy, Tyx, dims), similar(A.xz, Tzx, dims), similar(A.yz, Tzy, dims))
+Base.similar(A::AntiSymTenArray, ::Type{AntiSymmetricTensor{N, Tt, Tyx, Tzx, Tzy}}, dims::Tuple{Int, Vararg{Int, N2}}) where {N, Tt, Tyx, Tzx, Tzy, N2} = AntiSymTenArray(similar(A.xy, Tyx, dims), similar(A.xz, Tzx, dims), similar(A.yz, Tzy, dims))
 
 @inline function Base.getproperty(S::AntiSymTenArray, s::Symbol)
     if s === :x
@@ -456,7 +456,7 @@ Base.similar(A::AntiSymTenArray, ::Type{AntiSymTen{Tt, Tyx, Tzx, Tzy}}, dims::Tu
     end
 end
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{AntiSymTen{T, Txy, Txz, Tyz}}) where {T, Txy, Txz, Tyz}
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{AntiSymmetricTensor{2, T, Txy, Txz, Tyz}}) where {T, Txy, Txz, Tyz}
     s = length.(axes(bc))
     xy = Array{Txy}(undef, s...)
     xz = Array{Txz}(undef, s...)
