@@ -1,4 +1,7 @@
-struct SymTenArray{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTensorArray{T, N}
+const SymTenArray{T,N,Txx,Txy,Txz,Tyy,Tyz,Tzz} =
+    AbstractTensorArray{SymmetricTensor{2,T,Txx,Txy,Txz,Tyy,Tyz,Tzz},N}
+
+struct SymmetricTensorArray{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTensorArray{T, N}
     xx::Txx
     xy::Tyx
     xz::Tzx
@@ -6,12 +9,7 @@ struct SymTenArray{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTensorArray{T,
     yz::Tzy
     zz::Tzz
 
-    SymTenArray{T}(I::Vararg{Int, N}) where {T, N} = new{SymmetricTensor{2, T, T, T, T, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}, Array{T, N}, Array{T, N}, Array{T, N}}(
-        Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...),
-        Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...)
-    )
-
-    function SymTenArray(
+    function SymmetricTensorArray(
             xx::AbstractArray, yx::AbstractArray, zx::AbstractArray,
                                yy::AbstractArray, zy::AbstractArray,
                                                   zz::AbstractArray
@@ -59,9 +57,34 @@ struct SymTenArray{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTensorArray{T,
         )
     end
 
+    function SymmetricTensorArray(xx::AbstractArray{Txx, N}, xy::AbstractArray{Txy, N}, xz::AbstractArray{Txz, N},
+                                  yy::AbstractArray{Tyy, N}, yz::AbstractArray{Tyz, N},
+                                  zz::AbstractArray{Tzz, N}) where {NV,
+                                                                    Txx<:AbstractTensor{NV},
+                                                                    Txy<:AbstractTensor{NV},
+                                                                    Txz<:AbstractTensor{NV},
+                                                                    Tyy<:AbstractTensor{NV},
+                                                                    Tyz<:AbstractTensor{NV},
+                                                                    Tzz<:AbstractTensor{NV},
+                                                                    N}
+
+        s = size(xx)
+        (size(xy) === s && size(xz) === s && size(yy) === s && size(yz) === s && size(zz) === S) ||
+            throw(DimensionMismatch("Arrays must have the same size"))
+
+        # Figure out how to not rely on promote_op
+        TT = Base.promote_op(SymmetricTensor,Txx,Txy,Txz,Tyy,Tyz,Tzz)
+
+        return new{TT, N,
+                   typeof(xx), typeof(xy), typeof(xz),
+                   typeof(yy), typeof(yz),
+                   typeof(zz)}(xx, xy, xz,
+                               yy, yz,
+                               zz)
+    end
 end
 
-function SymTenArray(
+function SymmetricTensorArray(
         xx, yx, zx,
             yy, zy,
                 zz
@@ -87,177 +110,126 @@ function SymTenArray(
     sizes = (s, s, s, s, s, s)
     final_vals = map(_if_zero_to_Array, sizes, vals)
 
-    return SymTenArray(final_vals...)
+    return SymmetricTensorArray(final_vals...)
 end
 
-SymTenArray(;
-    xx::Union{Zero, <:AbstractArray} = 𝟎, xy::Union{Zero, <:AbstractArray} = 𝟎, xz::Union{Zero, <:AbstractArray} = 𝟎,
-                                          yy::Union{Zero, <:AbstractArray} = 𝟎, yz::Union{Zero, <:AbstractArray} = 𝟎,
-                                                                                zz::Union{Zero, <:AbstractArray} = 𝟎
-) = SymTenArray(
-    xx, xy, xz,
-        yy, yz,
-            zz
-)
+########### Aliases #################
 
-const SymTen3DArray{T, N} = SymTenArray{
+const SymTen3DArray{T, N} = SymmetricTensorArray{
     SymTen3D{T}, N, Array{T, N}, Array{T, N}, Array{T, N},
                                  Array{T, N}, Array{T, N},
                                               Array{T, N}
 }
 
 
-SymTen3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N},
-                                     d::AbstractArray{T,N}, e::AbstractArray{T,N},
-                                                            f::AbstractArray{T,N}) where {T,N} =
-    SymTenArray(a, b, c,
-                   d, e,
-                      f)
-
-
-const SymTen2DxyArray{T, N} = SymTenArray{
+const SymTen2DxyArray{T, N} = SymmetricTensorArray{
     SymTen2Dxy{T}, N, Array{T, N}, Array{T, N}, Array{Zero, N},
                                    Array{T, N}, Array{Zero, N},
                                                 Array{Zero, N}
 }
 
-SymTen2DxyArray(a::AbstractArray{T,N}, b::AbstractArray{T,N},
-                d::AbstractArray{T,N}) where {T,N} =
-    SymTenArray(a, b, ZeroArray(size(a)),
-                   d, ZeroArray(size(a)),
-                      ZeroArray(size(a)))
-
-
-const SymTen2DxzArray{T, N} = SymTenArray{
+const SymTen2DxzArray{T, N} = SymmetricTensorArray{
     SymTen2Dxz{T}, N, Array{T, N}, Array{Zero, N}, Array{T, N},
                                    Array{Zero, N}, Array{Zero, N},
                                                    Array{T, N}
 }
 
-SymTen2DxzArray(a::AbstractArray{T,N}, c::AbstractArray{T,N},
-                                       f::AbstractArray{T,N}) where {T,N} =
-    SymTenArray(a, ZeroArray(size(a)), c,
-                   ZeroArray(size(a)), ZeroArray(size(a)),
-                                       f)
-
-
-const SymTen2DyzArray{T, N} = SymTenArray{
+const SymTen2DyzArray{T, N} = SymmetricTensorArray{
     SymTen2Dyz{T}, N, Array{Zero, N}, Array{Zero, N}, Array{Zero, N},
                                       Array{T, N},    Array{T, N},
                                                       Array{T, N}
 }
 
-SymTen2DyzArray(d::AbstractArray{T,N}, e::AbstractArray{T,N},
-                                       f::AbstractArray{T,N}) where {T,N} =
-    SymTenArray(ZeroArray(size(d)), ZeroArray(size(d)), ZeroArray(size(d)),
-                d,                  e,
-                                                        f)
-
-
-const SymTen1DxArray{T, N} = SymTenArray{
+const SymTen1DxArray{T, N} = SymmetricTensorArray{
     SymTen1Dx{T}, N, Array{T, N}, Array{Zero, N}, Array{Zero, N},
                                   Array{Zero, N}, Array{Zero, N},
                                                   Array{Zero, N}
 }
 
-SymTen1DxArray(a::AbstractArray{T,N}) where {T,N} =
-    SymTenArray(a, ZeroArray(size(a)), ZeroArray(size(a)),
-                   ZeroArray(size(a)), ZeroArray(size(a)),
-                                       ZeroArray(size(a)))
-
-
-const SymTen1DyArray{T, N} = SymTenArray{
+const SymTen1DyArray{T, N} = SymmetricTensorArray{
     SymTen1Dy{T}, N, Array{Zero, N}, Array{Zero, N}, Array{Zero, N},
                                      Array{T, N},    Array{Zero, N},
                                                      Array{Zero, N}
 }
 
-SymTen1DyArray(d::AbstractArray{T,N}) where {T,N} =
-    SymTenArray(ZeroArray(size(d)), ZeroArray(size(d)), ZeroArray(size(d)),
-                                    d,                  ZeroArray(size(d)),
-                                                        ZeroArray(size(d)))
-
-
-const SymTen1DzArray{T, N} = SymTenArray{
+const SymTen1DzArray{T, N} = SymmetricTensorArray{
     SymTen1Dz{T}, N, Array{Zero, N}, Array{Zero, N}, Array{Zero, N},
                                      Array{Zero, N}, Array{Zero, N},
                                                      Array{T, N}
 }
 
-SymTen1DzArray(f::AbstractArray{T,N}) where {T,N} =
-    SymTenArray(ZeroArray(size(f)), ZeroArray(size(f)), ZeroArray(size(f)),
-                                    ZeroArray(size(f)), ZeroArray(size(f)),
-                                                        f)
-
-
-const SymTenMaybe2DxyArray{T, Tz, N} = SymTenArray{
+const SymTenMaybe2DxyArray{T, Tz, N} = SymmetricTensorArray{
     SymTenMaybe2Dxy{T, Tz}, N, Array{T, N}, Array{T, N}, Array{Tz, N},
                                             Array{T, N}, Array{Tz, N},
                                                          Array{Tz, N}
 }
 
-@inline Base.size(A::SymTenArray) = size(A.xx)
-@inline Base.length(A::SymTenArray) = length(A.xx)
-Base.dataids(A::SymTenArray) = (Base.dataids(A.xx)..., Base.dataids(A.xy)..., Base.dataids(A.xz)...,
-                                                       Base.dataids(A.yy)..., Base.dataids(A.yz)...,
-                                                                              Base.dataids(A.zz)...)
+############ Constructors ###################
+
+SymmetricTensorArray(;
+    xx::Union{Zero, <:AbstractArray} = 𝟎, xy::Union{Zero, <:AbstractArray} = 𝟎, xz::Union{Zero, <:AbstractArray} = 𝟎,
+                                          yy::Union{Zero, <:AbstractArray} = 𝟎, yz::Union{Zero, <:AbstractArray} = 𝟎,
+                                                                                zz::Union{Zero, <:AbstractArray} = 𝟎
+) = SymmetricTensorArray(
+    xx, xy, xz,
+        yy, yz,
+            zz
+)
+
+SymTen3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N},
+                                     d::AbstractArray{T,N}, e::AbstractArray{T,N},
+                                                            f::AbstractArray{T,N}) where {T,N} =
+    SymmetricTensorArray(a, b, c,
+                   d, e,
+                      f)
 
 
-@inline function Base.getindex(A::SymTenArray, i::Int)
-    @boundscheck checkbounds(A, i)
-    @inbounds r = SymmetricTensor(
-        A.xx[i], A.xy[i], A.xz[i],
-                 A.yy[i], A.yz[i],
-                          A.zz[i]
-    )
-    return r
-end
+SymTen2DxyArray(a::AbstractArray{T,N}, b::AbstractArray{T,N},
+                d::AbstractArray{T,N}) where {T,N} =
+    SymmetricTensorArray(a, b, ZeroArray(size(a)),
+                   d, ZeroArray(size(a)),
+                      ZeroArray(size(a)))
 
-@inline function Base.getindex(A::SymTenArray{T, N}, I::Vararg{Int, N}) where {T, N}
-    @boundscheck checkbounds(A, I...)
-    @inbounds r = SymmetricTensor(
-        A.xx[I...], A.xy[I...], A.xz[I...],
-                    A.yy[I...], A.yz[I...],
-                                A.zz[I...]
-    )
-    return r
-end
 
-@inline function Base.setindex!(A::SymTenArray{T}, s::Ten, i::Int) where {T}
-    @boundscheck checkbounds(A, i)
+SymTen2DxzArray(a::AbstractArray{T,N}, c::AbstractArray{T,N},
+                                       f::AbstractArray{T,N}) where {T,N} =
+    SymmetricTensorArray(a, ZeroArray(size(a)), c,
+                   ZeroArray(size(a)), ZeroArray(size(a)),
+                                       f)
 
-    sym_s = convert(T, s)
-    @inbounds begin
-        A.xx[i] = sym_s.xx
-        A.xy[i] = sym_s.xy
-        A.xz[i] = sym_s.xz
-        A.yy[i] = sym_s.yy
-        A.yz[i] = sym_s.yz
-        A.zz[i] = sym_s.zz
-    end
 
-    return A
-end
+SymTen2DyzArray(d::AbstractArray{T,N}, e::AbstractArray{T,N},
+                                       f::AbstractArray{T,N}) where {T,N} =
+    SymmetricTensorArray(ZeroArray(size(d)), ZeroArray(size(d)), ZeroArray(size(d)),
+                d,                  e,
+                                                        f)
 
-@inline function Base.setindex!(A::SymTenArray{T, N}, s::Ten, I::Vararg{Int, N}) where {T, N}
-    @boundscheck checkbounds(A, I...)
 
-    sym_s = convert(T, s)
-    @inbounds begin
-        A.xx[I...] = sym_s.xx
-        A.xy[I...] = sym_s.xy
-        A.xz[I...] = sym_s.xz
-        A.yy[I...] = sym_s.yy
-        A.yz[I...] = sym_s.yz
-        A.zz[I...] = sym_s.zz
-    end
+SymTen1DxArray(a::AbstractArray{T,N}) where {T,N} =
+    SymmetricTensorArray(a, ZeroArray(size(a)), ZeroArray(size(a)),
+                   ZeroArray(size(a)), ZeroArray(size(a)),
+                                       ZeroArray(size(a)))
 
-    return A
-end
 
-Base.similar(A::SymTenArray, ::Type{SymmetricTensor{2, Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz, N2} = SymTenArray(similar(A.xx, Txx, dims), similar(A.xy, Tyx, dims), similar(A.xz, Tzx, dims), similar(A.yy, Tyy, dims), similar(A.yz, Tzy, dims), similar(A.zz, Tzz, dims))
+SymTen1DyArray(d::AbstractArray{T,N}) where {T,N} =
+    SymmetricTensorArray(ZeroArray(size(d)), ZeroArray(size(d)), ZeroArray(size(d)),
+                                    d,                  ZeroArray(size(d)),
+                                                        ZeroArray(size(d)))
 
-@inline function Base.getproperty(S::SymTenArray, s::Symbol)
+
+SymTen1DzArray(f::AbstractArray{T,N}) where {T,N} =
+    SymmetricTensorArray(ZeroArray(size(f)), ZeroArray(size(f)), ZeroArray(size(f)),
+                                    ZeroArray(size(f)), ZeroArray(size(f)),
+                                                        f)
+
+
+###### AbstractArray Interface #######
+
+Base.dataids(A::SymmetricTensorArray) = (Base.dataids(A.xx)..., Base.dataids(A.xy)..., Base.dataids(A.xz)..., Base.dataids(A.yy)..., Base.dataids(A.yz)..., Base.dataids(A.zz)...)
+
+Base.similar(A::SymmetricTensorArray, ::Type{SymmetricTensor{N, Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, dims::Tuple{Int, Vararg{Int, N2}}) where {N, Tt, Txx, Tyx, Tzx, Tyy, Tzy, Tzz, N2} = SymmetricTensorArray(similar(A.xx, Txx, dims), similar(A.xy, Tyx, dims), similar(A.xz, Tzx, dims), similar(A.yy, Tyy, dims), similar(A.yz, Tzy, dims), similar(A.zz, Tzz, dims))
+
+@inline function Base.getproperty(S::SymmetricTensorArray, s::Symbol)
     if s === :x
         xx = getfield(S, :xx)
         yx = getfield(S, :xy)
@@ -292,21 +264,32 @@ function Base.similar(bc::Broadcast.Broadcasted, ::Type{SymmetricTensor{2, T, Tx
     yy = Array{Tyy}(undef, s...)
     yz = Array{Tyz}(undef, s...)
     zz = Array{Tzz}(undef, s...)
-    return SymTenArray(xx, xy, xz, yy, yz, zz)
+    return SymmetricTensorArray(xx, xy, xz, yy, yz, zz)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{SymmetricTensor{N, T, Txx, Txy, Txz, Tyy, Tyz, Tzz}}) where {T, N, Txx, Txy, Txz, Tyy, Tyz, Tzz}
+
+    xxv = similar(bc, Txx)
+    xyv = similar(bc, Txy)
+    xzv = similar(bc, Txz)
+    yyv = similar(bc, Tyy)
+    yzv = similar(bc, Tyz)
+    zzv = similar(bc, Tzz)
+    
+    return SymmetricTensorArray(xxv, xyv, xzv, yyv, yzv, zzv)
 end
 
 ############################ AntiSymTenArray ###########################
 
-struct AntiSymTenArray{T, N, Tyx, Tzx, Tzy} <: AbstractTensorArray{T, N}
+const AntiSymTenArray{T,N,Txy,Txz,Tyz} =
+    AbstractTensorArray{AntiSymmetricTensor{2,Txy,Txz,Tyz},N}
+
+struct AntiSymmetricTensorArray{T, N, Tyx, Tzx, Tzy} <: AbstractTensorArray{T, N}
     xy::Tyx
     xz::Tzx
     yz::Tzy
 
-    AntiSymTenArray{T}(I::Vararg{Int, N}) where {T, N} = new{AntiSymmetricTensor{2, Union{Zero,T}, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}}(
-        Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...)
-    )
-
-    function AntiSymTenArray(xy::AbstractArray, xz::AbstractArray, yz::AbstractArray)
+    function AntiSymmetricTensorArray(xy::AbstractArray, xz::AbstractArray, yz::AbstractArray)
 
         s = size(xy)
         N = ndims(xy)
@@ -331,9 +314,20 @@ struct AntiSymTenArray{T, N, Tyx, Tzx, Tzy} <: AbstractTensorArray{T, N}
         }(xy, xz, yz)
     end
 
+    function AntiSymmetricTensorArray(xy::AbstractArray{Txy, N}, xz::AbstractArray{Txz, N}, yz::AbstractArray{Tyz, N}) where {N, NV, Txy<:AbstractTensor{NV}, Txz<:AbstractTensor{NV}, Tyz<:AbstractTensor{NV}}
+
+        s = size(xy)
+        size(xz) === s || throw(DimensionMismatch("Arrays must have the same size"))
+        size(yz) === s || throw(DimensionMismatch("Arrays must have the same size"))
+
+        # Figure out how to not rely on promote_op
+        TT = Base.promote_op(AntiSymmetricTensor,Txy,Txz,Tyz)
+
+        return new{TT, N, typeof(xy), typeof(xz), typeof(yz)}(xy, xz, yz)
+    end
 end
 
-function AntiSymTenArray(xy, xz, yz)
+function AntiSymmetricTensorArray(xy, xz, yz)
 
     vals = (xy, xz, yz)
 
@@ -347,119 +341,87 @@ function AntiSymTenArray(xy, xz, yz)
     sizes = (s, s, s)
     final_vals = map(_if_zero_to_Array, sizes, vals)
 
-    return AntiSymTenArray(final_vals...)
+    return AntiSymmetricTensorArray(final_vals...)
 end
 
-AntiSymTenArray(;xy::Union{Zero, <:AbstractArray} = 𝟎, xz::Union{Zero, <:AbstractArray} = 𝟎,
-             yz::Union{Zero, <:AbstractArray} = 𝟎) = AntiSymTenArray(xy, xz, yz)
+AntiSymmetricTensorArray(;xy::Union{Zero, <:AbstractArray} = 𝟎, xz::Union{Zero, <:AbstractArray} = 𝟎,
+             yz::Union{Zero, <:AbstractArray} = 𝟎) = AntiSymmetricTensorArray(xy, xz, yz)
 
 
-const AntiSymTen3DArray{T, N} = AntiSymTenArray{AntiSymTen3D{T}, N,
+const AntiSymTen3DArray{T, N} = AntiSymmetricTensorArray{AntiSymTen3D{T}, N,
                                                 Array{T, N}, Array{T, N}, Array{T, N}}
 
-AntiSymTen3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N}) where {T,N} =
-    AntiSymTenArray(a, b, c)
 
-
-const AntiSymTen2DxyArray{T, N} = AntiSymTenArray{AntiSymTen2Dxy{T}, N,
+const AntiSymTen2DxyArray{T, N} = AntiSymmetricTensorArray{AntiSymTen2Dxy{T}, N,
                                                   Array{T, N}, Array{Zero, N}, Array{Zero, N}}
 
-AntiSymTen2DxyArray(a::AbstractArray{T,N}) where {T,N} =
-    AntiSymTenArray(a, ZeroArray(size(a)), ZeroArray(size(a)))
 
-
-const AntiSymTen2DxzArray{T, N} = AntiSymTenArray{AntiSymTen2Dxz{T}, N,
+const AntiSymTen2DxzArray{T, N} = AntiSymmetricTensorArray{AntiSymTen2Dxz{T}, N,
                                                   Array{Zero, N}, Array{T, N}, Array{Zero, N}}
 
-AntiSymTen2DxzArray(b::AbstractArray{T,N}) where {T,N} =
-    AntiSymTenArray(ZeroArray(size(b)), b, ZeroArray(size(b)))
 
-
-const AntiSymTen2DyzArray{T, N} = AntiSymTenArray{AntiSymTen2Dyz{T}, N,
+const AntiSymTen2DyzArray{T, N} = AntiSymmetricTensorArray{AntiSymTen2Dyz{T}, N,
                                                   Array{Zero, N}, Array{Zero, N}, Array{T, N}}
 
 AntiSymTen2DyzArray(c::AbstractArray{T,N}) where {T,N} =
-    AntiSymTenArray(ZeroArray(size(c)), ZeroArray(size(c)), c)
+    AntiSymmetricTensorArray(ZeroArray(size(c)), ZeroArray(size(c)), c)
+
+AntiSymTen3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N}) where {T,N} =
+    AntiSymmetricTensorArray(a, b, c)
+
+AntiSymTen2DxyArray(a::AbstractArray{T,N}) where {T,N} =
+    AntiSymmetricTensorArray(a, ZeroArray(size(a)), ZeroArray(size(a)))
+
+AntiSymTen2DxzArray(b::AbstractArray{T,N}) where {T,N} =
+    AntiSymmetricTensorArray(ZeroArray(size(b)), b, ZeroArray(size(b)))
 
 
-@inline Base.size(A::AntiSymTenArray) = size(A.xy)
-@inline Base.length(A::AntiSymTenArray) = length(A.xy)
-Base.dataids(A::AntiSymTenArray) = (Base.dataids(A.xy)..., Base.dataids(A.xz)..., Base.dataids(A.yz)...)
+Base.dataids(A::AntiSymmetricTensorArray) = (Base.dataids(A.xy)..., Base.dataids(A.xz)..., Base.dataids(A.yz)...)
 
-@inline function Base.getindex(A::AntiSymTenArray, i::Int)
-    @boundscheck checkbounds(A, i)
-    @inbounds r = AntiSymmetricTensor(A.xy[i], A.xz[i], A.yz[i])
-    return r
-end
+Base.similar(A::AntiSymmetricTensorArray, ::Type{AntiSymmetricTensor{N, Tt, Tyx, Tzx, Tzy}}, dims::Tuple{Int, Vararg{Int, N2}}) where {N, Tt, Tyx, Tzx, Tzy, N2} = AntiSymmetricTensorArray(similar(A.xy, Tyx, dims), similar(A.xz, Tzx, dims), similar(A.yz, Tzy, dims))
 
-@inline function Base.getindex(A::AntiSymTenArray{T, N}, I::Vararg{Int, N}) where {T, N}
-    @boundscheck checkbounds(A, I...)
-    @inbounds r = AntiSymmetricTensor(A.xy[I...], A.xz[I...], A.yz[I...])
-    return r
-end
-
-@inline function Base.setindex!(A::AntiSymTenArray{T}, s::Ten, i::Int) where {T}
-    @boundscheck checkbounds(A, i)
-
-    sym_s = convert(T, s)
-    @inbounds begin
-        A.xy[i] = sym_s.xy
-        A.xz[i] = sym_s.xz
-        A.yz[i] = sym_s.yz
-    end
-
-    return A
-end
-
-@inline function Base.setindex!(A::AntiSymTenArray{T, N}, s::Ten, I::Vararg{Int, N}) where {T, N}
-    @boundscheck checkbounds(A, I...)
-
-    sym_s = convert(T, s)
-    @inbounds begin
-        A.xy[I...] = sym_s.xy
-        A.xz[I...] = sym_s.xz
-        A.yz[I...] = sym_s.yz
-    end
-
-    return A
-end
-
-Base.similar(A::AntiSymTenArray, ::Type{AntiSymmetricTensor{N, Tt, Tyx, Tzx, Tzy}}, dims::Tuple{Int, Vararg{Int, N2}}) where {N, Tt, Tyx, Tzx, Tzy, N2} = AntiSymTenArray(similar(A.xy, Tyx, dims), similar(A.xz, Tzx, dims), similar(A.yz, Tzy, dims))
-
-@inline function Base.getproperty(S::AntiSymTenArray, s::Symbol)
-    if s === :x
-        yx = -getfield(S, :xy)
-        zx = -getfield(S, :xz)
-        return Tensor2DyzArray(yx, zx)
-    elseif s === :y
-        xy = getfield(S, :xy)
-        zy = -getfield(S, :yz)
-        return Tensor2DxzArray(xy, zy)
-    elseif s === :z
-        xz = getfield(S, :xz)
-        yz = getfield(S, :yz)
-        return Tensor2DxyArray(xz, yz)
-    elseif s === :yx
-        return -getfield(S, :xy)
-    elseif s === :zx
-        return -getfield(S, :xz)
-    elseif s === :zy
-        return -getfield(S, :yz)
-    elseif s === :xx
-        return Array{Zero}(undef, size(S))
-    elseif s === :yy
-        return Array{Zero}(undef, size(S))
-    elseif s === :zz
-        return Array{Zero}(undef, size(S))
-    else
-        return getfield(S, s)
-    end
-end
+# @inline function Base.getproperty(S::AntiSymmetricTensorArray, s::Symbol)
+#     if s === :x
+#         yx = -getfield(S, :xy)
+#         zx = -getfield(S, :xz)
+#         return Tensor2DyzArray(yx, zx)
+#     elseif s === :y
+#         xy = getfield(S, :xy)
+#         zy = -getfield(S, :yz)
+#         return Tensor2DxzArray(xy, zy)
+#     elseif s === :z
+#         xz = getfield(S, :xz)
+#         yz = getfield(S, :yz)
+#         return Tensor2DxyArray(xz, yz)
+#     elseif s === :yx
+#         return -getfield(S, :xy)
+#     elseif s === :zx
+#         return -getfield(S, :xz)
+#     elseif s === :zy
+#         return -getfield(S, :yz)
+    # elseif s === :xx
+    #     return Array{Zero}(undef, size(S))
+    # elseif s === :yy
+    #     return Array{Zero}(undef, size(S))
+    # elseif s === :zz
+    #     return Array{Zero}(undef, size(S))
+    # else
+    #     return getfield(S, s)
+#     end
+# end
 
 function Base.similar(bc::Broadcast.Broadcasted, ::Type{AntiSymmetricTensor{2, T, Txy, Txz, Tyz}}) where {T, Txy, Txz, Tyz}
     s = length.(axes(bc))
     xy = Array{Txy}(undef, s...)
     xz = Array{Txz}(undef, s...)
     yz = Array{Tyz}(undef, s...)
-    return AntiSymTenArray(xy, xz, yz)
+    return AntiSymmetricTensorArray(xy, xz, yz)
 end
+
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{AntiSymmetricTensor{N, T, Txy, Txz, Tyz}}) where {T, N, Txy, Txz, Tyz}
+    xyv = similar(bc, Txy)
+    xzv = similar(bc, Txz)
+    yzv = similar(bc, Tyz)
+    return AntiSymmetricTensorArray(xyv, xzv, yzv)
+end
+

@@ -262,50 +262,47 @@ Ten1DzArray(zz::AbstractArray) = Ten1DzArray(Vec1DzArray(zz))
 
 ################# AbstractArray interface and other ####################
 
-@inline Base.size(A::TensorArray) = size(A.x)
-@inline Base.length(A::TensorArray) = length(A.x)
+@inline Base.size(A::AbstractTensorArray) = size(getfield(A,1))
+@inline Base.length(A::AbstractTensorArray) = length(getfield(A,1))
 
-Base.dataids(A::TensorArray) = (Base.dataids(A.x)..., Base.dataids(A.y)..., Base.dataids(A.z)...)
+Base.dataids(A::TensorArray) = (Base.dataids(A.x)..., Base.dataids(A.y)..., Base.dataids(A.z)...) 
 
-@inline function Base.getindex(A::TensorArray, i::Int)
+struct IndexHelper{N}
+    i::NTuple{N,Int}
+end
+
+@inline (s::IndexHelper{N})(A) where {N} = @inbounds(Base.getindex(A,(s.i)...))
+@inline (s::IndexHelper{N})(A,v) where {N} = @inbounds(Base.setindex!(A,v,(s.i)...))
+
+@inline function Base.getindex(A::AbstractTensorArray{T}, i::Int) where T<:AbstractTensor
     @boundscheck checkbounds(A, i)
-    @inbounds @inline r = Tensor(A.x[i], A.y[i], A.z[i])
+    r = constructor(T)(map(IndexHelper((i,)),fields(A))...)
     return r
 end
 
-@inline function Base.getindex(A::TensorArray{T, N}, I::Vararg{Int, N}) where {T, N}
+@inline function Base.getindex(A::AbstractTensorArray{T, N}, I::Vararg{Int, N}) where {T, N}
     @boundscheck checkbounds(A, I...)
-    @inbounds @inline r = Tensor(A.x[I...], A.y[I...], A.z[I...])
+    r = constructor(T)(map(IndexHelper(I),fields(A))...)
     return r
 end
 
-@inline function Base.setindex!(A::TensorArray, u::AbstractTensor, i::Int)
+@inline function Base.setindex!(A::AbstractTensorArray{T}, u::T2, i::Int) where {N,T<:AbstractTensor{N}, T2<:AbstractTensor{N}}
     @boundscheck checkbounds(A, i)
-
-    @inbounds @inline begin
-        A.x[i] = u.x
-        A.y[i] = u.y
-        A.z[i] = u.z
-    end
-
+    uc = convert(T, u)
+    @inline map(IndexHelper((i,)), fields(A), fields(uc))
     return A
 end
 
-@inline function Base.setindex!(A::TensorArray{T, N}, u::AbstractTensor, I::Vararg{Int, N}) where {T, N}
+@inline function Base.setindex!(A::AbstractTensorArray{T, N}, u::T2, I::Vararg{Int, N}) where {N, NT, T<:AbstractTensor{NT}, T2<:AbstractTensor{NT}}
     @boundscheck checkbounds(A, I...)
-
-    @inbounds @inline begin
-        A.x[I...] = u.x
-        A.y[I...] = u.y
-        A.z[I...] = u.z
-    end
-
+    uc = convert(T, u)
+    @inline map(IndexHelper(I), fields(A), fields(uc))
     return A
 end
+
+Base.resize!(A::AbstractTensorArray{<:Any, 1}, i::Integer) = begin map(x -> resize!(x, i), fields(A)) ; A end
 
 Base.similar(A::TensorArray, ::Type{Tensor{N, Tt, Tx, Ty, Tz}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, N, Tx, Ty, Tz, N2} = TensorArray(similar(A.x, Tx, dims), similar(A.y, Ty, dims), similar(A.z, Tz, dims))
-
-Base.resize!(A::TensorArray{T,1}, i::Integer) where T = begin resize!(A.x, i); resize!(A.y, i); resize!(A.z, i); A end
 
 #Definitons so broadcast return a VecArray =======================================
 
