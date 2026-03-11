@@ -69,7 +69,7 @@ struct SymmetricTensorArray{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractTenso
                                                                     N}
 
         s = size(xx)
-        (size(xy) === s && size(xz) === s && size(yy) === s && size(yz) === s && size(zz) === S) ||
+        (size(xy) === s && size(xz) === s && size(yy) === s && size(yz) === s && size(zz) === s) ||
             throw(DimensionMismatch("Arrays must have the same size"))
 
         # Figure out how to not rely on promote_op
