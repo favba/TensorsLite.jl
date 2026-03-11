@@ -1,3 +1,4 @@
+using TensorsLite: SymTenArray, AntiSymTenArray
 using TensorsLite
 using Zeros
 using Test
@@ -792,6 +793,65 @@ end
         u3D[I, 2] = Ten(xx = zeroSIMD, yx = zeroSIMD, zx = zeroSIMD, xy = zeroSIMD, yy = zeroSIMD, zy = zeroSIMD, xz = zeroSIMD, yz = zeroSIMD, zz = zeroSIMD)
         u3D[1:4, 2] == TenArray(xx = zeros(4), yx = zeros(4), zx = zeros(4), xy = zeros(4), yy = zeros(4), zy = zeros(4), xz = zeros(4), yz = zeros(4), zz = zeros(4))
     end
+end
+
+function single_contract(A::AbstractArray, B::AbstractArray)
+    @assert size(A, ndims(A)) == 3
+    @assert size(B, 1) == 3
+
+    Ashape = size(A)
+    Bshape = size(B)
+
+    outshape = (Ashape[1:end-1]..., Bshape[2:end]...)
+    C = zeros(promote_type(eltype(A), eltype(B)), outshape)
+
+    for IA in CartesianIndices(Ashape[1:end-1]),
+        IB in CartesianIndices(Bshape[2:end])
+
+        s = zero(eltype(C))
+        for k in 1:3
+            a_idx = Tuple(IA)..., k
+            b_idx = k, Tuple(IB)...
+            s += A[a_idx...] * B[b_idx...]
+        end
+
+        C[Tuple(IA)..., Tuple(IB)...] = s
+    end
+
+    return C
+end
+
+function outer_product(A::AbstractArray, B::AbstractArray)
+    Ashape = size(A)
+    Bshape = size(B)
+
+    outshape = (Ashape..., Bshape...)
+    C = zeros(promote_type(eltype(A), eltype(B)), outshape)
+
+    for IA in CartesianIndices(Ashape), IB in CartesianIndices(Bshape)
+        C[Tuple(IA)..., Tuple(IB)...] = A[IA] * B[IB]
+    end
+
+    return C
+end
+
+@testset "Higher order tensors" begin
+
+    let u = VecArray(rand(2),rand(2),rand(2)), v = VecArray(rand(2),rand(2),rand(2)), w = VecArray(rand(2),rand(2),rand(2)), j = VecArray(rand(2),rand(2),rand(2)), k = VecArray(rand(2),rand(2),rand(2)), l = VecArray(rand(2),rand(2),rand(2))
+
+        S = SymmetricTensorArray(u,v,w,j,k,l)
+        W = AntiSymmetricTensorArray(k,v,j)
+
+        @test all(map((x,y) -> mapreduce(isapprox,&,x,y), dot.(S,v), ((x,y)->(single_contract(Array(x),Array(y)))).(S,v)))
+        @test all(map((x,y) -> mapreduce(isapprox,&,x,y), dot.(k,W), ((x,y)->(single_contract(Array(x),Array(y)))).(k,W)))
+        @test all(map((x,y) -> mapreduce(isapprox,&,x,y), dot.(S,W), ((x,y)->(single_contract(Array(x),Array(y)))).(S,W)))
+        @test all(map((x,y) -> mapreduce(isapprox,&,x,y), otimes.(S,v), ((x,y)->(outer_product(Array(x),Array(y)))).(S,v)))
+        @test all(map((x,y) -> mapreduce(isapprox,&,x,y), otimes.(k,W), ((x,y)->(outer_product(Array(x),Array(y)))).(k,W)))
+
+        W1 =  W[1]
+        @test all(map((x,y) -> mapreduce(isapprox,&,x,y), W1 .+ W, (Array(W1),) .+ Array(W)))
+    end
+
 end
 
 function apply_simd_op(out, op::F, args::Vararg{Any, N}) where {F, N}
