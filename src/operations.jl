@@ -82,7 +82,6 @@ end
 @inline Base.:+(a::AbstractTensor) = a
 @inline Base.:+(a::AbstractTensor{N}, b::AbstractTensor{N}) where {N} = Tensor(a.x + b.x, a.y + b.y, a.z + b.z)
 
-#@inline Base.:+(a::T...) where {T<:AbstractTensor} = reduce(+,a)
 @inline Base.:+(a::AbstractTensor{N}...) where {N} = Tensor(+(map(_x, a)...), +(map(_y, a)...), +(map(_z, a)...))
 
 # We treat Vec's as scalar for broadcasting but the default definition of + and - for AbstractArray's relies
