@@ -1,4 +1,4 @@
-abstract type AbstractSymmetricTensor{N,T} <: AbstractTensor{N, T} end
+abstract type AbstractSymmetricTensor{N, T} <: AbstractTensor{N, T} end
 
 const SymTen{T} = AbstractSymmetricTensor{2,T}
 
@@ -91,10 +91,10 @@ end
     return SymmetricTensor(nfields...)
 end
 
-@inline Base.:+(a::SymmetricTensor, b::SymmetricTensor) = @inline SymmetricTensor(map(+, fields(a), fields(b))...)
-@inline Base.:-(a::SymmetricTensor, b::SymmetricTensor) = @inline SymmetricTensor(map(-, fields(a), fields(b))...)
-@inline ==(a::SymmetricTensor, b::SymmetricTensor) = @inline reduce(&, map(==, fields(a), fields(b)))
-@inline function _muladd(a::Number, v::SymmetricTensor, u::SymmetricTensor)
+@inline Base.:+(a::SymmetricTensor{N}, b::SymmetricTensor{N}) where {N} = @inline SymmetricTensor(map(+, fields(a), fields(b))...)
+@inline Base.:-(a::SymmetricTensor{N}, b::SymmetricTensor{N}) where {N} = @inline SymmetricTensor(map(-, fields(a), fields(b))...)
+@inline ==(a::SymmetricTensor{N}, b::SymmetricTensor{N}) where {N} = @inline reduce(&, map(==, fields(a), fields(b)))
+@inline function _muladd(a::Number, v::SymmetricTensor{N}, u::SymmetricTensor{N}) where {N}
     @inline begin
         at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
         S = SymmetricTensor(map(_muladd, ntuple(i -> at, Val(6)), fields(v), fields(u))...)

@@ -45,10 +45,10 @@ end
 @inline AntiSymTen(; xy = 𝟎, xz = 𝟎, yz = 𝟎) = AntiSymmetricTensor(xy, xz, yz)
 
 @inline constructor(::Type{T}) where {T <: AntiSymmetricTensor} = AntiSymmetricTensor
-@inline Base.:+(a::AntiSymmetricTensor, b::AntiSymmetricTensor) = @inline AntiSymmetricTensor(map(+, fields(a), fields(b))...)
-@inline Base.:-(a::AntiSymmetricTensor, b::AntiSymmetricTensor) = @inline AntiSymmetricTensor(map(-, fields(a), fields(b))...)
-@inline ==(a::AntiSymmetricTensor, b::AntiSymmetricTensor) = @inline reduce(&, map(==, fields(a), fields(b)))
-@inline function _muladd(a::Number, v::AntiSymmetricTensor, u::AntiSymmetricTensor)
+@inline Base.:+(a::AntiSymmetricTensor{N}, b::AntiSymmetricTensor{N}) where {N} = @inline AntiSymmetricTensor(map(+, fields(a), fields(b))...)
+@inline Base.:-(a::AntiSymmetricTensor{N}, b::AntiSymmetricTensor{N}) where {N} = @inline AntiSymmetricTensor(map(-, fields(a), fields(b))...)
+@inline ==(a::AntiSymmetricTensor{N}, b::AntiSymmetricTensor{N}) where {N} = @inline reduce(&, map(==, fields(a), fields(b)))
+@inline function _muladd(a::Number, v::AntiSymmetricTensor{N}, u::AntiSymmetricTensor{N}) where {N}
     @inline begin
         at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
         W = AntiSymmetricTensor(map(_muladd, ntuple(i -> at, Val(3)), fields(v), fields(u))...)
