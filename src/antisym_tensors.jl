@@ -109,21 +109,18 @@ Base.IndexStyle(::Type{AntiSymmetricTensor}) = IndexCartesian()
 Base.@constprop :aggressive function Base.getindex(S::AntiSymmetricTensor{N}, I::Vararg{Integer,N}) where {N}
 
     tI = map(Int, I)
-    @boundscheck checkbounds(S, tI...)
+    @boundscheck _checkbounds(S, tI...)
     t = (tI[N-1], tI[N])
     mtI = tI[Base.OneTo(N-2)]
 
-    zt = 𝟎
-
-    t === (1, 1) && return zt
     t === (2, 1) && return @inbounds(S.yx[mtI...])
     t === (1, 2) && return -@inbounds(S.yx[mtI...])
     t === (3, 1) && return @inbounds(S.zx[mtI...])
     t === (1, 3) && return -@inbounds(S.zx[mtI...])
-    t === (2, 2) && return zt
     t === (3, 2) && return @inbounds(S.zy[mtI...])
     t === (2, 3) && return -@inbounds(S.zy[mtI...])
-    return zt
+    # if (t === (1,1) || t === (2,2) || t === (3,3))
+    return 𝟎
 end
 
 @inline function Base.getproperty(S::AntiSymmetricTensor{N}, s::Symbol) where {N}

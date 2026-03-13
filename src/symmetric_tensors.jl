@@ -193,7 +193,7 @@ Base.IndexStyle(::Type{SymmetricTensor}) = IndexCartesian()
 
 Base.@constprop :aggressive function Base.getindex(S::SymmetricTensor{N}, I::Vararg{Integer,N}) where {N}
     tI = map(Int, I)
-    @boundscheck checkbounds(S, tI...)
+    @boundscheck _checkbounds(S, tI...)
     t = (tI[N-1], tI[N])
     mtI = tI[Base.OneTo(N-2)]
     t === (1, 1) && return @inbounds(S.xx[mtI...])
@@ -201,7 +201,7 @@ Base.@constprop :aggressive function Base.getindex(S::SymmetricTensor{N}, I::Var
     (t === (3, 1) || t === (1, 3)) && return @inbounds(S.xz[mtI...])
     t === (2, 2) && return @inbounds(S.yy[mtI...])
     (t === (3, 2) || t === (2, 3))  && return @inbounds(S.yz[mtI...])
-    return S.zz[mtI...]
+    return @inbounds(S.zz[mtI...])
 end
 
 @inline function Base.getproperty(S::SymmetricTensor, s::Symbol)

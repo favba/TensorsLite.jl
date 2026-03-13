@@ -120,12 +120,28 @@ Base.size(u::AbstractTensor) = size(typeof(u))
 @inline _y(u::AbstractTensor) = u.y
 @inline _z(u::AbstractTensor) = u.z
 
+Base.@constprop :aggressive __checkbounds(i::Integer) = (0 < i <= 3)
+
+Base.@constprop :aggressive __checkbounds(i::Integer, I::Vararg{Integer}) = __checkbounds(i) && __checkbounds(I...)
+
+Base.@constprop :aggressive function _checkbounds(a::Vec, i::Integer)
+    __checkbounds(i) || throw(BoundsError(a,i))
+    return nothing
+end
+
 Base.@constprop :aggressive function Base.getindex(u::Tensor{1}, i::Integer)
-    return getfield(u, i)
+    @boundscheck _checkbounds(u,i)
+    return @inbounds(getfield(u, i))
+end
+
+Base.@constprop :aggressive function _checkbounds(a::AbstractTensor{N}, I::Vararg{Integer,N}) where {N}
+    __checkbounds(I...) || throw(BoundsError(a,I))
+    return nothing
 end
 
 Base.@constprop :aggressive function Base.getindex(u::Tensor{N}, I::Vararg{Integer, N}) where {N}
-    return getindex(getfield(u, @inbounds(I[N])), ntuple(i -> @inbounds(I[i]), Val{N-1}())...)
+    @boundscheck _checkbounds(u,I...)
+    return @inbounds(getindex(getfield(u, @inbounds(I[N])), ntuple(i -> @inbounds(I[i]), Val{N-1}())...))
 end
 
 Base.rand(::Type{Zero}) = Zero()
