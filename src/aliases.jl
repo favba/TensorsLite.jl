@@ -42,52 +42,55 @@ const TenMaybe2Dxy{T, Tz} = Tensor{2, Union{T, Tz}, VecMaybe2Dxy{T, Tz}, VecMayb
 
 ########################## Vec constructors ###########################
 
-Vec(x,y,z) = Tensor(x,y,z)
-Vec{T}(a, b, c) where {T} = Tensor(convert(T, a), convert(T, b), convert(T, c))
+@inline function Vec(a, b, c)
+    if (a isa AbstractTensor || b isa AbstractTensor || c isa AbstractTensor)
+        throw(ArgumentError("Tensors are not valid input to the `Vec` function"))
+    end
+    return Tensor(a, b, c)
+end
+
 Vec(;x=𝟎,y=𝟎,z=𝟎) = Vec(x,y,z)
 
-Vec3D{T}(a, b, c) where {T} = Tensor(convert(T, a), convert(T, b), convert(T, c))
+Vec3D{T}(a, b, c) where {T} = Vec(convert(T, a), convert(T, b), convert(T, c))
+Vec3D(a::T1, b::T2, c::T3) where {T1,T2,T3} = Vec{promote_type(T1,T2,T3)}(a, b, c)
 
-Vec2Dxy{T}(a, b) where {T} = Tensor(convert(T, a), convert(T, b), Zero())
+Vec2Dxy{T}(a, b) where {T} = Vec(convert(T, a), convert(T, b), Zero())
 Vec2Dxy(a, b) = Vec2Dxy{promote_type(typeof(a),typeof(b))}(a, b)
 
-Vec2Dxz{T}(a, b) where {T} = Tensor(convert(T, a), Zero(), convert(T, b))
+Vec2Dxz{T}(a, b) where {T} = Vec(convert(T, a), Zero(), convert(T, b))
 Vec2Dxz(a, b) = Vec2Dxz{promote_type(typeof(a),typeof(b))}(a, b)
 
-Vec2Dyz{T}(a, b) where {T} = Tensor(Zero(), convert(T, a), convert(T, b))
+Vec2Dyz{T}(a, b) where {T} = Vec(Zero(), convert(T, a), convert(T, b))
 Vec2Dyz(a, b) = Vec2Dyz{promote_type(typeof(a),typeof(b))}(a, b)
 
-Vec1Dx{T}(a) where {T} = Tensor(convert(T, a), Zero(), Zero())
+Vec1Dx{T}(a) where {T} = Vec(convert(T, a), Zero(), Zero())
 Vec1Dx(a) = Vec1Dx{typeof(a)}(a)
 
-Vec1Dy{T}(a) where {T} = Tensor(Zero(), convert(T, a), Zero())
+Vec1Dy{T}(a) where {T} = Vec(Zero(), convert(T, a), Zero())
 Vec1Dy(a) = Vec1Dy{typeof(a)}(a)
 
-Vec1Dz{T}(a) where {T} = Tensor(Zero(), Zero(), convert(T, a))
+Vec1Dz{T}(a) where {T} = Vec(Zero(), Zero(), convert(T, a))
 Vec1Dz(a) = Vec1Dz{typeof(a)}(a)
 
 ########################## Vec constructors ###########################
 
 ################ Ten constructors #####################
 
+@inline Ten(x::Vec,y::Vec,z::Vec) = Tensor(x,y,z)
+
 @inline function Ten(xx, xy, xz,
                      yx, yy, yz,
                      zx, zy, zz)
-    x = Tensor(xx, yx, zx)
-    y = Tensor(xy, yy, zy)
-    z = Tensor(xz, yz, zz)
-    return Tensor(x, y, z)
+    x = Vec(xx, yx, zx)
+    y = Vec(xy, yy, zy)
+    z = Vec(xz, yz, zz)
+    return Ten(x, y, z)
 end
 
 @inline Ten(; xx = 𝟎, yx = 𝟎, zx = 𝟎, xy = 𝟎, yy = 𝟎, zy = 𝟎, xz = 𝟎, yz = 𝟎, zz = 𝟎) = 
     Ten(xx, xy, xz,
         yx, yy, yz,
         zx, zy, zz)
-
-Ten{T}(xx, xy, xz, yx, yy, yz, zx, zy, zz) where {T} = 
-    Ten(convert(T, xx), convert(T, xy), convert(T, xz),
-        convert(T, yx), convert(T, yy), convert(T, yz),
-        convert(T, zx), convert(T, zy), convert(T, zz))
 
 Ten3D{T}(xx, xy, xz, yx, yy, yz, zx, zy, zz) where {T} = 
     Ten(convert(T, xx), convert(T, xy), convert(T, xz),

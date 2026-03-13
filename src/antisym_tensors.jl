@@ -41,10 +41,19 @@ struct AntiSymmetricTensor{N, T, Tyx, Tzx, Tzy} <: AbstractAntiSymmetricTensor{N
 
 end
 
-@inline AntiSymTen(xy, xz, yz) = AntiSymmetricTensor(xy, xz, yz)
-@inline AntiSymTen(; xy = 𝟎, xz = 𝟎, yz = 𝟎) = AntiSymmetricTensor(xy, xz, yz)
+@inline function AntiSymmetricTensor(; xy = 𝟎, xz = 𝟎, yz = 𝟎)
+    if (xy === 𝟎) && (xz == 𝟎) && (yz == 𝟎)
+        return AntiSymmetricTensor(xy,xz,yz)
+    else
+        check_args_ignoring_zeros(xy,xz,yz)
+        NV = _get_ndims(xy,xz,yz)
+        xyf, xzf, yzf = if_zero_to_tensor(NV,xy,xz,yz)
+        return AntiSymmetricTensor(xyf,xzf,yzf)
+    end
+end
 
 @inline constructor(::Type{T}) where {T <: AntiSymmetricTensor} = AntiSymmetricTensor
+
 @inline Base.:+(a::AntiSymmetricTensor{N}, b::AntiSymmetricTensor{N}) where {N} = @inline AntiSymmetricTensor(map(+, fields(a), fields(b))...)
 @inline Base.:-(a::AntiSymmetricTensor{N}, b::AntiSymmetricTensor{N}) where {N} = @inline AntiSymmetricTensor(map(-, fields(a), fields(b))...)
 @inline ==(a::AntiSymmetricTensor{N}, b::AntiSymmetricTensor{N}) where {N} = @inline reduce(&, map(==, fields(a), fields(b)))
@@ -56,35 +65,44 @@ end
     return W
 end
 
-const AntiSymTen3D{T} = AntiSymmetricTensor{2, Union{Zero,T}, T, T, T}
+@inline function AntiSymTen(a, b, c)
+    if (a isa AbstractTensor || b isa AbstractTensor || c isa AbstractTensor)
+        throw(ArgumentError("Tensors are not valid input to the `AntiSymTen` function"))
+    end
+    return AntiSymmetricTensor(a, b, c)
+end
 
-AntiSymTen3D{T}(xy, xz, yz) where {T} = AntiSymmetricTensor(convert(T, xy), convert(T, xz), convert(T, yz))
+@inline AntiSymTen(; xy = 𝟎, xz = 𝟎, yz = 𝟎) = AntiSymTen(xy,xz,yz)
+
+const AntiSymTen3D{T} = AntiSymmetricTensor{2, T, T, T, T}
+
+AntiSymTen3D{T}(xy, xz, yz) where {T} = AntiSymTen(convert(T, xy), convert(T, xz), convert(T, yz))
 
 AntiSymTen3D(xy, xz, yz) = AntiSymTen3D{promote_type(typeof(xy), typeof(xz), typeof(yz))}(xy, xz, yz)
 
 
 const AntiSymTen2Dxy{T} = AntiSymmetricTensor{2, Union{Zero, T}, T, Zero, Zero}
 
-AntiSymTen2Dxy{T}(xy) where {T} = AntiSymmetricTensor(convert(T, xy), Zero(), Zero())
+AntiSymTen2Dxy{T}(xy) where {T} = AntiSymTen(convert(T, xy), Zero(), Zero())
 
 AntiSymTen2Dxy(xy) = AntiSymTen2Dxy{typeof(xy)}(xy)
 
 
 const AntiSymTen2Dxz{T} = AntiSymmetricTensor{2, Union{Zero, T}, Zero, T, Zero}
 
-AntiSymTen2Dxz{T}(xz) where {T} = AntiSymmetricTensor(Zero(), convert(T, xz), Zero())
+AntiSymTen2Dxz{T}(xz) where {T} = AntiSymTen(Zero(), convert(T, xz), Zero())
 
 AntiSymTen2Dxz(xz) = AntiSymTen2Dxz{typeof(xz)}(xz)
 
 
 const AntiSymTen2Dyz{T} = AntiSymmetricTensor{2, Union{Zero, T}, Zero, Zero, T}
 
-AntiSymTen2Dyz{T}(yz) where {T} = AntiSymmetricTensor(Zero(), Zero(), convert(T, yz))
+AntiSymTen2Dyz{T}(yz) where {T} = AntiSymTen(Zero(), Zero(), convert(T, yz))
 
 AntiSymTen2Dyz(yz) = AntiSymTen2Dyz{typeof(yz)}(yz)
 
 
-const AntiSymTenMaybe2Dxy{T, Tz} = AntiSymmetricTensor{2, Union{T, Zero}, T, Tz, Tz}
+const AntiSymTenMaybe2Dxy{T, Tz} = AntiSymmetricTensor{2, Union{T, Tz}, T, Tz, Tz}
 
 Base.IndexStyle(::Type{AntiSymmetricTensor}) = IndexCartesian()
 

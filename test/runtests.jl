@@ -67,9 +67,10 @@ const sz = SIMD.Vec(3.0, 4.0)
     @test Tensor(x=1,y=2.0) === Tensor(1.0,2.0,Zero())
 
     @test Vec3D{Float64}(1,2,3) === Tensor(1.0,2.0,3.0)
-    @test Vec{Float64}(1,2,3) === Tensor(1.0,2.0,3.0)
 
     @test typeof(rand(Tensor{1,Union{One,Zero,Float64},Float64,One,Zero})) === Tensor{1,Union{One,Zero,Float64},Float64,One,Zero}
+
+    @test_throws ArgumentError Vec(y=Vec(x=1))
 
 end
 
@@ -89,6 +90,7 @@ end
     ) === Float64
 
     @test_throws DimensionMismatch Tensor(x=1.0,y=Vec(x=1))
+    @test_throws ArgumentError Ten(yy=Vec(x=1))
 
     @test eltype(Ten(xx = 1.0)) === Union{Zero, Float64}
 
@@ -107,7 +109,6 @@ end
     @test typeof(Tensor(z=Vec1Dz(1.0))) === Ten1Dz{Float64}
 
     @test Ten3D(1,2,3,4,5,6,7,8,9) === Ten(1,2,3,4,5,6,7,8,9)
-    @test Ten{Float64}(1,2,3,4,5,6,7,8,9) === Ten(1.,2.,3.,4.,5.,6.,7.,8.,9.)
     @test Ten2Dxy(1,2,3,4.) === Ten(xx=1.0, xy=2.0, yx=3.0, yy=4.0)
     @test Ten2Dxz(1,2,3,4.) === Ten(xx=1.0, xz=2.0, zx=3.0, zz=4.0)
     @test Ten2Dyz(1,2,3,4.) === Ten(yy=1.0, yz=2.0, zy=3.0, zz=4.0)
@@ -387,6 +388,8 @@ end
 
     @test typeof(rand(SymTen2Dyz{Float16})) === SymTen2Dyz{Float16}
 
+    @test_throws ArgumentError SymTen(xx=Vec(1,2,3))
+
     let S3 = SymmetricTensor(rand(Vec3D{Float64}),rand(Vec3D{Float64}),rand(Vec3D{Float64}),rand(Vec3D{Float64}),rand(Vec3D{Float64}),rand(Vec3D{Float64})) 
         @test norm(S3) ≈ norm(Array(S3))
     end
@@ -440,14 +443,15 @@ end
 
     @test typeof(rand(AntiSymTen2Dyz{Float16})) === AntiSymTen2Dyz{Float16}
 
+    @test_throws ArgumentError AntiSymTen(xy=Vec(1,2,3))
+
     let u=rand(Vec3D{Float64}), v=rand(Vec3D{Float64}), w=rand(Vec3D{Float64})
-        W = AntiSymTen(u,v,w)
+        W = AntiSymmetricTensor(u,v,w)
         @test norm(W) ≈ norm(Array(W))
     end
 end
 
 @testset "VecArray" begin
-    #@test_throws DomainError VecArray() Now creates a Zero Dimensional Vec3DArray{Zero, 0}
     @test_throws DimensionMismatch Vec2DxyArray(rand(1, 2), rand(2, 1))
     @test_throws DimensionMismatch Vec2DxzArray(rand(1, 2), rand(2, 1))
     @test_throws DimensionMismatch Vec2DyzArray(rand(1, 2), rand(2, 1))

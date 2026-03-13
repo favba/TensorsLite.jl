@@ -93,7 +93,8 @@ function tensor_type_1Dz(::Val{N},::Type{T}) where {N,T}
     return Tensor{N,Union{T,Zero},lTzero,lTzero,lTt}
 end
 
-@inline check_args_ignoring_zeros(::Any,::Any,::Any) = nothing
+@inline check_args_ignoring_zeros(::Vararg{Any,N2}) where {N2} = nothing
+
 @inline function check_args_ignoring_zeros(::Union{<:AbstractTensor{N},Zero},::Union{<:AbstractTensor{N},Zero},::Union{<:AbstractTensor{N},Zero}) where {N}
     return nothing
 end
@@ -102,13 +103,21 @@ end
     return throw(DimensionMismatch())
 end
 
-@inline _get_ndims(::Any,::Any,::Any) = Val{0}()
-@inline function _get_ndims(::Union{<:AbstractTensor{N},Zero},::Union{<:AbstractTensor{N},Zero},::Union{<:AbstractTensor{N},Zero}) where {N}
+@inline function check_args_ignoring_zeros(::Union{<:AbstractTensor{N},Zero},::Union{<:AbstractTensor{N},Zero},::Union{<:AbstractTensor{N},Zero},::Union{<:AbstractTensor{N},Zero},::Union{<:AbstractTensor{N},Zero},::Union{<:AbstractTensor{N},Zero}) where {N}
+    return nothing
+end
+
+@inline function check_args_ignoring_zeros(::Union{<:AbstractTensor{N1},Zero},::Union{<:AbstractTensor{N2},Zero},::Union{<:AbstractTensor{N3},Zero},::Union{<:AbstractTensor{N4},Zero},::Union{<:AbstractTensor{N5},Zero},::Union{<:AbstractTensor{N6},Zero}) where {N1,N2,N3,N4,N5,N6}
+    return throw(DimensionMismatch())
+end
+
+@inline _get_ndims(::Vararg{Any}) = Val{0}()
+@inline function _get_ndims(::Vararg{Union{<:AbstractTensor{N},Zero}}) where {N}
     return Val{N}()
 end
 
 @inline if_zero_to_tensor(::Val{0}, ::Zero) = Zero()
 @inline if_zero_to_tensor(::Val{N}, ::Zero) where {N} = Tensor{N}()
 @inline if_zero_to_tensor(::Val{N}, x) where {N} = x
-@inline if_zero_to_tensor(v::Val{N},x,y,z) where {N} = (if_zero_to_tensor(v,x), if_zero_to_tensor(v,y), if_zero_to_tensor(v,z))
+@inline if_zero_to_tensor(v::Val{N},var::Vararg) where {N} = map(x->if_zero_to_tensor(v,x), var)
 

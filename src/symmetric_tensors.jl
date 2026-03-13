@@ -77,14 +77,17 @@ end
 @inline constructor(::Type{T}) where {T <: SymmetricTensor} = SymmetricTensor
 
 @inline SymmetricTensor{2}() = SymmetricTensor(Zero(),Zero(),Zero(),Zero(),Zero(),Zero())
-@inline function SymmetricTensor{N}() where N
-    iseven(N) || throw(DomainError(N))
-    N2 = N-2
-    SymmetricTensor(SymmetricTensor{N2}(), SymmetricTensor{N2}(), SymmetricTensor{N2}(),SymmetricTensor{N2}(), SymmetricTensor{N2}(), SymmetricTensor{N2}())
-end
 
-@inline SymTen(xx, xy, xz, yy, yz, zz) = SymmetricTensor(xx, xy, xz, yy, yz, zz)
-@inline SymTen(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎) = SymmetricTensor(xx, xy, xz, yy, yz, zz)
+@inline function SymmetrictTensor(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎)
+    if (xx === 𝟎) && (xy == 𝟎) && (xz == 𝟎) && (yy === 𝟎) && (yz == 𝟎) && (zz == 𝟎)
+        return SymmetricTensor{2}()
+    else
+        check_args_ignoring_zeros(xx,xy,xz,yy,yz,zz)
+        NV = _get_ndims(xx,xy,xz,yy,yz,zz)
+        xxf, xyf, xzf, yyf, yzf, zzf = if_zero_to_tensor(NV,xx,xy,xz,yy,yz,zz)
+        return SymmetricTensor(xxf, xyf, xzf, yyf, yzf, zzf)
+    end
+end
 
 @inline function Base.convert(::Type{SymmetricTensor{N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, v::SymmetricTensor{N}) where {N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}
     @inline nfields = map(convert, (Txx, Tyx, Tzx, Tyy, Tzy, Tzz), fields(v))
@@ -102,9 +105,19 @@ end
     return S
 end
 
+@inline function SymTen(a, b, c, d, e, f)
+    if (a isa AbstractTensor || b isa AbstractTensor || c isa AbstractTensor ||
+        d isa AbstractTensor || e isa AbstractTensor || f isa AbstractTensor)
+        throw(ArgumentError("Tensors are not valid input to the `SymTen` function"))
+    end
+    return SymmetricTensor(a, b, c, d, e, f)
+end
+
+@inline SymTen(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎) = SymTen(xx,xy,xz,yy,yz,zz)
+
 const SymTen3D{T} = SymmetricTensor{2, T, T, T, T, T, T, T}
 
-SymTen3D{T}(xx, xy, xz, yy, yz, zz) where {T} = SymmetricTensor(convert(T, xx), convert(T, xy), convert(T, xz),
+SymTen3D{T}(xx, xy, xz, yy, yz, zz) where {T} = SymTen(convert(T, xx), convert(T, xy), convert(T, xz),
                                                                        convert(T, yy), convert(T, yz),
                                                                                        convert(T, zz))
 
@@ -117,7 +130,7 @@ SymTen3D(xx, xy, xz, yy, yz, zz) = SymTen3D{promote_type(typeof(xx), typeof(xy),
 
 const SymTen2Dxy{T} = SymmetricTensor{2, Union{Zero, T}, T, T, Zero, T, Zero, Zero}
 
-SymTen2Dxy{T}(xx, xy, yy) where {T} = SymmetricTensor(convert(T, xx), convert(T, xy), Zero(),
+SymTen2Dxy{T}(xx, xy, yy) where {T} = SymTen(convert(T, xx), convert(T, xy), Zero(),
                                                              convert(T, yy), Zero(),
                                                                              Zero())
 
@@ -126,7 +139,7 @@ SymTen2Dxy(xx, xy, yy) = SymTen2Dxy{promote_type(typeof(xx), typeof(xy), typeof(
 
 const SymTen2Dxz{T} = SymmetricTensor{2, Union{Zero, T}, T, Zero, T, Zero, Zero, T}
 
-SymTen2Dxz{T}(xx, xz, zz) where {T} = SymmetricTensor(convert(T, xx), Zero(), convert(T, xz),
+SymTen2Dxz{T}(xx, xz, zz) where {T} = SymTen(convert(T, xx), Zero(), convert(T, xz),
                                                              Zero(), Zero(),
                                                                      convert(T, zz))
 
@@ -135,7 +148,7 @@ SymTen2Dxz(xx, xz, zz) = SymTen2Dxz{promote_type(typeof(xx), typeof(xz), typeof(
 
 const SymTen2Dyz{T} = SymmetricTensor{2, Union{Zero, T}, Zero, Zero, Zero, T, T, T}
 
-SymTen2Dyz{T}(yy, yz, zz) where {T} = SymmetricTensor(Zero(), Zero(),         Zero() ,
+SymTen2Dyz{T}(yy, yz, zz) where {T} = SymTen(Zero(), Zero(),         Zero() ,
                                                      convert(T, yy), convert(T, yz),
                                                                      convert(T, zz))
 
@@ -147,7 +160,7 @@ const SymTen2D{T} = Union{SymTen2Dxy{T}, SymTen2Dxz{T}, SymTen2Dyz{T}}
 
 const SymTen1Dx{T} = SymmetricTensor{2, Union{Zero, T}, T, Zero, Zero, Zero, Zero, Zero}
 
-SymTen1Dx{T}(xx) where {T} = SymmetricTensor(convert(T, xx), Zero(), Zero(),
+SymTen1Dx{T}(xx) where {T} = SymTen(convert(T, xx), Zero(), Zero(),
                                                     Zero(), Zero(),
                                                             Zero())
 
@@ -156,7 +169,7 @@ SymTen1Dx(xx) = SymTen1Dx{typeof(xx)}(xx)
 
 const SymTen1Dy{T} = SymmetricTensor{2, Union{Zero, T}, Zero, Zero, Zero, T, Zero, Zero}
 
-SymTen1Dy{T}(yy) where {T} = SymmetricTensor(Zero(), Zero(),         Zero(),
+SymTen1Dy{T}(yy) where {T} = SymTen(Zero(), Zero(),         Zero(),
                                             convert(T, yy), Zero(),
                                                             Zero())
 
@@ -164,7 +177,8 @@ SymTen1Dy(yy) = SymTen1Dy{typeof(yy)}(yy)
 
 
 const SymTen1Dz{T} = SymmetricTensor{2, Union{Zero, T}, Zero, Zero, Zero, Zero, Zero, T}
-SymTen1Dz{T}(zz) where {T} = SymmetricTensor(Zero(), Zero(), Zero(),
+
+SymTen1Dz{T}(zz) where {T} = SymTen(Zero(), Zero(), Zero(),
                                             Zero(), Zero(),
                                                     convert(T, zz))
 
