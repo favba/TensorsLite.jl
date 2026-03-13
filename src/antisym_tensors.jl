@@ -1,5 +1,5 @@
 
-abstract type AbstractAntiSymmetricTensor{N,T} <: AbstractTensor{N, T} end
+abstract type AbstractAntiSymmetricTensor{N,T} <: AbstractTensor{N, Union{T,Zero}} end
 
 const AntiSymTen{T} = AbstractAntiSymmetricTensor{2,T}
 
@@ -28,7 +28,7 @@ struct AntiSymmetricTensor{N, T, Tyx, Tzx, Tzy} <: AbstractAntiSymmetricTensor{N
         Tzxf = typeof(zxn)
         Tzyf = typeof(zyn)
         Tff = Union{Tyxf, Tzxf, Tzyf}
-        return new{2, Union{Tff, Zero}, Tyxf, Tzxf, Tzyf}(yxn, zxn, zyn)
+        return new{2, Tff, Tyxf, Tzxf, Tzyf}(yxn, zxn, zyn)
     end
 
     @inline function AntiSymmetricTensor(xy::AbstractTensor{N,Txy}, xz::AbstractTensor{N,Txz}, yz::AbstractTensor{N,Tyz}) where {N, Txy, Txz, Tyz}
@@ -36,7 +36,7 @@ struct AntiSymmetricTensor{N, T, Tyx, Tzx, Tzy} <: AbstractAntiSymmetricTensor{N
         xyf = _eltype_convert(Tf, xy)
         xzf = _eltype_convert(Tf, xz)
         yzf = _eltype_convert(Tf, yz)
-        return new{N+2, Union{eltype(xyf), eltype(xzf), eltype(yzf), Zero}, typeof(xyf), typeof(xzf), typeof(yzf)}(xyf, xzf, yzf)
+        return new{N+2, Union{eltype(xyf), eltype(xzf), eltype(yzf)}, typeof(xyf), typeof(xzf), typeof(yzf)}(xyf, xzf, yzf)
     end
 
 end
