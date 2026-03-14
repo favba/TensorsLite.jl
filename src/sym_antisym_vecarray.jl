@@ -176,51 +176,45 @@ SymmetricTensorArray(;
             zz
 )
 
+function SymTenArray(;xx::Union{Zero, <:AbstractArray} = 𝟎, xy::Union{Zero, <:AbstractArray} = 𝟎, xz::Union{Zero, <:AbstractArray} = 𝟎,
+                               yy::Union{Zero, <:AbstractArray} = 𝟎, yz::Union{Zero, <:AbstractArray} = 𝟎,
+                               zz::Union{Zero, <:AbstractArray} = 𝟎)
+    if (eltype(xx) <: AbstractTensor || eltype(xy) <: AbstractTensor || eltype(xz) <: AbstractTensor ||
+        eltype(yy) <: AbstractTensor || eltype(yz) <: AbstractTensor || eltype(zz) <: AbstractTensor )
+        throw(ArgumentError("Array of Tensors are not valid input to the `SymTenArray` function"))
+    end
+    return SymmetricTensorArray(xx,xy,xz,yy,yz,zz)
+end
+
+SymTenArray(a,b,c,d,e,f) = SymTenArray(xx=a,xy=b,xz=c,yy=d,yz=e,zz=f)
+
 SymTen3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N},
                                      d::AbstractArray{T,N}, e::AbstractArray{T,N},
                                                             f::AbstractArray{T,N}) where {T,N} =
-    SymmetricTensorArray(a, b, c,
+    SymTenArray(a, b, c,
                    d, e,
                       f)
 
 
 SymTen2DxyArray(a::AbstractArray{T,N}, b::AbstractArray{T,N},
-                d::AbstractArray{T,N}) where {T,N} =
-    SymmetricTensorArray(a, b, ZeroArray(size(a)),
-                   d, ZeroArray(size(a)),
-                      ZeroArray(size(a)))
+                d::AbstractArray{T,N}) where {T,N} = SymTenArray(xx=a, xy=b, yy=d)
 
 
 SymTen2DxzArray(a::AbstractArray{T,N}, c::AbstractArray{T,N},
-                                       f::AbstractArray{T,N}) where {T,N} =
-    SymmetricTensorArray(a, ZeroArray(size(a)), c,
-                   ZeroArray(size(a)), ZeroArray(size(a)),
-                                       f)
+                f::AbstractArray{T,N}) where {T,N} = SymTenArray(xx=a, xz=c, zz=f)
 
 
 SymTen2DyzArray(d::AbstractArray{T,N}, e::AbstractArray{T,N},
-                                       f::AbstractArray{T,N}) where {T,N} =
-    SymmetricTensorArray(ZeroArray(size(d)), ZeroArray(size(d)), ZeroArray(size(d)),
-                d,                  e,
-                                                        f)
+                f::AbstractArray{T,N}) where {T,N} = SymTenArray(yy=d, yz=e, zz=f)
 
 
-SymTen1DxArray(a::AbstractArray{T,N}) where {T,N} =
-    SymmetricTensorArray(a, ZeroArray(size(a)), ZeroArray(size(a)),
-                   ZeroArray(size(a)), ZeroArray(size(a)),
-                                       ZeroArray(size(a)))
+SymTen1DxArray(a::AbstractArray{T,N}) where {T,N} = SymTenArray(xx=a)
 
 
-SymTen1DyArray(d::AbstractArray{T,N}) where {T,N} =
-    SymmetricTensorArray(ZeroArray(size(d)), ZeroArray(size(d)), ZeroArray(size(d)),
-                                    d,                  ZeroArray(size(d)),
-                                                        ZeroArray(size(d)))
+SymTen1DyArray(d::AbstractArray{T,N}) where {T,N} = SymTenArray(yy=d)
 
 
-SymTen1DzArray(f::AbstractArray{T,N}) where {T,N} =
-    SymmetricTensorArray(ZeroArray(size(f)), ZeroArray(size(f)), ZeroArray(size(f)),
-                                    ZeroArray(size(f)), ZeroArray(size(f)),
-                                                        f)
+SymTen1DzArray(f::AbstractArray{T,N}) where {T,N} = SymTenArray(zz=f)
 
 
 ###### AbstractArray Interface #######
@@ -280,9 +274,8 @@ function Base.similar(bc::Broadcast.Broadcasted, ::Type{SymmetricTensor{N, T, Tx
 end
 
 ############################ AntiSymTenArray ###########################
-
 const AntiSymTenArray{T,N,Txy,Txz,Tyz} =
-    AbstractTensorArray{AntiSymmetricTensor{2,Txy,Txz,Tyz},N}
+    AbstractTensorArray{AntiSymmetricTensor{2,Union{Txy,Txz,Tyz},Txy,Txz,Tyz},N}
 
 struct AntiSymmetricTensorArray{T, N, Tyx, Tzx, Tzy} <: AbstractTensorArray{T, N}
     xy::Tyx
@@ -347,6 +340,17 @@ end
 AntiSymmetricTensorArray(;xy::Union{Zero, <:AbstractArray} = 𝟎, xz::Union{Zero, <:AbstractArray} = 𝟎,
              yz::Union{Zero, <:AbstractArray} = 𝟎) = AntiSymmetricTensorArray(xy, xz, yz)
 
+function AntiSymTenArray(a::Union{<:AbstractArray{Ta,N},Zero}, b::Union{<:AbstractArray{Tb,N},Zero}, c::Union{<:AbstractArray{Tc,N},Zero}) where {Ta,Tb,Tc,N}
+
+    if (eltype(a)<:AbstractTensor || eltype(b)<:AbstractTensor || eltype(c)<:AbstractTensor)
+        throw(ArgumentError("Array of Tensors are not valid input to the `AntiSymTenArray` function"))
+    end
+
+    return AntiSymmetricTensorArray(a, b, c)
+end
+
+AntiSymTenArray(;xy::Union{Zero, <:AbstractArray} = 𝟎, xz::Union{Zero, <:AbstractArray} = 𝟎,
+             yz::Union{Zero, <:AbstractArray} = 𝟎) = AntiSymTenArray(xy, xz, yz)
 
 const AntiSymTen3DArray{T, N} = AntiSymmetricTensorArray{AntiSymTen3D{T}, N,
                                                 Array{T, N}, Array{T, N}, Array{T, N}}
@@ -363,17 +367,14 @@ const AntiSymTen2DxzArray{T, N} = AntiSymmetricTensorArray{AntiSymTen2Dxz{T}, N,
 const AntiSymTen2DyzArray{T, N} = AntiSymmetricTensorArray{AntiSymTen2Dyz{T}, N,
                                                   Array{Zero, N}, Array{Zero, N}, Array{T, N}}
 
-AntiSymTen2DyzArray(c::AbstractArray{T,N}) where {T,N} =
-    AntiSymmetricTensorArray(ZeroArray(size(c)), ZeroArray(size(c)), c)
-
 AntiSymTen3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N}) where {T,N} =
-    AntiSymmetricTensorArray(a, b, c)
+    AntiSymTenArray(a, b, c)
 
-AntiSymTen2DxyArray(a::AbstractArray{T,N}) where {T,N} =
-    AntiSymmetricTensorArray(a, ZeroArray(size(a)), ZeroArray(size(a)))
+AntiSymTen2DxyArray(a::AbstractArray{T,N}) where {T,N} = AntiSymTenArray(xy=a)
 
-AntiSymTen2DxzArray(b::AbstractArray{T,N}) where {T,N} =
-    AntiSymmetricTensorArray(ZeroArray(size(b)), b, ZeroArray(size(b)))
+AntiSymTen2DxzArray(b::AbstractArray{T,N}) where {T,N} = AntiSymTenArray(xz=b)
+
+AntiSymTen2DyzArray(c::AbstractArray{T,N}) where {T,N} = AntiSymTenArray(yz=c)
 
 
 Base.dataids(A::AntiSymmetricTensorArray) = (Base.dataids(A.xy)..., Base.dataids(A.xz)..., Base.dataids(A.yz)...)

@@ -4,13 +4,13 @@ const VecArray{T,N,Tx,Ty,Tz} = AbstractTensorArray{Tensor{1,T,Tx,Ty,Tz},N}
 
 const TenArray{T,N,Tx,Ty,Tz} = AbstractTensorArray{Tensor{2,T,Tx,Ty,Tz},N}
 
-
 struct TensorArray{T, N, Tx, Ty, Tz} <: AbstractTensorArray{T, N}
     x::Tx
     y::Ty
     z::Tz
 
     TensorArray{T,1}(I::Vararg{Integer, N}) where {T, N} = new{Tensor{1, T, T, T, T}, N, Array{T, N}, Array{T, N}, Array{T, N}}(Array{T}(undef, I...), Array{T}(undef, I...), Array{T}(undef, I...))
+
     function TensorArray{T,NT}(I::Vararg{Integer, N}) where {T,NT,N} 
         x = TensorArray{T,NT-1}(I...)
         y = TensorArray{T,NT-1}(I...)
@@ -93,7 +93,7 @@ ZeroArray(s) = Array{Zero}(undef, s)
 @inline ZeroTensorArray(::Val{N}, I::Vararg{Integer, NI}) where {N, NI} = TensorArray(ZeroTensorArray(Val{N-1}(), I...), ZeroTensorArray(Val{N-1}(), I...), ZeroTensorArray(Val{N-1}(), I...))
 
 _check_TensorArray_args(v::Vararg) = any(map(x->isa(x,AbstractArray{<:AbstractTensor}), v)) ? throw(DomainError("Tensor Array fields must be Arrays of  tensors with the same order")) : nothing
-_check_TensorArray_args(v::Vararg{T}) where {TE, N, T<:AbstractArray{<:AbstractTensor{N,TE}}} = nothing
+_check_TensorArray_args(::Vararg{T}) where {TE, N, T<:AbstractArray{<:AbstractTensor{N,TE}}} = nothing
 check_TensorArray_args(x,y,z) = _check_TensorArray_args(_filter_zeros(x,y,z)...)
 
 _get_ndims(::Union{Zero,<:AbstractArray{<:AbstractTensor{N}}},
@@ -150,29 +150,37 @@ Tensor1DzArray(::Type{T}, ::Val{1}, I::Vararg{Integer,N}) where {T, N} = Tensor1
 Tensor1DzArray(::Type{T}, ::Val{NT}, I::Vararg{Integer,N}) where {T, NT, N} = Tensor1DzArray(Tensor1DzArray(T, Val{NT-1}(), I...))
 
 
-VecArray(a::AbstractArray{Ta,N}, b::AbstractArray{Tb,N}, c::AbstractArray{Tc,N}) where {Ta,Tb,Tc,N} = TensorArray(a, b, c)
-VecArray(;x = 𝟎, y= 𝟎, z = 𝟎) = TensorArray(x=x,y=y,z=z)
+function VecArray(a::Union{<:AbstractArray{Ta,N},Zero}, b::Union{<:AbstractArray{Tb,N},Zero}, c::Union{<:AbstractArray{Tc,N},Zero}) where {Ta,Tb,Tc,N}
 
-Vec3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N}) where {T,N} = TensorArray(a, b, c)
+    if (eltype(a)<:AbstractTensor || eltype(b)<:AbstractTensor || eltype(c)<:AbstractTensor)
+        throw(ArgumentError("Array of Tensors are not valid input to the `VecArray` function"))
+    end
+
+    return TensorArray(x=a, y=b, z=c)
+end
+
+VecArray(;x = 𝟎, y = 𝟎, z = 𝟎) = VecArray(x,y,z)
+
+Vec3DArray(a::AbstractArray{T,N}, b::AbstractArray{T,N}, c::AbstractArray{T,N}) where {T,N} = VecArray(a, b, c)
 Vec3DArray{T}(I::Vararg{Integer,N}) where {T,N} = Vec3DArray(Array{T}(undef,I...), Array{T}(undef,I...), Array{T}(undef,I...))
 VecArray{T}(I::Vararg{Integer,N}) where {T,N} = Vec3DArray{T}(I...)
 
-Vec2DxyArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = Tensor2DxyArray(a, b)
+Vec2DxyArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = VecArray(x=a, y=b)
 Vec2DxyArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor2DxyArray(T,Val{1}(),I...)
 
-Vec2DxzArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = Tensor2DxzArray(a, b)
+Vec2DxzArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = VecArray(x=a, z=b)
 Vec2DxzArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor2DxzArray(T,Val{1}(),I...)
 
-Vec2DyzArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = Tensor2DyzArray(a, b)
+Vec2DyzArray(a::AbstractArray{T,N},b::AbstractArray{T,N}) where {T,N} = VecArray(y=a, z=b)
 Vec2DyzArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor2DyzArray(T,Val{1}(),I...)
 
-Vec1DxArray(a::AbstractArray{T,N}) where {T,N} = Tensor1DxArray(a)
+Vec1DxArray(a::AbstractArray{T,N}) where {T,N} = VecArray(x=a)
 Vec1DxArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor1DxArray(T,Val{1}(),I...)
 
-Vec1DyArray(a::AbstractArray{T,N}) where {T,N} = Tensor1DyArray(a)
+Vec1DyArray(a::AbstractArray{T,N}) where {T,N} = VecArray(y=a)
 Vec1DyArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor1DyArray(T,Val{1}(),I...)
 
-Vec1DzArray(a::AbstractArray{T,N}) where {T,N} = Tensor1DzArray(a)
+Vec1DzArray(a::AbstractArray{T,N}) where {T,N} = VecArray(z=a)
 Vec1DzArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor1DzArray(T,Val{1}(),I...)
 
 Ten3DArray{T}(I::Vararg{Integer,N}) where {T,N} = TensorArray{T,2}(I...)
@@ -208,9 +216,9 @@ Ten1DzArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor1DzArray(T,Val{2}(),I..
                           zx::AbstractArray{Tzx,N}, zy::AbstractArray{Tzy,N}, zz::AbstractArray{Tzz,N}) where {Txx,Txy,Txz,
                                                                                                                Tyx,Tyy,Tyz,
                                                                                                                Tzx,Tzy,Tzz,N}
-    x = TensorArray(xx, yx, zx)
-    y = TensorArray(xy, yy, zy)
-    z = TensorArray(xz, yz, zz)
+    x = VecArray(xx, yx, zx)
+    y = VecArray(xy, yy, zy)
+    z = VecArray(xz, yz, zz)
     return TensorArray(x, y, z)
 end
 
@@ -224,9 +232,9 @@ function TenArray(;
     )
 
     vals = (
-        xx, yx, zx,
-        xy, yy, zy,
-        xz, yz, zz,
+        xx, xy, xz,
+        yx, yy, yz,
+        zx, zy, zz,
     )
 
     vals === (
@@ -243,20 +251,16 @@ function TenArray(;
     sizes = (s, s, s, s, s, s, s, s, s)
     final_vals = map(_if_zero_to_Array, sizes, vals)
 
-    xv = TensorArray(final_vals[1], final_vals[2], final_vals[3])
-    yv = TensorArray(final_vals[4], final_vals[5], final_vals[6])
-    zv = TensorArray(final_vals[7], final_vals[8], final_vals[9])
-
-    return TensorArray(xv, yv, zv)
+    return TenArray(final_vals...)
 end
 
 
-Ten2DxyArray(xx::AbstractArray, xy::AbstractArray, yx::AbstractArray, yy::AbstractArray) = Ten2DxyArray(Vec2DxyArray(xx,yx), Vec2DxyArray(xy,yy))
-Ten2DxzArray(xx::AbstractArray, xz::AbstractArray, zx::AbstractArray, zz::AbstractArray) = Ten2DxzArray(Vec2DxzArray(xx,zx), Vec2DxzArray(xz,zz))
-Ten2DyzArray(yy::AbstractArray, yz::AbstractArray, zy::AbstractArray, zz::AbstractArray) = Ten2DyzArray(Vec2DyzArray(yy,zy), Vec2DyzArray(yz,zz))
-Ten1DxArray(xx::AbstractArray) = Ten1DxArray(Vec1DxArray(xx))
-Ten1DyArray(yy::AbstractArray) = Ten1DyArray(Vec1DyArray(yy))
-Ten1DzArray(zz::AbstractArray) = Ten1DzArray(Vec1DzArray(zz))
+Ten2DxyArray(xx::AbstractArray, xy::AbstractArray, yx::AbstractArray, yy::AbstractArray) = TenArray(xx=xx,xy=xy,yx=yx,yy=yy)
+Ten2DxzArray(xx::AbstractArray, xz::AbstractArray, zx::AbstractArray, zz::AbstractArray) = TenArray(xx=xx,xz=xz,zx=zx,zz=zz)
+Ten2DyzArray(yy::AbstractArray, yz::AbstractArray, zy::AbstractArray, zz::AbstractArray) = TenArray(yy=yy,yz=yz,zy=zy,zz=zz)
+Ten1DxArray(xx::AbstractArray) = TenArray(xx=xx)
+Ten1DyArray(yy::AbstractArray) = TenArray(yy=yy)
+Ten1DzArray(zz::AbstractArray) = TenArray(zz=zz)
 
 ########################################################################
 
