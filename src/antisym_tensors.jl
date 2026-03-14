@@ -158,13 +158,6 @@ end
     return AntiSymmetricTensor(nfields...)
 end
 
-@inline function Base.convert(::Type{Tensor{N, T, Tensor{<:Any, _Tx, Txx, Tyx, Tzx}, Tensor{<:Any, _Ty, Txy, Tyy, Tzy}, Tensor{<:Any, _Tz, Txz, Tyz, Tzz}}}, v::AntiSymmetricTensor{N}) where {N,T, _Tx, _Ty, _Tz, Txx, Tyx, Tzx, Txy, Tyy, Tzy, Txz, Tyz, Tzz}
-    @inline xx, yx, zx, xy, yy, zy, xz, yz, zz = map(convert, (Txx, Tyx, Tzx, Txy, Tyy, Tzy, Txz, Tyz, Tzz), map(getproperty, (v, v, v, v, v, v, v, v, v), (:xx, :yx, :zx, :xy, :yy, :zy, :xz, :yz, :zz)))
-    return Ten(xx, xy, xz,
-               yx, yy, yz,
-               zx, zy, zz)
-end
-
 @inline inner(a::AntiSymmetricTensor{2, <:Real}, b::AntiSymmetricTensor{2, <:Real}) = 2 * _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz * b.yz))
 
 @inline inneradd(a::AntiSymmetricTensor{2, <:Real}, b::AntiSymmetricTensor{2, <:Real}, c::Real) = _muladd(2, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz * b.yz)), c)
