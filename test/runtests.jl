@@ -128,6 +128,18 @@ end
     @test typeof(rand(tensor_type_1Dy(Val(2),Float32))) === Ten1Dy{Float32}
     @test typeof(rand(tensor_type_1Dz(Val(2),Float32))) === Ten1Dz{Float32}
     @test typeof(rand(tensor_type_2Dxy(Val(3),Float16))) === Tensor{3, Union{Zero,Float16}, Ten2Dxy{Float16}, Ten2Dxy{Float16}, Ten3D{Zero}}
+
+    let T = rand(Ten3D{Float64})
+        @test T.xx === T[1,1]
+        @test T.xy === T[1,2]
+        @test T.xz === T[1,3]
+        @test T.yx === T[2,1]
+        @test T.yy === T[2,2]
+        @test T.yz === T[2,3]
+        @test T.zx === T[3,1]
+        @test T.zy === T[3,2]
+        @test T.zz === T[3,3]
+    end
 end
 
 @testset "Vec size and length" begin

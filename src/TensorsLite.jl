@@ -144,6 +144,36 @@ Base.@constprop :aggressive function Base.getindex(u::Tensor{N}, I::Vararg{Integ
     return @inbounds(getindex(getfield(u, @inbounds(I[N])), ntuple(i -> @inbounds(I[i]), Val{N-1}())...))
 end
 
+@inline @generated function Base.getproperty(T::Tensor{N}, s::Symbol) where N
+    if N >= 2
+        return quote
+            if s === :xx
+                return getfield(getfield(T, :x), :x)
+            elseif s === :xy
+                return getfield(getfield(T, :y), :x)
+            elseif s === :xz
+                return getfield(getfield(T, :z), :x)
+            elseif s === :yx
+                return getfield(getfield(T, :x), :y)
+            elseif s === :yy
+                return getfield(getfield(T, :y), :y)
+            elseif s === :yz
+                return getfield(getfield(T, :z), :y)
+            elseif s === :zx
+                return getfield(getfield(T, :x), :z)
+            elseif s === :zy
+                return getfield(getfield(T, :y), :z)
+            elseif s === :zz
+                return getfield(getfield(T, :z), :z)
+            else
+                return getfield(T, s)
+            end
+        end
+    else
+        return :(getfield(T,s))
+    end
+end
+
 Base.rand(::Type{Zero}) = Zero()
 Base.rand(::Type{One}) = One()
 Base.rand(::Type{Tensor{N,T,Tx,Ty,Tz}}) where {T,N,Tx,Ty,Tz} = Tensor(rand(Tx), rand(Ty), rand(Tz))
