@@ -16,7 +16,7 @@ struct SymmetricTensor{N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractSymmetricT
                     zz
         )
 
-        mapreduce(x->isa(x,AbstractTensor), &, (xx,xy,xz,yy,yz,zz)) && throw(DimensionMismatch())
+        mapreduce(x->isa(x,AbstractTensor), |, (xx,xy,xz,yy,yz,zz)) && throw(DimensionMismatch())
 
         Txx = typeof(xx)
         Tyx = typeof(xy)
@@ -78,7 +78,7 @@ end
 
 @inline SymmetricTensor{2}() = SymmetricTensor(Zero(),Zero(),Zero(),Zero(),Zero(),Zero())
 
-@inline function SymmetrictTensor(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎)
+@inline function SymmetricTensor(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎)
     if (xx === 𝟎) && (xy == 𝟎) && (xz == 𝟎) && (yy === 𝟎) && (yz == 𝟎) && (zz == 𝟎)
         return SymmetricTensor{2}()
     else
@@ -110,7 +110,7 @@ end
         d isa AbstractTensor || e isa AbstractTensor || f isa AbstractTensor)
         throw(ArgumentError("Tensors are not valid input to the `SymTen` function"))
     end
-    return SymmetricTensor(a, b, c, d, e, f)
+    return SymmetricTensor(xx=a, xy=b, xz=c, yy=d, yz=e, zz=f)
 end
 
 @inline SymTen(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎) = SymTen(xx,xy,xz,yy,yz,zz)

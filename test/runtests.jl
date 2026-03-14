@@ -67,6 +67,7 @@ const sz = SIMD.Vec(3.0, 4.0)
     @test Tensor(x=1,y=2.0) === Tensor(1.0,2.0,Zero())
 
     @test Vec3D{Float64}(1,2,3) === Tensor(1.0,2.0,3.0)
+    @test Vec3D(1,2,3.0) === Vec3D(1.,2.,3.)
 
     @test typeof(rand(Tensor{1,Union{One,Zero,Float64},Float64,One,Zero})) === Tensor{1,Union{One,Zero,Float64},Float64,One,Zero}
 
@@ -90,6 +91,7 @@ end
     ) === Float64
 
     @test_throws DimensionMismatch Tensor(x=1.0,y=Vec(x=1))
+    @test_throws DimensionMismatch Tensor(x=Ten(xx=1.0),y=Vec(x=1))
     @test_throws ArgumentError Ten(yy=Vec(x=1))
 
     @test eltype(Ten(xx = 1.0)) === Union{Zero, Float64}
@@ -361,6 +363,9 @@ end
 
     @test SymTen(6, 5, 4, 3, 2, 0) == SymTen(6.0, 5.0, 4.0, 3.0, 2.0, 0.0)
 
+    @test_throws DimensionMismatch SymmetricTensor(xx=1.0,yy=Vec(x=1))
+    @test_throws DimensionMismatch SymmetricTensor(xx=Ten(xx=1.0),xy=Vec(x=1))
+
     @test (SymTen(xx = 1) + SymTen(xx = 2.0, yy = 5.0)) === SymTen(xx = 3.0, yy = 5.0)
     @test (SymTen(xx = 1) - SymTen(xx = 2.0, yy = 5.0)) === SymTen(xx = -1.0, yy = -5.0)
     @test muladd(3.0, SymTen(xx = 4.0), SymTen(xx = 5.0)) === SymTen(xx = 17.0)
@@ -442,6 +447,8 @@ end
     @test det(W1) === Zero()
 
     @test typeof(rand(AntiSymTen2Dyz{Float16})) === AntiSymTen2Dyz{Float16}
+
+    @test convert(Ten2Dxy{Float32}, AntiSymTen(xy=1.0)) === Ten2Dxy(0.0f0, 1.0f0, -1.0f0, 0.0f0)
 
     @test_throws ArgumentError AntiSymTen(xy=Vec(1,2,3))
 
@@ -840,6 +847,12 @@ function outer_product(A::AbstractArray, B::AbstractArray)
 end
 
 @testset "Higher order tensors" begin
+
+    S = SymmetricTensor(xx=Vec2Dxy(3.0,-2.0),xy=Vec1Dx(1.0))
+    @test size(S) == (3,3,3)
+    @test S[:,1,2] == S[:,2,1]
+    @test S[:,1,3] == S[:,3,1]
+    @test S[:,2,3] == S[:,3,2]
 
     let u = VecArray(rand(2),rand(2),rand(2)), v = VecArray(rand(2),rand(2),rand(2)), w = VecArray(rand(2),rand(2),rand(2)), j = VecArray(rand(2),rand(2),rand(2)), k = VecArray(rand(2),rand(2),rand(2)), l = VecArray(rand(2),rand(2),rand(2))
 

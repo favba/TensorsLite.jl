@@ -52,7 +52,7 @@ end
 Vec(;x=𝟎,y=𝟎,z=𝟎) = Vec(x,y,z)
 
 Vec3D{T}(a, b, c) where {T} = Vec(convert(T, a), convert(T, b), convert(T, c))
-Vec3D(a::T1, b::T2, c::T3) where {T1,T2,T3} = Vec{promote_type(T1,T2,T3)}(a, b, c)
+Vec3D(a::T1, b::T2, c::T3) where {T1,T2,T3} = Vec3D{promote_type(T1,T2,T3)}(a, b, c)
 
 Vec2Dxy{T}(a, b) where {T} = Vec(convert(T, a), convert(T, b), Zero())
 Vec2Dxy(a, b) = Vec2Dxy{promote_type(typeof(a),typeof(b))}(a, b)

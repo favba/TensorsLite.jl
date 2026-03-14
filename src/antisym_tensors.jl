@@ -69,7 +69,7 @@ end
     if (a isa AbstractTensor || b isa AbstractTensor || c isa AbstractTensor)
         throw(ArgumentError("Tensors are not valid input to the `AntiSymTen` function"))
     end
-    return AntiSymmetricTensor(a, b, c)
+    return AntiSymmetricTensor(xy=a, xz=b, yz=c)
 end
 
 @inline AntiSymTen(; xy = 𝟎, xz = 𝟎, yz = 𝟎) = AntiSymTen(xy,xz,yz)
