@@ -20,7 +20,7 @@ using Zeros: StaticBool
 #@inline +(::Zero, ::AbstractTensor) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
 @inline +(x, ::One) = x + oneunit(x)
 @inline +(::One, x) = oneunit(x) + x
-@inline +(::One, x::One) = 2
+@inline +(::One, ::One) = 2
 ##Useful for debuging only, should never happen
 #@inline +(::AbstractTensor, ::One) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
 #@inline +(::One, ::AbstractTensor) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
@@ -140,11 +140,8 @@ end
 @inline _otimes(a::AbstractTensor, b::AbstractTensor) = Tensor(_otimes(a, b.x), _otimes(a, b.y), _otimes(a, b.z))
 
 @inline otimes(a::AbstractTensor, b::AbstractTensor) = _otimes(a,b)
-const ⊗ = otimes
 
-@inline dot(a::AbstractTensor,b::Vec) = _muladd(a.x, b.x, _muladd(a.y, b.y, a.z*b.z))
-@inline dot(A::AbstractTensor, B::AbstractTensor) = Tensor(dot(A,B.x), dot(A, B.y), dot(A, B.z)) 
-@inline Base.:*(T::AbstractTensor, B::AbstractTensor) = dot(T,B)
+const ⊗ = otimes
 
 @inline _muladd(a::Vec, b::Vec, c) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
 @inline _muladd(a::Vec, b::Vec, c::StaticBool) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
@@ -160,6 +157,10 @@ end
 
 @inline Base.muladd(a::AbstractTensor, b::AbstractTensor, c::AbstractTensor) = _muladd(a,b,c)
 
+@inline dot(a::AbstractTensor,b::Vec) = _muladd(a.x, b.x, _muladd(a.y, b.y, a.z*b.z))
+@inline dot(A::AbstractTensor, B::AbstractTensor) = Tensor(dot(A,B.x), dot(A, B.y), dot(A, B.z)) 
+@inline Base.:*(T::AbstractTensor, B::AbstractTensor) = dot(T,B)
+
 @inline dotadd(a::Vec,b::Vec,c) = _muladd(a,b,c)
 @inline dotadd(a::AbstractTensor,b::AbstractTensor,c::AbstractTensor) = _muladd(a,b,c)
 
@@ -170,3 +171,27 @@ end
 @inline inneradd(T1::AbstractTensor{N}, T2::AbstractTensor{N}, c) where {N} = inneradd(T1.x, T2.x, inneradd(T1.y, T2.y, inneradd(T1.z, T2.z, c)))
 
 @inline inner(T1::AbstractTensor{N}, T2::AbstractTensor{N}) where {N} = inneradd(T1.x, T2.x, inneradd(T1.y, T2.y, inner(T1.z,T2.z)))
+
+@inline dcontract(a::AbstractTensor,b::Ten) = _muladd(a.xx, b.xx, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz,
+                                              _muladd(a.yx, b.yx, _muladd(a.yy, b.yy, _muladd(a.yz, b.yz,
+                                              _muladd(a.zx, b.zx, _muladd(a.zy, b.zy, a.zz*b.zz))))))))
+
+@inline dcontract(A::AbstractTensor, B::AbstractTensor) = Tensor(dcontract(A, B.x), dcontract(A, B.y), dcontract(A, B.z)) 
+
+const ⊡ = dcontract
+
+@inline dcontractadd(a::Ten,b::Ten, c) = _muladd(a.xx, b.xx, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz,
+                                         _muladd(a.yx, b.yx, _muladd(a.yy, b.yy, _muladd(a.yz, b.yz,
+                                         _muladd(a.zx, b.zx, _muladd(a.zy, b.zy, _muladd(a.zz, b.zz, c)))))))))
+
+@inline function dcontractadd(a::AbstractTensor{N},b::Ten, c::AbstractTensor{N2}) where {N,N2}
+    ((N-2) === N2) || throw(DimensionMismatch())
+    return _muladd(a.xx, b.xx, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz,
+           _muladd(a.yx, b.yx, _muladd(a.yy, b.yy, _muladd(a.yz, b.yz,
+           _muladd(a.zx, b.zx, _muladd(a.zy, b.zy, _muladd(a.zz, b.zz, c)))))))))
+end
+
+@inline function dcontractadd(A::AbstractTensor{N}, B::AbstractTensor{N2}, C::AbstractTensor{N3}) where {N,N2,N3}
+    ((N-2 + N2-2) === N3) || throw(DimensionMismatch())
+    return Tensor(dcontractadd(A, B.x, C.x), dcontractadd(A, B.y, C.y), dcontractadd(A, B.z, C.z)) 
+end

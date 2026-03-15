@@ -21,7 +21,16 @@ my_isapprox(x, y) = isapprox(x, y)
 my_isapprox(x::SIMD.Vec{N, T}, y::Number) where {N, T} = isapprox(x, SIMD.Vec{N, T}(y))
 my_isapprox(y::Number, x::SIMD.Vec{N, T}) where {N, T} = isapprox(x, SIMD.Vec{N, T}(y))
 
-@testset "_muladd definitions" begin
+@testset "Internal operators definitions" begin
+
+    for x in (One(), Zero(), rand())
+        for y in (One(), Zero(), rand())
+            for ops in ((TensorsLite.:+, Base.:+), (TensorsLite.:-, Base.:-), (TensorsLite.:*, Base.:*))
+                @test ops[1](x,y) == ops[2](x,y)
+            end
+        end
+    end
+
     for x in (One(), Zero(), rand(), SIMD.Vec(rand(), rand(), rand(), rand()))
         for y in (One(), Zero(), rand(), SIMD.Vec(rand(), rand(), rand(), rand()))
             for z in (One(), Zero(), rand(), SIMD.Vec(rand(), rand(), rand(), rand()))
@@ -858,13 +867,59 @@ function outer_product(A::AbstractArray, B::AbstractArray)
     return C
 end
 
+function double_contract(A::AbstractArray, B::AbstractArray)
+    @assert ndims(A) ≥ 2
+    @assert ndims(B) ≥ 2
+    @assert size(A, ndims(A)-1) == 3
+    @assert size(A, ndims(A)) == 3
+    @assert size(B, 1) == 3
+    @assert size(B, 2) == 3
+
+    Ashape = size(A)
+    Bshape = size(B)
+
+    outshape = (Ashape[1:end-2]..., Bshape[3:end]...)
+    C = zeros(promote_type(eltype(A), eltype(B)), outshape)
+
+    for IA in CartesianIndices(Ashape[1:end-2]),
+        IB in CartesianIndices(Bshape[3:end])
+
+        s = zero(eltype(C))
+
+        for k in 1:3, l in 1:3
+            a_idx = Tuple(IA)..., k, l
+            b_idx = k, l, Tuple(IB)...
+            s += A[a_idx...] * B[b_idx...]
+        end
+
+        C[Tuple(IA)..., Tuple(IB)...] = s
+    end
+
+    return C
+end
+
 @testset "Higher order tensors" begin
 
-    S = SymmetricTensor(xx=Vec2Dxy(3.0,-2.0),xy=Vec1Dx(1.0))
-    @test size(S) == (3,3,3)
-    @test S[:,1,2] == S[:,2,1]
-    @test S[:,1,3] == S[:,3,1]
-    @test S[:,2,3] == S[:,3,2]
+    S3 = SymmetricTensor(xx=Vec2Dxy(3.0,-2.0),xy=Vec1Dx(1.0))
+    @test size(S3) == (3,3,3)
+    @test S3[:,1,2] == S3[:,2,1]
+    @test S3[:,1,3] == S3[:,3,1]
+    @test S3[:,2,3] == S3[:,3,2]
+
+    T3 = rand(Tensor{3,Float64,Ten3D{Float64},Ten3D{Float64},Ten3D{Float64}})
+    W4 = rand(AntiSymmetricTensor{4,Float64,AntiSymTen3D{Float64},AntiSymTen3D{Float64},AntiSymTen3D{Float64}})
+
+    @test mapreduce(isapprox, &, dcontract(T3,S3), double_contract(Array(T3), Array(S3)))
+    @test mapreduce(isapprox, &, dcontract(T3,W4), double_contract(Array(T3), Array(W4)))
+    @test mapreduce(isapprox, &, dcontract(S3,W4), double_contract(Array(S3), Array(W4)))
+    @test mapreduce(isapprox, &, dcontract(W4,S3), double_contract(Array(W4), Array(S3)))
+
+    T = rand(Ten3D{Float64})
+
+    @test dcontract(T,T) ≈ inner(T,T)
+    @test dcontractadd(T,T,1.0) ≈ inneradd(T,T,1.0)
+
+    @test mapreduce(isapprox, &, dcontractadd(T3,S3,T), dcontract(T3,S3) + T)
 
     let u = VecArray(rand(2),rand(2),rand(2)), v = VecArray(rand(2),rand(2),rand(2)), w = VecArray(rand(2),rand(2),rand(2)), j = VecArray(rand(2),rand(2),rand(2)), k = VecArray(rand(2),rand(2),rand(2)), l = VecArray(rand(2),rand(2),rand(2))
 
