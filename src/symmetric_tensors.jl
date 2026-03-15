@@ -105,6 +105,8 @@ end
     return S
 end
 
+@inline _muladd(::Zero, ::SymmetricTensor{N}, S::SymmetricTensor{N}) where {N} = S
+
 @inline function SymTen(a, b, c, d, e, f)
     if (a isa AbstractTensor || b isa AbstractTensor || c isa AbstractTensor ||
         d isa AbstractTensor || e isa AbstractTensor || f isa AbstractTensor)

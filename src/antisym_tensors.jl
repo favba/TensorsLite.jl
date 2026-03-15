@@ -65,6 +65,8 @@ end
     return W
 end
 
+@inline _muladd(a::Zero, v::AntiSymmetricTensor{N}, u::AntiSymmetricTensor{N}) where {N} = u
+
 @inline function AntiSymTen(a, b, c)
     if (a isa AbstractTensor || b isa AbstractTensor || c isa AbstractTensor)
         throw(ArgumentError("Tensors are not valid input to the `AntiSymTen` function"))
@@ -168,5 +170,5 @@ end
 @inline inneradd(::AntiSymmetricTensor{2}, ::SymmetricTensor{2}, c) = c
 @inline inneradd(::SymmetricTensor{2}, ::AntiSymmetricTensor{2}, c) = c
 
-Base.rand(::Type{AntiSymmetricTensor{N, T,Txy,Txz,Tyz}}) where {N, T,Txy,Txz,Tyz} = AntiSymmetricTensor(rand(Txy), rand(Txz), rand(Tyz))
+Base.rand(::Type{AntiSymmetricTensor{N,T,Txy,Txz,Tyz}}) where {N, T,Txy,Txz,Tyz} = AntiSymmetricTensor(rand(Txy), rand(Txz), rand(Tyz))
 
