@@ -4,10 +4,11 @@ using Zeros: StaticBool
 # I'm also using my own `dot` function, and LinearAlgebra.dot is overloaded in ext/LinearAlgebraExt.jl
 @inline +(a) = Base.:+(a)
 @inline +(a, b) = Base.:+(a, b)
-@inline +(a::Vararg) = Base.:+(a...)
+@inline +(a::Vararg{<:Any,N}) where {N} = (+(a[Base.OneTo(N-1)]...)) + a[N] 
 @inline -(a) = Base.:-(a)
 @inline -(a, b) = Base.:-(a, b)
 @inline *(a, b) = Base.:*(a, b)
+@inline *(a::Vararg{<:Any,N}) where {N} = (*(a[Base.OneTo(N-1)]...)) * a[N] 
 
 # `Zero`s will be the mark of a nill direction of a vector
 
