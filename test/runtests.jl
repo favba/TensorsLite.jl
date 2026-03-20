@@ -8,11 +8,6 @@ import SIMD
 
 const ze = Zero()
 
-# This helps comparing arrays of Union{Zero,Number}
-(::Type{Union{Zero, T}})(x::Number) where {T <: Number} = x == zero(x) ? Zeros.Zero() : T(x)
-(::Type{Union{One, T}})(x::Number) where {T <: Number} = x == one(x) ? Zeros.One() : T(x)
-#(::Type{Union{Zero, One}})(x::Number) = x == zero(x) ? Zeros.Zero() : x == one(x) ? Zeros.One() : throw(InexactError())
-
 Base.isapprox(a::SIMD.Vec{N}, b::SIMD.Vec{N}) where {N} = reduce(&, ntuple(i -> isapprox(a[i], b[i]), Val{N}()))
 
 const zeroSIMD = SIMD.Vec(0.0, 0.0, 0.0, 0.0)
@@ -418,6 +413,8 @@ end
 
     let S3 = SymmetricTensor(rand(Vec3D{Float64}),rand(Vec3D{Float64}),rand(Vec3D{Float64}),rand(Vec3D{Float64}),rand(Vec3D{Float64}),rand(Vec3D{Float64})) 
         @test norm(S3) ≈ norm(Array(S3))
+        op = x->map(exp,x)
+        @test op(S3) ≈ op(Array(S3))
     end
 end
 

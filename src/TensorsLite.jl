@@ -41,7 +41,7 @@ Base.Broadcast.broadcastable(u::AbstractTensor) = (u,)
     Tensor{N, T, Tx, Ty, Tz} <: AbstractTensor{N, T}
 
 A `N`th order tensor with eltype `T`.
-Higher order tensors are implemented as vectors of lower order tensors.
+`N`th order tensors are implemented as vectors (1st order tensors) of `(N-1)`th order tensors.
 
 """
 struct Tensor{N, T, Tx, Ty, Tz} <: AbstractTensor{N, T}
@@ -201,6 +201,16 @@ include("sym_antisym_vecarray.jl")
 @inline Base.sum(op::F, v::AbstractTensor) where {F <: Function} = @inline sum(op,v.x) + sum(op,v.y) + sum(op,v.z)
 
 @inline Base.map(f::F, vecs::Vararg{AbstractTensor{N}}) where {F <: Function, N} = @inline(Tensor(map(f, _x.(vecs)...), map(f, _y.(vecs)...), map(f, _z.(vecs)...)))
+
+@inline _xx(u::AbstractTensor) = u.xx
+@inline _xy(u::AbstractTensor) = u.xy
+@inline _xz(u::AbstractTensor) = u.xz
+@inline _yy(u::AbstractTensor) = u.yy
+@inline _yz(u::AbstractTensor) = u.yz
+@inline _zz(u::AbstractTensor) = u.zz
+
+@inline Base.map(f::F, vecs::Vararg{SymmetricTensor{N}}) where {F <: Function, N} = @inline(SymmetricTensor(map(f, _xx.(vecs)...), map(f, _xy.(vecs)...), map(f, _xz.(vecs)...),
+                                                                                                            map(f, _yy.(vecs)...), map(f, _yz.(vecs)...), map(f, _zz.(vecs)...)))
 
 #### AbstractMatrix interface #######
 
