@@ -1,72 +1,68 @@
 
 # define my own *, +, - so I can extend those operators without commiting type piracy (For SIMDExt.jl)
 using Zeros: StaticBool
+
+#Helpful for generic codes. This is type piracy. Should we make a PR to Zeros.jl?
+Union{Zero, T}(x::Number) where {T<:Number} = T(x)::T
+Union{Zero, T}(x::Zero) where {T<:Number} = x
+Union{One, T}(x::Number) where {T<:Number} = T(x)::T
+Union{One, T}(x::One) where {T<:Number} = x
+
 # I'm also using my own `dot` function, and LinearAlgebra.dot is overloaded in ext/LinearAlgebraExt.jl
+#Using generated is easier than dealing with all the amibiguities...
 @inline +(a) = Base.:+(a)
-@inline +(a, b) = Base.:+(a, b)
-@inline +(a::Vararg{<:Any,N}) where {N} = (+(a[Base.OneTo(N-1)]...)) + a[N] 
+
+@inline @generated function +(a::T1, b::T2) where {T1,T2}
+    if (T1 === Zero) && !(T2<:AbstractTensor)
+        return :(b)
+    elseif (T2 === Zero) && !(T1<:AbstractTensor)
+        return :(a)
+    elseif (T1 === One) && !(T2<:AbstractTensor)
+        return :(Base.:+(b,one(T2)))
+    elseif (T2 === One) && !(T1<:AbstractTensor)
+        return :(Base.:+(a,one(T1)))
+    else
+        return :(Base.:+(a, b))
+    end
+end
+
+@inline +(a::Vararg{Any,N}) where {N} = (+(a[Base.OneTo(N-1)]...)) + a[N] 
+
 @inline -(a) = Base.:-(a)
-@inline -(a, b) = Base.:-(a, b)
-@inline *(a, b) = Base.:*(a, b)
-@inline *(a::Vararg{<:Any,N}) where {N} = (*(a[Base.OneTo(N-1)]...)) * a[N] 
+
+@inline @generated function -(a::T1, b::T2) where {T1,T2}
+    if (T1 === Zero) && !(T2<:AbstractTensor)
+        return :(-b)
+    elseif (T2 === Zero) && !(T1<:AbstractTensor)
+        return :(a)
+    else
+        return :(Base.:-(a, b))
+    end
+end
 
 # `Zero`s will be the mark of a nill direction of a vector
 
-@inline +(x, ::Zero) = x
-@inline +(::Zero, x) = x
-@inline +(::Zero, x::Zero) = x
+@inline @generated function *(a::T1, b::T2) where {T1,T2}
+    if (T1 === Zero)
+        if T2<:AbstractTensor
+            return :(constructor(T2)(map(*,ntuple(i->Zero(),Val(fieldcount(T2))),fields(v))...))
+        else
+            return :(Zero())
+        end
+    elseif (T2 === Zero)
+        return :(b*a)
+    elseif (T1 === One)
+        return :(b)
+    elseif (T2 === One)
+        return :(a)
+    else
+        return :(Base.:*(a,b))
+    end
+end
 
-##Useful for debuging only, should never happen
-#@inline +(::AbstractTensor, ::Zero) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
-#@inline +(::Zero, ::AbstractTensor) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
-@inline +(x, ::One) = x + oneunit(x)
-@inline +(::One, x) = oneunit(x) + x
-@inline +(::One, ::One) = 2
-##Useful for debuging only, should never happen
-#@inline +(::AbstractTensor, ::One) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
-#@inline +(::One, ::AbstractTensor) = throw(DimensionMismatch("Cannot add Tensor and scalar"))
-@inline +(::One, ::Zero) = One()
-@inline +(::Zero, ::One) = One()
+@inline *(a::Vararg{Any,N}) where {N} = (*(a[Base.OneTo(N-1)]...)) * a[N] 
 
-@inline -(x, ::Zero) = x
-@inline -(::Zero, x) = -x
-@inline -(::Zero, x::Zero) = x
-##Useful for debuging only, should never happen
-#@inline -(::AbstractTensor, ::Zero) = throw(DimensionMismatch("Cannot subtract Tensor and scalar"))
-#@inline -(::Zero, ::AbstractTensor) = throw(DimensionMismatch("Cannot subtract Tensor and scalar"))
-@inline -(x, ::One) = x - oneunit(x)
-@inline -(::One, x) = oneunit(x) - x
-@inline -(::One, x::One) = Zero()
-##Useful for debuging only, should never happen
-#@inline -(::AbstractTensor, ::One) = throw(DimensionMismatch("Cannot subtract Tensor and scalar"))
-#@inline -(::One, ::AbstractTensor) = throw(DimensionMismatch("Cannot subtract Tensor and scalar"))
-@inline -(::One, ::Zero) = One()
-@inline -(::Zero, ::One) = -1
-
-@inline *(::Any, ::Zero) = Zero()
-@inline *(::Zero, ::Any) = Zero()
-@inline *(x, ::One) = x
-@inline *(::One, x) = x
-@inline *(::Zero, ::Zero) = Zero()
-@inline *(::Zero, ::One) = Zero()
-@inline *(::One, ::Zero) = Zero()
-@inline *(::One, ::One) = One()
-@inline *(::Zero, v::T) where {T<:AbstractTensor} = constructor(T)(
-    map(
-        *,
-        ntuple(
-               i->Zero(),
-               Val(fieldcount(T))
-        ),
-        fields(v) 
-    )...
-)
-@inline *(v::T, ::Zero) where {T<:AbstractTensor} = Zero() * v
-@inline *(::One, v::T) where {T<:AbstractTensor} = v
-@inline *(v::T, ::One) where {T<:AbstractTensor} = v
-
-#Using generated is easier than dealing with all the amibiguities...
-@inline @generated function __muladd(::Type{T1}, ::Type{T2}, ::Type{T3}, a, b, c) where {T1,T2,T3}
+@inline @generated function __muladd(a::T1, b::T2, c::T3) where {T1,T2,T3}
     if (T1<:StaticBool || T2<:StaticBool || T3<:StaticBool) 
         :(return a * b + c) # `*` and `+` as defined in this module
     else
@@ -75,12 +71,13 @@ using Zeros: StaticBool
 end
 
 @inline function _muladd(a, b, c)
-    @inline __muladd(typeof(a),typeof(b),typeof(c),a,b,c)
+    @inline __muladd(a,b,c)
 end
 
 ############# Tensor Algebra ################
 
 @inline Base.:+(a::AbstractTensor) = a
+
 @inline Base.:+(a::AbstractTensor{N}, b::AbstractTensor{N}) where {N} = Tensor(a.x + b.x, a.y + b.y, a.z + b.z)
 
 @inline Base.:+(a::AbstractTensor{N}...) where {N} = Tensor(+(map(_x, a)...), +(map(_y, a)...), +(map(_z, a)...))
@@ -88,12 +85,15 @@ end
 # We treat Vec's as scalar for broadcasting but the default definition of + and - for AbstractArray's relies
 # on broadcasting to perform addition and subtraction. The method definitons below overcomes this inconsistency
 @inline Base.:+(a::AbstractTensor, b::AbstractArray) = Array(a) + b
+
 @inline Base.:+(b::AbstractArray, a::AbstractTensor) = b + Array(a)
 
 @inline Base.:-(a::T) where {T <: AbstractTensor} = @inline constructor(T)(map(-, fields(a))...)
+
 @inline Base.:-(a::AbstractTensor{N}, b::AbstractTensor{N}) where {N} = Tensor(a.x - b.x, a.y - b.y, a.z - b.z)
 
 @inline Base.:-(a::AbstractTensor, b::AbstractArray) = Array(a) - b
+
 @inline Base.:-(b::AbstractArray, a::AbstractTensor) = b - Array(a)
 
 import Base: ==
@@ -104,12 +104,16 @@ import Base: ==
     bt = convert(promote_type(typeof(b), nonzero_eltype(T)), b)
     constructor(T)(map(*, ntuple(i -> bt, Val(fieldcount(T))), fields(v))...)
 end
+
 @inline Base.:*(b, v::AbstractTensor) = b*v
+
 @inline Base.:*(b::Number, v::AbstractTensor) = b*v
 
 # `b` is part of some ring, more general than Number
 @inline *(v::AbstractTensor, b) = b * v
+
 @inline Base.:*(v::AbstractTensor, b) = b * v
+
 @inline Base.:*(v::AbstractTensor, b::Number) = b * v
 
 @inline _muladd(a::Number, v::AbstractTensor{N}, u::AbstractTensor{N}) where {N} = Tensor(_muladd(a, v.x, u.x), _muladd(a, v.y, u.y), _muladd(a, v.z, u.z))
@@ -117,6 +121,7 @@ end
 @inline _muladd(::Zero, ::AbstractTensor{N}, u::AbstractTensor{N}) where {N} = u
 
 @inline _muladd(v::AbstractTensor{N}, a::Number, u::AbstractTensor{N}) where {N} = _muladd(a, v, u)
+
 @inline _muladd(v::AbstractTensor{N}, a::Zero, u::AbstractTensor{N}) where {N} = _muladd(a, v, u)
 
 @inline Base.muladd(a::Number, v::AbstractTensor{N}, u::AbstractTensor{N}) where {N} = _muladd(a,v,u)
@@ -138,6 +143,7 @@ end
 @inline Base.conj(a::T) where {T <: AbstractTensor} = @inline constructor(T)(map(conj, fields(a))...)
 
 @inline _otimes(a,b) = a*b
+
 @inline _otimes(a::AbstractTensor, b::AbstractTensor) = Tensor(_otimes(a, b.x), _otimes(a, b.y), _otimes(a, b.z))
 
 @inline otimes(a::AbstractTensor, b::AbstractTensor) = _otimes(a,b)
@@ -145,12 +151,14 @@ end
 const ⊗ = otimes
 
 @inline _muladd(a::Vec, b::Vec, c) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
+
 @inline _muladd(a::Vec, b::Vec, c::StaticBool) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
 
 @inline function _muladd(a::AbstractTensor{N1}, b::Vec, c::AbstractTensor{N2}) where {N1, N2}
     ((N1-1) === N2) || throw(DimensionMismatch())
     return _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
 end
+
 @inline function _muladd(a::AbstractTensor{N1}, b::AbstractTensor{N2}, c::AbstractTensor{N3}) where {N1, N2, N3}
     ((N1+N2-2) === N3) || throw(DimensionMismatch())
     return Tensor(_muladd(a, b.x, c.x), _muladd(a, b.y, c.y), _muladd(a, b.z, c.z))
@@ -159,10 +167,13 @@ end
 @inline Base.muladd(a::AbstractTensor, b::AbstractTensor, c::AbstractTensor) = _muladd(a,b,c)
 
 @inline dot(a::AbstractTensor,b::Vec) = _muladd(a.x, b.x, _muladd(a.y, b.y, a.z*b.z))
+
 @inline dot(A::AbstractTensor, B::AbstractTensor) = Tensor(dot(A,B.x), dot(A, B.y), dot(A, B.z)) 
+
 @inline Base.:*(T::AbstractTensor, B::AbstractTensor) = dot(T,B)
 
 @inline dotadd(a::Vec,b::Vec,c) = _muladd(a,b,c)
+
 @inline dotadd(a::AbstractTensor,b::AbstractTensor,c::AbstractTensor) = _muladd(a,b,c)
 
 @inline inner(u::Vec, v::Vec) = dot(conj(u), v)
