@@ -1007,3 +1007,7 @@ end
     end
 
 end
+
+@testset "Fix Issues"  begin
+    @test 𝐤⊗𝐤 === Tensor(z=𝐤)
+end

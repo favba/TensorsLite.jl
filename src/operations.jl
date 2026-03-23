@@ -2,11 +2,13 @@
 # define my own *, +, - so I can extend those operators without commiting type piracy (For SIMDExt.jl)
 using Zeros: StaticBool
 
-#Helpful for generic codes. This is type piracy. Should we make a PR to Zeros.jl?
+#Helpful for generic AbstractArray codes. This is type piracy. Should we make a PR to Zeros.jl?
 Union{Zero, T}(x::Number) where {T<:Number} = T(x)::T
 Union{Zero, T}(x::Zero) where {T<:Number} = x
 Union{One, T}(x::Number) where {T<:Number} = T(x)::T
 Union{One, T}(x::One) where {T<:Number} = x
+Union{One, Zero, T}(x::Number) where {T<:Number} = T(x)::T
+Union{One, Zero, T}(x::Union{One, Zero}) where {T<:Number} = x
 
 # I'm also using my own `dot` function, and LinearAlgebra.dot is overloaded in ext/LinearAlgebraExt.jl
 #Using generated is easier than dealing with all the amibiguities...
@@ -101,7 +103,7 @@ import Base: ==
 
 # `b` is part of some ring, more general than Number
 @inline *(b, v::T) where {T <: AbstractTensor} = @inline  begin
-    bt = convert(promote_type(typeof(b), nonzero_eltype(T)), b)
+    bt = _my_convert(promote_type(typeof(b), nonzero_eltype(T)), b)
     constructor(T)(map(*, ntuple(i -> bt, Val(fieldcount(T))), fields(v))...)
 end
 
@@ -130,7 +132,7 @@ end
 
 @inline Base.:/(v::T, b::Number) where {T <: AbstractTensor} = @inline  begin
     ib = inv(b)
-    bt = convert(promote_type(typeof(ib), nonzero_eltype(T)), ib)
+    bt = _my_convert(promote_type(typeof(ib), nonzero_eltype(T)), ib)
     constructor(T)(map(*, fields(v), ntuple(i -> bt, Val(fieldcount(T))))...)
 end
 
