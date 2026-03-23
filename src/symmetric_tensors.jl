@@ -267,3 +267,5 @@ end
     end
     return S
 end
+
+@inline otimes(a::Tensor{1}) = SymmetricTensor(a.x*a.x, a.x*a.y, a.x*a.z, a.y*a.y, a.y*a.z, a.z*a.z)

@@ -259,6 +259,11 @@ _rand(::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
             end
         end
     end
+
+    let u = rand(Vec3D{Float64})
+        @test typeof(otimes(u)) <: SymTen
+        @test otimes(u) == otimes(u,u)
+    end
 end
 
 @testset "Tensor Operations" begin
