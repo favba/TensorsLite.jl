@@ -35,6 +35,7 @@ const DiagTen3D{T} = Tensor{2, Union{Zero, T}, Vec1Dx{T}, Vec1Dy{T}, Vec1Dz{T}}
 const DiagTen2Dxy{T} = Tensor{2, Union{Zero, T}, Vec1Dx{T}, Vec1Dy{T}, Vec0D}
 const DiagTen2Dxz{T} = Tensor{2, Union{Zero, T}, Vec1Dx{T}, Vec0D, Vec1Dz{T}}
 const DiagTen2Dyz{T} = Tensor{2, Union{Zero, T}, Vec0D, Vec1Dy{T}, Vec1Dz{T}}
+const DiagTen{T} = Union{DiagTen3D{T}, DiagTen2Dxy{T}, DiagTen2Dxz{T}, DiagTen2Dyz{T}}
 
 const TenMaybe2Dxy{T, Tz} = Tensor{2, Union{T, Tz}, VecMaybe2Dxy{T, Tz}, VecMaybe2Dxy{T, Tz}, Vec3D{Tz}}
 

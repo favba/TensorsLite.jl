@@ -119,6 +119,28 @@ end
 
 const SymTen3D{T} = SymmetricTensor{2, T, T, T, T, T, T, T}
 
+const SymTen2Dxy{T} = SymmetricTensor{2, Union{Zero, T}, T, T, Zero, T, Zero, Zero}
+const SymTen2Dxz{T} = SymmetricTensor{2, Union{Zero, T}, T, Zero, T, Zero, Zero, T}
+const SymTen2Dyz{T} = SymmetricTensor{2, Union{Zero, T}, Zero, Zero, Zero, T, T, T}
+
+const SymTen2D{T} = Union{SymTen2Dxy{T}, SymTen2Dxz{T}, SymTen2Dyz{T}}
+
+const SymTen1Dx{T} = SymmetricTensor{2, Union{Zero, T}, T, Zero, Zero, Zero, Zero, Zero}
+const SymTen1Dy{T} = SymmetricTensor{2, Union{Zero, T}, Zero, Zero, Zero, T, Zero, Zero}
+const SymTen1Dz{T} = SymmetricTensor{2, Union{Zero, T}, Zero, Zero, Zero, Zero, Zero, T}
+
+const SymTen1D{T} = Union{SymTen1Dx{T}, SymTen1Dy{T}, SymTen1Dz{T}}
+
+const SymTenMaybe2Dxy{T, Tz} = SymmetricTensor{2, Union{T, Tz}, T, T, Tz, T, Tz, Tz}
+
+const DiagSymTen3D{T} = SymmetricTensor{2, Union{T,Zero}, T, Zero, Zero, T, Zero, T}
+
+const DiagSymTen2Dxy{T} = SymmetricTensor{2, Union{T,Zero}, T, Zero, Zero, T, Zero, Zero}
+const DiagSymTen2Dxz{T} = SymmetricTensor{2, Union{T,Zero}, T, Zero, Zero, Zero, Zero, T}
+const DiagSymTen2Dyz{T} = SymmetricTensor{2, Union{T,Zero}, Zero, Zero, Zero, T, Zero, T}
+
+const DiagSymTen{T} = Union{DiagSymTen3D{T}, DiagSymTen2Dxy{T}, DiagSymTen2Dxz{T}, DiagSymTen2Dyz{T}}
+
 SymTen3D{T}(xx, xy, xz, yy, yz, zz) where {T} = SymTen(convert(T, xx), convert(T, xy), convert(T, xz),
                                                                        convert(T, yy), convert(T, yz),
                                                                                        convert(T, zz))
@@ -129,17 +151,11 @@ SymTen3D(xx, xy, xz, yy, yz, zz) = SymTen3D{promote_type(typeof(xx), typeof(xy),
                                                                                                   yy, yz,
                                                                                                       zz)
 
-
-const SymTen2Dxy{T} = SymmetricTensor{2, Union{Zero, T}, T, T, Zero, T, Zero, Zero}
-
 SymTen2Dxy{T}(xx, xy, yy) where {T} = SymTen(convert(T, xx), convert(T, xy), Zero(),
                                                              convert(T, yy), Zero(),
                                                                              Zero())
 
 SymTen2Dxy(xx, xy, yy) = SymTen2Dxy{promote_type(typeof(xx), typeof(xy), typeof(yy))}(xx, xy, yy)
-
-
-const SymTen2Dxz{T} = SymmetricTensor{2, Union{Zero, T}, T, Zero, T, Zero, Zero, T}
 
 SymTen2Dxz{T}(xx, xz, zz) where {T} = SymTen(convert(T, xx), Zero(), convert(T, xz),
                                                              Zero(), Zero(),
@@ -147,20 +163,11 @@ SymTen2Dxz{T}(xx, xz, zz) where {T} = SymTen(convert(T, xx), Zero(), convert(T, 
 
 SymTen2Dxz(xx, xz, zz) = SymTen2Dxz{promote_type(typeof(xx), typeof(xz), typeof(zz))}(xx, xz, zz)
 
-
-const SymTen2Dyz{T} = SymmetricTensor{2, Union{Zero, T}, Zero, Zero, Zero, T, T, T}
-
 SymTen2Dyz{T}(yy, yz, zz) where {T} = SymTen(Zero(), Zero(),         Zero() ,
                                                      convert(T, yy), convert(T, yz),
                                                                      convert(T, zz))
 
 SymTen2Dyz(yy, yz, zz) = SymTen2Dyz{promote_type(typeof(yy), typeof(yz), typeof(zz))}(yy, yz, zz)
-
-
-const SymTen2D{T} = Union{SymTen2Dxy{T}, SymTen2Dxz{T}, SymTen2Dyz{T}}
-
-
-const SymTen1Dx{T} = SymmetricTensor{2, Union{Zero, T}, T, Zero, Zero, Zero, Zero, Zero}
 
 SymTen1Dx{T}(xx) where {T} = SymTen(convert(T, xx), Zero(), Zero(),
                                                     Zero(), Zero(),
@@ -168,28 +175,17 @@ SymTen1Dx{T}(xx) where {T} = SymTen(convert(T, xx), Zero(), Zero(),
 
 SymTen1Dx(xx) = SymTen1Dx{typeof(xx)}(xx)
 
-
-const SymTen1Dy{T} = SymmetricTensor{2, Union{Zero, T}, Zero, Zero, Zero, T, Zero, Zero}
-
 SymTen1Dy{T}(yy) where {T} = SymTen(Zero(), Zero(),         Zero(),
                                             convert(T, yy), Zero(),
                                                             Zero())
 
 SymTen1Dy(yy) = SymTen1Dy{typeof(yy)}(yy)
 
-
-const SymTen1Dz{T} = SymmetricTensor{2, Union{Zero, T}, Zero, Zero, Zero, Zero, Zero, T}
-
 SymTen1Dz{T}(zz) where {T} = SymTen(Zero(), Zero(), Zero(),
                                             Zero(), Zero(),
                                                     convert(T, zz))
 
 SymTen1Dz(zz) = SymTen1Dz{typeof(zz)}(zz)
-
-
-const SymTen1D{T} = Union{SymTen1Dx{T}, SymTen1Dy{T}, SymTen1Dz{T}}
-
-const SymTenMaybe2Dxy{T, Tz} = SymmetricTensor{2, Union{T, Tz}, T, T, Tz, T, Tz, Tz}
 
 Base.IndexStyle(::Type{SymmetricTensor}) = IndexCartesian()
 
