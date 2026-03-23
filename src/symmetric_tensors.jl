@@ -74,48 +74,7 @@ struct SymmetricTensor{N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz} <: AbstractSymmetricT
 
 end
 
-@inline constructor(::Type{T}) where {T <: SymmetricTensor} = SymmetricTensor
-
-@inline SymmetricTensor{2}() = SymmetricTensor(Zero(),Zero(),Zero(),Zero(),Zero(),Zero())
-
-@inline function SymmetricTensor(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎)
-    if (xx === 𝟎) && (xy == 𝟎) && (xz == 𝟎) && (yy === 𝟎) && (yz == 𝟎) && (zz == 𝟎)
-        return SymmetricTensor{2}()
-    else
-        check_args_ignoring_zeros(xx,xy,xz,yy,yz,zz)
-        NV = _get_ndims(xx,xy,xz,yy,yz,zz)
-        xxf, xyf, xzf, yyf, yzf, zzf = if_zero_to_tensor(NV,xx,xy,xz,yy,yz,zz)
-        return SymmetricTensor(xxf, xyf, xzf, yyf, yzf, zzf)
-    end
-end
-
-@inline function Base.convert(::Type{SymmetricTensor{N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, v::SymmetricTensor{N}) where {N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}
-    @inline nfields = map(convert, (Txx, Tyx, Tzx, Tyy, Tzy, Tzz), fields(v))
-    return SymmetricTensor(nfields...)
-end
-
-@inline Base.:+(a::SymmetricTensor{N}, b::SymmetricTensor{N}) where {N} = @inline SymmetricTensor(map(+, fields(a), fields(b))...)
-@inline Base.:-(a::SymmetricTensor{N}, b::SymmetricTensor{N}) where {N} = @inline SymmetricTensor(map(-, fields(a), fields(b))...)
-@inline ==(a::SymmetricTensor{N}, b::SymmetricTensor{N}) where {N} = @inline reduce(&, map(==, fields(a), fields(b)))
-@inline function _muladd(a::Number, v::SymmetricTensor{N}, u::SymmetricTensor{N}) where {N}
-    @inline begin
-        at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
-        S = SymmetricTensor(map(_muladd, ntuple(i -> at, Val(6)), fields(v), fields(u))...)
-    end
-    return S
-end
-
-@inline _muladd(::Zero, ::SymmetricTensor{N}, S::SymmetricTensor{N}) where {N} = S
-
-@inline function SymTen(a, b, c, d, e, f)
-    if (a isa AbstractTensor || b isa AbstractTensor || c isa AbstractTensor ||
-        d isa AbstractTensor || e isa AbstractTensor || f isa AbstractTensor)
-        throw(ArgumentError("Tensors are not valid input to the `SymTen` function"))
-    end
-    return SymmetricTensor(xx=a, xy=b, xz=c, yy=d, yz=e, zz=f)
-end
-
-@inline SymTen(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎) = SymTen(xx,xy,xz,yy,yz,zz)
+#################################### Aliases ###############################################
 
 const SymTen3D{T} = SymmetricTensor{2, T, T, T, T, T, T, T}
 
@@ -140,6 +99,54 @@ const DiagSymTen2Dxz{T} = SymmetricTensor{2, Union{T,Zero}, T, Zero, Zero, Zero,
 const DiagSymTen2Dyz{T} = SymmetricTensor{2, Union{T,Zero}, Zero, Zero, Zero, T, Zero, T}
 
 const DiagSymTen{T} = Union{DiagSymTen3D{T}, DiagSymTen2Dxy{T}, DiagSymTen2Dxz{T}, DiagSymTen2Dyz{T}}
+
+#################################### Aliases ###############################################
+
+@inline constructor(::Type{T}) where {T <: SymmetricTensor} = SymmetricTensor
+
+@inline SymmetricTensor{2}() = SymmetricTensor(Zero(),Zero(),Zero(),Zero(),Zero(),Zero())
+
+@inline function SymmetricTensor(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎)
+    if (xx === 𝟎) && (xy == 𝟎) && (xz == 𝟎) && (yy === 𝟎) && (yz == 𝟎) && (zz == 𝟎)
+        return SymmetricTensor{2}()
+    else
+        check_args_ignoring_zeros(xx,xy,xz,yy,yz,zz)
+        NV = _get_ndims(xx,xy,xz,yy,yz,zz)
+        xxf, xyf, xzf, yyf, yzf, zzf = if_zero_to_tensor(NV,xx,xy,xz,yy,yz,zz)
+        return SymmetricTensor(xxf, xyf, xzf, yyf, yzf, zzf)
+    end
+end
+
+@inline function Base.convert(::Type{SymmetricTensor{N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}, v::SymmetricTensor{N}) where {N, T, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}
+    @inline nfields = map(convert, (Txx, Tyx, Tzx, Tyy, Tzy, Tzz), fields(v))
+    return SymmetricTensor(nfields...)
+end
+
+@inline Base.:+(a::SymmetricTensor{N}, b::SymmetricTensor{N}) where {N} = @inline SymmetricTensor(map(+, fields(a), fields(b))...)
+
+@inline Base.:-(a::SymmetricTensor{N}, b::SymmetricTensor{N}) where {N} = @inline SymmetricTensor(map(-, fields(a), fields(b))...)
+
+@inline ==(a::SymmetricTensor{N}, b::SymmetricTensor{N}) where {N} = @inline reduce(&, map(==, fields(a), fields(b)))
+
+@inline function _muladd(a::Number, v::SymmetricTensor{N}, u::SymmetricTensor{N}) where {N}
+    @inline begin
+        at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
+        S = SymmetricTensor(map(_muladd, ntuple(i -> at, Val(6)), fields(v), fields(u))...)
+    end
+    return S
+end
+
+@inline _muladd(::Zero, ::SymmetricTensor{N}, S::SymmetricTensor{N}) where {N} = S
+
+@inline function SymTen(a, b, c, d, e, f)
+    if (a isa AbstractTensor || b isa AbstractTensor || c isa AbstractTensor ||
+        d isa AbstractTensor || e isa AbstractTensor || f isa AbstractTensor)
+        throw(ArgumentError("Tensors are not valid input to the `SymTen` function"))
+    end
+    return SymmetricTensor(xx=a, xy=b, xz=c, yy=d, yz=e, zz=f)
+end
+
+@inline SymTen(; xx = 𝟎, xy = 𝟎, xz = 𝟎, yy = 𝟎, yz = 𝟎, zz = 𝟎) = SymTen(xx,xy,xz,yy,yz,zz)
 
 SymTen3D{T}(xx, xy, xz, yy, yz, zz) where {T} = SymTen(convert(T, xx), convert(T, xy), convert(T, xz),
                                                                        convert(T, yy), convert(T, yz),

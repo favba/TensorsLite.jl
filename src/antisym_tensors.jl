@@ -41,6 +41,20 @@ struct AntiSymmetricTensor{N, T, Tyx, Tzx, Tzy} <: AbstractAntiSymmetricTensor{N
 
 end
 
+#################################### Aliases ###############################################
+
+const AntiSymTen3D{T} = AntiSymmetricTensor{2, T, T, T, T}
+
+const AntiSymTen2Dxy{T} = AntiSymmetricTensor{2, Union{Zero, T}, T, Zero, Zero}
+
+const AntiSymTen2Dxz{T} = AntiSymmetricTensor{2, Union{Zero, T}, Zero, T, Zero}
+
+const AntiSymTen2Dyz{T} = AntiSymmetricTensor{2, Union{Zero, T}, Zero, Zero, T}
+
+const AntiSymTenMaybe2Dxy{T, Tz} = AntiSymmetricTensor{2, Union{T, Tz}, T, Tz, Tz}
+
+#################################### Aliases ###############################################
+
 @inline function AntiSymmetricTensor(; xy = 𝟎, xz = 𝟎, yz = 𝟎)
     if (xy === 𝟎) && (xz == 𝟎) && (yz == 𝟎)
         return AntiSymmetricTensor(xy,xz,yz)
@@ -55,8 +69,11 @@ end
 @inline constructor(::Type{T}) where {T <: AntiSymmetricTensor} = AntiSymmetricTensor
 
 @inline Base.:+(a::AntiSymmetricTensor{N}, b::AntiSymmetricTensor{N}) where {N} = @inline AntiSymmetricTensor(map(+, fields(a), fields(b))...)
+
 @inline Base.:-(a::AntiSymmetricTensor{N}, b::AntiSymmetricTensor{N}) where {N} = @inline AntiSymmetricTensor(map(-, fields(a), fields(b))...)
+
 @inline ==(a::AntiSymmetricTensor{N}, b::AntiSymmetricTensor{N}) where {N} = @inline reduce(&, map(==, fields(a), fields(b)))
+
 @inline function _muladd(a::Number, v::AntiSymmetricTensor{N}, u::AntiSymmetricTensor{N}) where {N}
     @inline begin
         at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
@@ -76,35 +93,25 @@ end
 
 @inline AntiSymTen(; xy = 𝟎, xz = 𝟎, yz = 𝟎) = AntiSymTen(xy,xz,yz)
 
-const AntiSymTen3D{T} = AntiSymmetricTensor{2, T, T, T, T}
-
 AntiSymTen3D{T}(xy, xz, yz) where {T} = AntiSymTen(convert(T, xy), convert(T, xz), convert(T, yz))
 
 AntiSymTen3D(xy, xz, yz) = AntiSymTen3D{promote_type(typeof(xy), typeof(xz), typeof(yz))}(xy, xz, yz)
 
-
-const AntiSymTen2Dxy{T} = AntiSymmetricTensor{2, Union{Zero, T}, T, Zero, Zero}
 
 AntiSymTen2Dxy{T}(xy) where {T} = AntiSymTen(convert(T, xy), Zero(), Zero())
 
 AntiSymTen2Dxy(xy) = AntiSymTen2Dxy{typeof(xy)}(xy)
 
 
-const AntiSymTen2Dxz{T} = AntiSymmetricTensor{2, Union{Zero, T}, Zero, T, Zero}
-
 AntiSymTen2Dxz{T}(xz) where {T} = AntiSymTen(Zero(), convert(T, xz), Zero())
 
 AntiSymTen2Dxz(xz) = AntiSymTen2Dxz{typeof(xz)}(xz)
 
 
-const AntiSymTen2Dyz{T} = AntiSymmetricTensor{2, Union{Zero, T}, Zero, Zero, T}
-
 AntiSymTen2Dyz{T}(yz) where {T} = AntiSymTen(Zero(), Zero(), convert(T, yz))
 
 AntiSymTen2Dyz(yz) = AntiSymTen2Dyz{typeof(yz)}(yz)
 
-
-const AntiSymTenMaybe2Dxy{T, Tz} = AntiSymmetricTensor{2, Union{T, Tz}, T, Tz, Tz}
 
 Base.IndexStyle(::Type{AntiSymmetricTensor}) = IndexCartesian()
 
@@ -165,9 +172,11 @@ end
 @inline inneradd(a::AntiSymmetricTensor{2, <:Real}, b::AntiSymmetricTensor{2, <:Real}, c::Real) = _muladd(2, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz * b.yz)), c)
 
 @inline inner(::AntiSymmetricTensor{2}, ::SymmetricTensor{2}) = 𝟎
+
 @inline inner(::SymmetricTensor{2}, ::AntiSymmetricTensor{2}) = 𝟎
 
 @inline inneradd(::AntiSymmetricTensor{2}, ::SymmetricTensor{2}, c) = c
+
 @inline inneradd(::SymmetricTensor{2}, ::AntiSymmetricTensor{2}, c) = c
 
 Base.rand(::Type{AntiSymmetricTensor{N,T,Txy,Txz,Tyz}}) where {N, T,Txy,Txz,Tyz} = AntiSymmetricTensor(rand(Txy), rand(Txz), rand(Tyz))
