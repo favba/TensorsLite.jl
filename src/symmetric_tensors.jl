@@ -241,3 +241,29 @@ end
 @inline inneradd(a::SymmetricTensor{2,<:Real}, b::SymmetricTensor{2,<:Real}, c::Real) =  _muladd(2, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz*b.yz)), _muladd(a.xx, b.xx, _muladd(a.yy, b.yy, _muladd(a.zz,b.zz, c))))
 
 Base.rand(::Type{SymmetricTensor{N,T,Txx,Txy,Txz,Tyy,Tyz,Tzz}}) where {N,T,Txx,Txy,Txz,Tyy,Tyz,Tzz} = SymmetricTensor(rand(Txx), rand(Txy), rand(Txz), rand(Tyy), rand(Tyz), rand(Tzz))
+
+######################## Especializations ###########################
+
+sym_ten_fields(T::AbstractTensor) = (T.xx, T.xy, T.xz, T.yy, T.yz, T.zz)
+
+@inline Base.:+(a::SymmetricTensor{2}, b::Union{<:DiagTen,<:Ten1D}) = @inline SymmetricTensor(map(+, sym_ten_fields(a), sym_ten_fields(b))...)
+@inline Base.:+(b::Union{<:DiagTen,<:Ten1D}, a::SymmetricTensor{2}) = @inline SymmetricTensor(map(+, sym_ten_fields(a), sym_ten_fields(b))...)
+
+@inline Base.:-(a::SymmetricTensor{2}, b::Union{<:DiagTen,<:Ten1D}) = @inline SymmetricTensor(map(-, sym_ten_fields(a), sym_ten_fields(b))...)
+@inline Base.:-(b::Union{<:DiagTen,<:Ten1D}, a::SymmetricTensor{2}) = @inline SymmetricTensor(map(-, sym_ten_fields(b), sym_ten_fields(a))...)
+
+@inline function _muladd(a::Number, v::SymmetricTensor{2}, u::Union{<:DiagTen,<:Ten1D})
+    @inline begin
+        at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
+        S = SymmetricTensor(map(_muladd, ntuple(i -> at, Val(6)), sym_ten_fields(v), sym_ten_fields(u))...)
+    end
+    return S
+end
+
+@inline function _muladd(a::Number, v::Union{<:DiagTen,<:Ten1D}, u::SymmetricTensor{2})
+    @inline begin
+        at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
+        S = SymmetricTensor(map(_muladd, ntuple(i -> at, Val(6)), sym_ten_fields(v), sym_ten_fields(u))...)
+    end
+    return S
+end

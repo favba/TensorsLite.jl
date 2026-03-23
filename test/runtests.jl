@@ -416,6 +416,13 @@ end
         op = x->map(exp,x)
         @test op(S3) ≈ op(Array(S3))
     end
+
+    @test typeof(rand(SymTen3D{Float64}) + 𝐈) <: SymTen
+    @test typeof(𝐈 + rand(SymTen3D{Float64})) <: SymTen
+    @test typeof(rand(SymTen3D{Float64}) - 𝐈) <: SymTen
+    @test typeof(𝐈 - rand(SymTen3D{Float64})) <: SymTen
+    @test typeof(muladd(2.0, rand(SymTen3D{Float64}), 𝐈)) <: SymTen
+    @test typeof(muladd(2.0, 𝐈, rand(SymTen3D{Float64}))) <: SymTen
 end
 
 @testset "AntiSymTen" begin
