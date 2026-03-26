@@ -1,4 +1,4 @@
-using TensorsLite: SymTenArray, AntiSymTenArray
+using TensorsLite: SymTenArray, AntiSymTenArray, DiagSymTen, DiagSymTen3D
 using TensorsLite
 using Zeros
 using Test
@@ -1020,6 +1020,32 @@ end
 
 end
 
+function r_eigen(T::Ten, F::Eigen)
+    v = F.values
+    vecs = F.vectors
+    return (T*vecs.x ≈ v.x*vecs.x) && (T*vecs.y ≈ v.y*vecs.y) && (T*vecs.z ≈ v.z*vecs.z)
+end
+
+@testset "Eigen" begin
+    for T in (
+            rand(Ten1Dx{Float64}), rand(Ten1Dy{Float64}), rand(Ten1Dz{Float64}),
+            rand(SymTen1Dx{Float64}), rand(SymTen1Dy{Float64}), rand(SymTen1Dz{Float64}),
+            rand(SymTen2Dxy{Float64}), rand(SymTen2Dxz{Float64}), rand(SymTen2Dyz{Float64}),
+            rand(Ten2Dxy{Float64}), rand(Ten2Dxz{Float64}), rand(Ten2Dyz{Float64}),
+            rand(Ten2Dxy{Float64}) + rand(AntiSymTen2Dxy{Float64}), rand(Ten2Dxz{Float64}) + rand(AntiSymTen2Dxz{Float64}), rand(Ten2Dyz{Float64}) + rand(AntiSymTen2Dyz{Float64}),
+            rand(AntiSymTen2Dxy{Float64}), rand(AntiSymTen2Dxz{Float64}), rand(AntiSymTen2Dyz{Float64}),
+            rand(DiagTen3D{Float64}), rand(DiagSymTen3D{Float64}),
+            rand(SymTen2Dxy{Float64}) + rand()*otimes(𝐤), rand(SymTen2Dxz{Float64}) + rand()*otimes(𝐣), rand(SymTen2Dyz{Float64}) + rand()*otimes(𝐢),
+            rand(Ten2Dxy{Float64}) + rand()*otimes(𝐤), rand(Ten2Dxz{Float64}) + rand()*otimes(𝐣), rand(Ten2Dyz{Float64}) + rand()*otimes(𝐢),
+            rand(SymTen3D{Float64}), -rand(SymTen3D{Float64}),
+        )
+
+        @test r_eigen(T, eigen(T))
+        @test eigvals(T) ≈ eigen(T).values
+    end
+end
+
 @testset "Fix Issues"  begin
     @test 𝐤⊗𝐤 === Tensor(z=𝐤)
 end
+
