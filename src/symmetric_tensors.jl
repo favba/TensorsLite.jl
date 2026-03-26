@@ -194,7 +194,17 @@ SymTen1Dz{T}(zz) where {T} = SymTen(Zero(), Zero(), Zero(),
 
 SymTen1Dz(zz) = SymTen1Dz{typeof(zz)}(zz)
 
-Base.IndexStyle(::Type{SymmetricTensor}) = IndexCartesian()
+Base.@constprop :aggressive function Base.getindex(S::SymmetricTensor{2}, I::Vararg{Integer,2})
+    tI = map(Int, I)
+    @boundscheck _checkbounds(S, tI...)
+    t = (tI[1], tI[2])
+    t === (1, 1) && return S.xx
+    (t === (2, 1) || t === (1, 2)) && return S.xy
+    (t === (3, 1) || t === (1, 3)) && return S.xz
+    t === (2, 2) && return S.yy
+    (t === (3, 2) || t === (2, 3))  && return S.yz
+    return S.zz
+end
 
 Base.@constprop :aggressive function Base.getindex(S::SymmetricTensor{N}, I::Vararg{Integer,N}) where {N}
     tI = map(Int, I)

@@ -113,7 +113,21 @@ AntiSymTen2Dyz{T}(yz) where {T} = AntiSymTen(Zero(), Zero(), convert(T, yz))
 AntiSymTen2Dyz(yz) = AntiSymTen2Dyz{typeof(yz)}(yz)
 
 
-Base.IndexStyle(::Type{AntiSymmetricTensor}) = IndexCartesian()
+Base.@constprop :aggressive function Base.getindex(S::AntiSymmetricTensor{2}, I::Vararg{Integer,2})
+
+    tI = map(Int, I)
+    @boundscheck _checkbounds(S, tI...)
+    t = (tI[1], tI[2])
+
+    t === (2, 1) && return S.yx
+    t === (1, 2) && return -S.yx
+    t === (3, 1) && return S.zx
+    t === (1, 3) && return -S.zx
+    t === (3, 2) && return S.zy
+    t === (2, 3) && return -S.zy
+    # if (t === (1,1) || t === (2,2) || t === (3,3))
+    return 𝟎
+end
 
 Base.@constprop :aggressive function Base.getindex(S::AntiSymmetricTensor{N}, I::Vararg{Integer,N}) where {N}
 
