@@ -51,6 +51,8 @@ const AntiSymTen2Dxz{T} = AntiSymmetricTensor{2, Union{Zero, T}, Zero, T, Zero}
 
 const AntiSymTen2Dyz{T} = AntiSymmetricTensor{2, Union{Zero, T}, Zero, Zero, T}
 
+const AntiSymTen2D{T} = Union{AntiSymTen2Dxy{T},AntiSymTen2Dxz{T},AntiSymTen2Dyz{T}}
+
 const AntiSymTenMaybe2Dxy{T, Tz} = AntiSymmetricTensor{2, Union{T, Tz}, T, Tz, Tz}
 
 #################################### Aliases ###############################################

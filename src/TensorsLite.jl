@@ -2,28 +2,60 @@ module TensorsLite
 
 using Zeros
 
+# Compile-time constant zero and one from Zeros.jl
 export Zero, One
-export Tensor, AbstractTensor, Vec, Ten
 
+#Abstract Tensor types
+export AbstractTensor, AbstractSymmetricTensor, AbstractAntiSymmetricTensor
+
+#Abstract Tensor types aliases
+export Vec, Ten, SymTen, AntiSymTen
+
+#Concrete Tensor types defined in this package
+export Tensor, SymmetricTensor, AntiSymmetricTensor
+
+#Concrete aliases of Tensor types defined in this package
+export Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec2D, Vec1Dx, Vec1Dy, Vec1Dz
+export Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten1Dx, Ten1Dy, Ten1Dz
+export DiagTen3D, DiagTen2Dxy, DiagTen2Dxz, DiagTen2Dyz
+export SymTen3D, SymTen2Dxy, SymTen2Dxz, SymTen2Dyz, SymTen1Dx, SymTen1Dy, SymTen1Dz
+export DiagSymTen3D, DiagSymTen2Dxy, DiagSymTen2Dxz, DiagSymTen2Dyz
+export AntiSymTen3D, AntiSymTen2Dxy, AntiSymTen2Dxz, AntiSymTen2Dyz
+
+#Useful Union Tensor types (for method dispatch)
+export Vec2D, Vec1D, VecND, Ten2D, Ten1D, TenND
+export SymTen2D, SymTen1D, AntiSymTen2D
+ 
+#Useful compile-time constant vectors and second order Tensors
+export 𝐢, 𝐣, 𝐤 # Canonical vector base
+export 𝐈 # Idetity Matrix
+export 𝐢𝐢, 𝐢𝐣, 𝐢𝐤
+export 𝐣𝐢, 𝐣𝐣, 𝐣𝐤
+export 𝐤𝐢, 𝐤𝐣, 𝐤𝐤
+
+#Tensor operators
+export dotadd, inner, inneradd, otimes, ⊗, dcontract, ⊡, dcontractadd
+
+#Abstract SOA Array of Tensor types
+export AbstractTensorArray
+
+#Abstract SOA Array of Tensor types aliases 
+export VecArray, TenArray, SymTenArray, AntiSymTenArray 
+
+#Concrete SOA Array of Tensors types
+export TensorArray, SymmetricTensorArray, AntiSymmetricTensorArray
+
+#Concrete SOA Array of Tensors type aliases
+export Vec3DArray, Vec2DxyArray, Vec2DxzArray, Vec2DyzArray, Vec1DxArray, Vec1DyArray, Vec1DzArray
+export Ten3DArray, Ten2DxyArray, Ten2DxzArray, Ten2DyzArray, Ten1DxArray, Ten1DyArray, Ten1DzArray
+export SymTen3DArray, SymTen2DxyArray, SymTen2DxzArray, SymTen2DyzArray, SymTen1DxArray, SymTen1DyArray, SymTen1DzArray
+export AntiSymTen3DArray, AntiSymTen2DxyArray, AntiSymTen2DxzArray, AntiSymTen2DyzArray
+
+#Tensor types inference utilities
+export nonzero_eltype
 export tensor_type_3D
 export tensor_type_2Dxy, tensor_type_2Dxz, tensor_type_2Dyz
 export tensor_type_1Dx, tensor_type_1Dy, tensor_type_1Dz
-
-export Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec2D, Vec1Dx, Vec1Dy, Vec1Dz, Vec1D, VecND
-export Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten2D, Ten1Dx, Ten1Dy, Ten1Dz, Ten1D, TenND
-export DiagTen3D, DiagTen2Dxy, DiagTen2Dxz, DiagTen2Dyz
-export dotadd, inner, inneradd, otimes, ⊗, dcontract, ⊡, dcontractadd
-export 𝐢, 𝐣, 𝐤, 𝐈
-export SymmetricTensor, SymTen
-export SymTen3D, SymTen2Dxy, SymTen2Dxz, SymTen2Dyz, SymTen1Dx, SymTen1Dy, SymTen1Dz
-export AntiSymmetricTensor, AntiSymTen
-export AntiSymTen3D, AntiSymTen2Dxy, AntiSymTen2Dxz, AntiSymTen2Dyz
-export AbstractTensorArray, TensorArray, VecArray, TenArray, SymmetricTensorArray, AntiSymmetricTensorArray
-export Vec3DArray, Vec2DxyArray, Vec2DxzArray, Vec2DyzArray, Vec1DxArray, Vec1DyArray, Vec1DzArray
-export Ten3DArray, Ten2DxyArray, Ten2DxzArray, Ten2DyzArray, Ten1DxArray, Ten1DyArray, Ten1DzArray
-export SymmetricTensorArray, SymTen3DArray, SymTen2DxyArray, SymTen2DxzArray, SymTen2DyzArray, SymTen1DxArray, SymTen1DyArray, SymTen1DzArray
-export AntiSymmetricTensorArray, AntiSymTen3DArray, AntiSymTen2DxyArray, AntiSymTen2DxzArray, AntiSymTen2DyzArray
-export nonzero_eltype
 
 include("type_utils.jl")
 
@@ -174,8 +206,10 @@ end
     end
 end
 
+#Type piracy. Should make a PR to Zeros.jl
 Base.rand(::Type{Zero}) = Zero()
 Base.rand(::Type{One}) = One()
+
 Base.rand(::Type{Tensor{N,T,Tx,Ty,Tz}}) where {T,N,Tx,Ty,Tz} = Tensor(rand(Tx), rand(Ty), rand(Tz))
 
 # useful compile time constant tensors
@@ -183,6 +217,15 @@ const 𝐢 = Vec(One(), Zero(), Zero())
 const 𝐣 = Vec(Zero(), One(), Zero())
 const 𝐤 = Vec(Zero(), Zero(), One())
 const 𝐈 = Tensor(Vec1Dx(One()), Vec1Dy(One()), Vec1Dz(One()))
+const 𝐢𝐢 = Tensor(𝐢, Vec(), Vec())
+const 𝐢𝐣 = Tensor(Vec(), 𝐢, Vec())
+const 𝐢𝐤 = Tensor(Vec(), Vec(), 𝐢)
+const 𝐣𝐢 = Tensor(𝐣, Vec(), Vec())
+const 𝐣𝐣 = Tensor(Vec(), 𝐣, Vec())
+const 𝐣𝐤 = Tensor(Vec(), Vec(), 𝐣)
+const 𝐤𝐢 = Tensor(𝐤, Vec(), Vec())
+const 𝐤𝐣 = Tensor(Vec(), 𝐤, Vec())
+const 𝐤𝐤 = Tensor(Vec(), Vec(), 𝐤)
 
 include("operations.jl")
 
