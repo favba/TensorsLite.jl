@@ -15,7 +15,7 @@ export Vec, Ten, SymTen, AntiSymTen
 export Tensor, SymmetricTensor, AntiSymmetricTensor
 
 #Concrete aliases of Tensor types defined in this package
-export Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec2D, Vec1Dx, Vec1Dy, Vec1Dz
+export Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec1Dx, Vec1Dy, Vec1Dz
 export Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten1Dx, Ten1Dy, Ten1Dz
 export DiagTen3D, DiagTen2Dxy, DiagTen2Dxz, DiagTen2Dyz
 export SymTen3D, SymTen2Dxy, SymTen2Dxz, SymTen2Dyz, SymTen1Dx, SymTen1Dy, SymTen1Dz
@@ -213,10 +213,10 @@ Base.rand(::Type{One}) = One()
 Base.rand(::Type{Tensor{N,T,Tx,Ty,Tz}}) where {T,N,Tx,Ty,Tz} = Tensor(rand(Tx), rand(Ty), rand(Tz))
 
 # useful compile time constant tensors
-const 𝐢 = Vec(One(), Zero(), Zero())
-const 𝐣 = Vec(Zero(), One(), Zero())
-const 𝐤 = Vec(Zero(), Zero(), One())
-const 𝐈 = Tensor(Vec1Dx(One()), Vec1Dy(One()), Vec1Dz(One()))
+const 𝐢 = Vec1Dx(One())
+const 𝐣 = Vec1Dy(One())
+const 𝐤 = Vec1Dz(One())
+const 𝐈 = Tensor(𝐢, 𝐣, 𝐤)
 const 𝐢𝐢 = Tensor(𝐢, Vec(), Vec())
 const 𝐢𝐣 = Tensor(Vec(), 𝐢, Vec())
 const 𝐢𝐤 = Tensor(Vec(), Vec(), 𝐢)
@@ -255,7 +255,7 @@ include("sym_antisym_vecarray.jl")
 @inline Base.map(f::F, vecs::Vararg{SymmetricTensor{N}}) where {F <: Function, N} = @inline(SymmetricTensor(map(f, _xx.(vecs)...), map(f, _xy.(vecs)...), map(f, _xz.(vecs)...),
                                                                                                             map(f, _yy.(vecs)...), map(f, _yz.(vecs)...), map(f, _zz.(vecs)...)))
 
-#### AbstractMatrix interface #######
+#### AbstractMatrix interface defined in the `Base` module #######
 
 @inline function Base.transpose(T::Ten)
     x = T.x
