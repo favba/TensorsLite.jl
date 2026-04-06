@@ -216,6 +216,20 @@ SymTen1DyArray(d::AbstractArray{T,N}) where {T,N} = SymTenArray(yy=d)
 
 SymTen1DzArray(f::AbstractArray{T,N}) where {T,N} = SymTenArray(zz=f)
 
+function tensorarray(::Type{SymmetricTensor{2,T,Txx,Txy,Txz,Tyy,Tyz,Tzz}}, dims::Dims) where {T,Txx,Txy,Txz,Tyy,Tyz,Tzz}
+    xx = Array{Txx}(undef,dims)
+    xy = Array{Txy}(undef,dims)
+    xz = Array{Txz}(undef,dims)
+    yy = Array{Tyy}(undef,dims)
+    yz = Array{Tyz}(undef,dims)
+    zz = Array{Tzz}(undef,dims)
+    return SymmetricTensorArray(xx,xy,xz,yy,yz,zz)
+end
+
+function tensorarray(::Type{SymmetricTensor{N,T,Txx,Txy,Txz,Tyy,Tyz,Tzz}}, dims::Dims) where {N,T,Txx,Txy,Txz,Tyy,Tyz,Tzz}
+    return SymmetricTensorArray(tensorarray(Txx,dims),tensorarray(Txy,dims),tensorarray(Txz,dims),
+        tensorarray(Tyy,dims),tensorarray(Tyz,dims),tensorarray(Tzz,dims))
+end
 
 ###### AbstractArray Interface #######
 
@@ -250,28 +264,6 @@ Base.similar(A::SymmetricTensorArray, ::Type{SymmetricTensor{N, Tt, Txx, Tyx, Tz
     end
 end
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{SymmetricTensor{2, T, Txx, Txy, Txz, Tyy, Tyz, Tzz}}) where {T, Txx, Txy, Txz, Tyy, Tyz, Tzz}
-    s = length.(axes(bc))
-    xx = Array{Txx}(undef, s...)
-    xy = Array{Txy}(undef, s...)
-    xz = Array{Txz}(undef, s...)
-    yy = Array{Tyy}(undef, s...)
-    yz = Array{Tyz}(undef, s...)
-    zz = Array{Tzz}(undef, s...)
-    return SymmetricTensorArray(xx, xy, xz, yy, yz, zz)
-end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{SymmetricTensor{N, T, Txx, Txy, Txz, Tyy, Tyz, Tzz}}) where {T, N, Txx, Txy, Txz, Tyy, Tyz, Tzz}
-
-    xxv = similar(bc, Txx)
-    xyv = similar(bc, Txy)
-    xzv = similar(bc, Txz)
-    yyv = similar(bc, Tyy)
-    yzv = similar(bc, Tyz)
-    zzv = similar(bc, Tzz)
-    
-    return SymmetricTensorArray(xxv, xyv, xzv, yyv, yzv, zzv)
-end
 
 ############################ AntiSymTenArray ###########################
 const AntiSymTenArray{T,N,Txy,Txz,Tyz} =
@@ -411,18 +403,11 @@ Base.similar(A::AntiSymmetricTensorArray, ::Type{AntiSymmetricTensor{N, Tt, Tyx,
 #     end
 # end
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{AntiSymmetricTensor{2, T, Txy, Txz, Tyz}}) where {T, Txy, Txz, Tyz}
-    s = length.(axes(bc))
-    xy = Array{Txy}(undef, s...)
-    xz = Array{Txz}(undef, s...)
-    yz = Array{Tyz}(undef, s...)
-    return AntiSymmetricTensorArray(xy, xz, yz)
+function tensorarray(::Type{AntiSymmetricTensor{2,T,Tx,Ty,Tz}}, dims::Dims) where {T,Tx,Ty,Tz}
+    return AntiSymmetricTensorArray(Array{Tx}(undef,dims), Array{Ty}(undef,dims), Array{Tz}(undef,dims))
 end
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{AntiSymmetricTensor{N, T, Txy, Txz, Tyz}}) where {T, N, Txy, Txz, Tyz}
-    xyv = similar(bc, Txy)
-    xzv = similar(bc, Txz)
-    yzv = similar(bc, Tyz)
-    return AntiSymmetricTensorArray(xyv, xzv, yzv)
+function tensorarray(::Type{AntiSymmetricTensor{N,T,Tx,Ty,Tz}}, dims::Dims) where {N,T,Tx,Ty,Tz}
+    return AntiSymmetricTensorArray(tensorarray(Tx,dims), tensorarray(Ty,dims), tensorarray(Tz,dims))
 end
 

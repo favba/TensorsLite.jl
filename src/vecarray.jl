@@ -308,24 +308,22 @@ Base.resize!(A::AbstractTensorArray{<:Any, 1}, i::Integer) = begin map(x -> resi
 
 Base.similar(A::TensorArray, ::Type{Tensor{N, Tt, Tx, Ty, Tz}}, dims::Tuple{Int, Vararg{Int, N2}}) where {Tt, N, Tx, Ty, Tz, N2} = TensorArray(similar(A.x, Tx, dims), similar(A.y, Ty, dims), similar(A.z, Tz, dims))
 
+function tensorarray(::Type{Tensor{1,T,Tx,Ty,Tz}}, dims::Dims) where {T,Tx,Ty,Tz}
+    return TensorArray(Array{Tx}(undef,dims), Array{Ty}(undef,dims), Array{Tz}(undef,dims))
+end
+
+function tensorarray(::Type{Tensor{N,T,Tx,Ty,Tz}}, dims::Dims) where {N,T,Tx,Ty,Tz}
+    return TensorArray(tensorarray(Tx,dims), tensorarray(Ty,dims), tensorarray(Tz,dims))
+end
+
+tensorarray(::Type{T}, d::Integer, dims::Vararg{Integer}) where {T<:AbstractTensor} = tensorarray(T,Dims((d,dims...)))
+
 #Definitons so broadcast return a VecArray =======================================
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{Tensor{1, T, Tx, Ty, Tz}}) where {T, Tx, Ty, Tz}
+function Base.similar(bc::Broadcast.Broadcasted, ::Type{T}) where {T<:AbstractTensor}
     s = length.(axes(bc))
-    x = Array{Tx}(undef, s...)
-    y = Array{Ty}(undef, s...)
-    z = Array{Tz}(undef, s...)
-    return TensorArray(x, y, z)
+    return tensorarray(T,s)
 end
-
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{Tensor{N, T, Tx, Ty, Tz}}) where {T, N, Tx, Ty, Tz}
-    xv = similar(bc, Tx)
-    yv = similar(bc, Ty)
-    zv = similar(bc, Tz)
-    return TensorArray(xv, yv, zv)
-end
-
-#Definitons so broadcast return a VecArray =======================================
 
 @inline function Base.getproperty(T::TenArray, s::Symbol)
     if s === :xx
@@ -350,3 +348,4 @@ end
         return getfield(T, s)
     end
 end
+

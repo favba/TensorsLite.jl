@@ -15,4 +15,7 @@ Random.rand(rng::AbstractRNG, ::SamplerType{AntiSymmetricTensor{N,T,Tx,Ty,Tz}}) 
 
 Random.rand(::AbstractRNG, ::SamplerType{T}) where T<:Union{Zero,One} = T()
 
+Random.rand(r::AbstractRNG, ::Type{T}, dims::Dims) where {T<:AbstractTensor} =
+    rand!(r, tensorarray(T,dims))
+
 end

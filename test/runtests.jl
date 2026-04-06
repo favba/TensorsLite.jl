@@ -625,6 +625,10 @@ end
         @test size(a) === (2,3)
     end
 
+    @test size(tensorarray(Vec1Dx{Float64}, 4, 3)) === (4,3)
+
+    @test typeof(rand(Ten2Dxz{Float32}, 10)) === Ten2DxzArray{Float32,1}
+
 end
 
 @testset "VecArray Broadcasting" begin
@@ -696,6 +700,9 @@ end
         @test SymTen1DyArray(a1) == SymmetricTensorArray(yy=a1)
         @test SymTen1DzArray(a1) == SymmetricTensorArray(zz=a1)
     end
+
+    @test typeof(rand(SymTen1Dz{Int},2, 2)) === SymTen1DzArray{Int,2}
+
 end
 
 @testset "AntiSymTenArray" begin
@@ -741,6 +748,8 @@ end
         @test AntiSymTen2DxzArray(a1) == AntiSymmetricTensorArray(xz=a1)
         @test AntiSymTen2DyzArray(a1) == AntiSymmetricTensorArray(yz=a1)
     end
+
+    @test typeof(rand(AntiSymTen2Dxz{Float32},2, 2)) === AntiSymTen2DxzArray{Float32,2}
 end
 
 @testset "VecArray SIMD" begin

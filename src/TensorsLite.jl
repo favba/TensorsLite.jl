@@ -51,6 +51,9 @@ export Ten3DArray, Ten2DxyArray, Ten2DxzArray, Ten2DyzArray, Ten1DxArray, Ten1Dy
 export SymTen3DArray, SymTen2DxyArray, SymTen2DxzArray, SymTen2DyzArray, SymTen1DxArray, SymTen1DyArray, SymTen1DzArray
 export AntiSymTen3DArray, AntiSymTen2DxyArray, AntiSymTen2DxzArray, AntiSymTen2DyzArray
 
+#SOA functions
+export tensorarray
+
 #Tensor types inference utilities
 export nonzero_eltype
 export tensor_type_3D
