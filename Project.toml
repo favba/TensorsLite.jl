@@ -1,7 +1,7 @@
 name = "TensorsLite"
 uuid = "1a1b94bd-d244-45e0-965a-8acfeb92b70f"
-authors = ["Felipe A. V. de Bragança Alves <favbalves@gmail.com> and contributors"]
 version = "0.1.0"
+authors = ["Felipe A. V. de Bragança Alves <favbalves@gmail.com> and contributors"]
 
 [deps]
 Zeros = "bd1ec220-6eb4-527a-9b49-e79c3db6233b"
@@ -10,24 +10,27 @@ Zeros = "bd1ec220-6eb4-527a-9b49-e79c3db6233b"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SIMD = "fdea26ae-647d-5447-a871-4b548cad5224"
 StrideArraysCore = "7792a7ef-975c-4747-a70f-980b88e8d1da"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [extensions]
 TensorsLiteLinearAlgebraExt = "LinearAlgebra"
 TensorsLiteSIMDExt = "SIMD"
 TensorsLiteStrideArraysCoreExt = "StrideArraysCore"
+TensorsLiteRandomExt = "Random"
 
 [compat]
-Zeros = "0.4"
-julia = "1.10"
 LinearAlgebra = "1"
+Random = "1"
 SIMD = "3"
 StrideArraysCore = "0.5"
+Zeros = "0.4"
+julia = "1.10"
 
 [extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SIMD = "fdea26ae-647d-5447-a871-4b548cad5224"
 StrideArraysCore = "7792a7ef-975c-4747-a70f-980b88e8d1da"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test", "LinearAlgebra", "SIMD", "StrideArraysCore"]

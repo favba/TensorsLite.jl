@@ -206,11 +206,6 @@ end
     end
 end
 
-#Type piracy. Should make a PR to Zeros.jl
-Base.rand(::Type{Zero}) = Zero()
-Base.rand(::Type{One}) = One()
-
-Base.rand(::Type{Tensor{N,T,Tx,Ty,Tz}}) where {T,N,Tx,Ty,Tz} = Tensor(rand(Tx), rand(Ty), rand(Tz))
 
 # useful compile time constant tensors
 const 𝐢 = Vec1Dx(One())

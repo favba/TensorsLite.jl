@@ -250,7 +250,6 @@ end
 
 @inline inneradd(a::SymmetricTensor{2,<:Real}, b::SymmetricTensor{2,<:Real}, c::Real) =  _muladd(2, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz*b.yz)), _muladd(a.xx, b.xx, _muladd(a.yy, b.yy, _muladd(a.zz,b.zz, c))))
 
-Base.rand(::Type{SymmetricTensor{N,T,Txx,Txy,Txz,Tyy,Tyz,Tzz}}) where {N,T,Txx,Txy,Txz,Tyy,Tyz,Tzz} = SymmetricTensor(rand(Txx), rand(Txy), rand(Txz), rand(Tyy), rand(Tyz), rand(Tzz))
 
 ######################## Especializations ###########################
 

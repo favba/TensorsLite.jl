@@ -916,7 +916,7 @@ end
     @test S3[:,2,3] == S3[:,3,2]
 
     T3 = rand(Tensor{3,Float64,Ten3D{Float64},Ten3D{Float64},Ten3D{Float64}})
-    W4 = rand(AntiSymmetricTensor{4,Float64,AntiSymTen3D{Float64},AntiSymTen3D{Float64},AntiSymTen3D{Float64}})
+    W4 = rand(AntiSymmetricTensor{4,Union{Float64,Zero},AntiSymTen3D{Float64},AntiSymTen3D{Float64},AntiSymTen3D{Float64}})
 
     @test mapreduce(isapprox, &, dcontract(T3,S3), double_contract(Array(T3), Array(S3)))
     @test mapreduce(isapprox, &, dcontract(T3,W4), double_contract(Array(T3), Array(W4)))

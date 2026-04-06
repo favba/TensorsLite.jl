@@ -195,5 +195,4 @@ end
 
 @inline inneradd(::SymmetricTensor{2}, ::AntiSymmetricTensor{2}, c) = c
 
-Base.rand(::Type{AntiSymmetricTensor{N,T,Txy,Txz,Tyz}}) where {N, T,Txy,Txz,Tyz} = AntiSymmetricTensor(rand(Txy), rand(Txz), rand(Tyz))
 
