@@ -1,4 +1,4 @@
-module LinearAlgebraExt
+module TensorsLiteLinearAlgebraExt
 
 using TensorsLite, Zeros
 

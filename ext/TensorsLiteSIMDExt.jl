@@ -1,4 +1,4 @@
-module SIMDExt
+module TensorsLiteSIMDExt
 
 using Base: Constructor
 import TensorsLite: *, -, +, fields, constructor

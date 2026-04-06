@@ -1,4 +1,4 @@
-module StrideArraysCoreExt
+module TensorsLiteStrideArraysCoreExt
 
 using TensorsLite, StrideArraysCore, Zeros
 
