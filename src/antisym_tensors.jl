@@ -1,7 +1,7 @@
 
-abstract type AbstractAntiSymmetricTensor{N,T} <: AbstractTensor{N, Union{T,Zero}} end
+abstract type AbstractAntiSymmetricTensor{N,T} <: AbstractTensor{N, T} end
 
-const AntiSymTen{T} = AbstractAntiSymmetricTensor{2,T}
+const AntiSymTen{T} = AbstractAntiSymmetricTensor{2,Union{T,Zero}}
 
 struct AntiSymmetricTensor{N, T, Tyx, Tzx, Tzy} <: AbstractAntiSymmetricTensor{N, T}
     xy::Tyx
@@ -28,7 +28,7 @@ struct AntiSymmetricTensor{N, T, Tyx, Tzx, Tzy} <: AbstractAntiSymmetricTensor{N
         Tzxf = typeof(zxn)
         Tzyf = typeof(zyn)
         Tff = Union{Tyxf, Tzxf, Tzyf}
-        return new{2, Tff, Tyxf, Tzxf, Tzyf}(yxn, zxn, zyn)
+        return new{2, Union{Tff,Zero}, Tyxf, Tzxf, Tzyf}(yxn, zxn, zyn)
     end
 
     @inline function AntiSymmetricTensor(xy::AbstractTensor{N,Txy}, xz::AbstractTensor{N,Txz}, yz::AbstractTensor{N,Tyz}) where {N, Txy, Txz, Tyz}
@@ -36,14 +36,14 @@ struct AntiSymmetricTensor{N, T, Tyx, Tzx, Tzy} <: AbstractAntiSymmetricTensor{N
         xyf = _eltype_convert(Tf, xy)
         xzf = _eltype_convert(Tf, xz)
         yzf = _eltype_convert(Tf, yz)
-        return new{N+2, Union{eltype(xyf), eltype(xzf), eltype(yzf)}, typeof(xyf), typeof(xzf), typeof(yzf)}(xyf, xzf, yzf)
+        return new{N+2, Union{eltype(xyf), eltype(xzf), eltype(yzf),Zero}, typeof(xyf), typeof(xzf), typeof(yzf)}(xyf, xzf, yzf)
     end
 
 end
 
 #################################### Aliases ###############################################
 
-const AntiSymTen3D{T} = AntiSymmetricTensor{2, T, T, T, T}
+const AntiSymTen3D{T} = AntiSymmetricTensor{2, Union{T,Zero}, T, T, T}
 
 const AntiSymTen2Dxy{T} = AntiSymmetricTensor{2, Union{Zero, T}, T, Zero, Zero}
 
@@ -53,7 +53,7 @@ const AntiSymTen2Dyz{T} = AntiSymmetricTensor{2, Union{Zero, T}, Zero, Zero, T}
 
 const AntiSymTen2D{T} = Union{AntiSymTen2Dxy{T},AntiSymTen2Dxz{T},AntiSymTen2Dyz{T}}
 
-const AntiSymTenMaybe2Dxy{T, Tz} = AntiSymmetricTensor{2, Union{T, Tz}, T, Tz, Tz}
+const AntiSymTenMaybe2Dxy{T, Tz} = AntiSymmetricTensor{2, Union{T, Zero}, T, Tz, Tz}
 
 #################################### Aliases ###############################################
 
@@ -84,7 +84,7 @@ end
     return W
 end
 
-@inline _muladd(a::Zero, v::AntiSymmetricTensor{N}, u::AntiSymmetricTensor{N}) where {N} = u
+@inline _muladd(::Zero, ::AntiSymmetricTensor{N}, u::AntiSymmetricTensor{N}) where {N} = u
 
 @inline function AntiSymTen(a, b, c)
     if (a isa AbstractTensor || b isa AbstractTensor || c isa AbstractTensor)
