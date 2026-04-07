@@ -1008,6 +1008,8 @@ end
 
         el = u[1]
 
+        s = rand(16)
+
         for v in (Ten1DxArray(rand(16)), Ten2DyzArray(rand(16), rand(16), rand(16), rand(16)), SymTen2DxzArray(rand(16), rand(16), rand(16)), AntiSymmetricTensorArray(rand(16), rand(16), rand(16)))
             for op in (+, -, dot, inner, (x,y) -> inneradd(x,y,2.0), (x, y) -> muladd(x, y, el), (x, y) -> muladd(2.0, x, y), (x, y) -> muladd(x, 2.0, y))
                 @test begin
@@ -1016,6 +1018,19 @@ end
                     all(map(isapprox, apply_simd_op(rout, op, u, v), r))
                 end
             end
+
+            r = inneradd.(u, v, s)
+            rout = similar(r)
+            @test all(map(isapprox, apply_simd_op(rout, inneradd, u, v, s), r))
+
+            r1 = muladd.(s, u, v)
+            rout1 = similar(r1)
+            @test all(map(isapprox, apply_simd_op(rout1, muladd, s, u, v), r1))
+            @test all(map(isapprox, apply_simd_op(rout1, muladd, u, s, v), r1))
+
+            r2 = dcontractadd.(u,v,s)
+            rout2 = similar(r2)
+            @test all(map(isapprox, apply_simd_op(rout2, dcontractadd, u, v, s), r2))
         end
 
         for v in (Vec1DxArray(rand(16)), Vec2DxyArray(rand(16), rand(16)), VecArray(rand(16), rand(16), rand(16)))

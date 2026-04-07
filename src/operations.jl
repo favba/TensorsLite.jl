@@ -86,37 +86,36 @@ end
 
 # We treat Vec's as scalar for broadcasting but the default definition of + and - for AbstractArray's relies
 # on broadcasting to perform addition and subtraction. The method definitons below overcomes this inconsistency
-@inline Base.:+(a::AbstractTensor, b::AbstractArray) = Array(a) + b
+@inline Base.:+(a::AbstractTensor{N}, b::AbstractArray{<:Any, N}) where {N} = Array(a) + b
 
-@inline Base.:+(b::AbstractArray, a::AbstractTensor) = b + Array(a)
+@inline Base.:+(b::AbstractArray{<:Any, N}, a::AbstractTensor{N}) where {N} = b + Array(a)
 
 @inline Base.:-(a::T) where {T <: AbstractTensor} = @inline constructor(T)(map(-, fields(a))...)
 
 @inline Base.:-(a::AbstractTensor{N}, b::AbstractTensor{N}) where {N} = Tensor(a.x - b.x, a.y - b.y, a.z - b.z)
 
-@inline Base.:-(a::AbstractTensor, b::AbstractArray) = Array(a) - b
+@inline Base.:-(a::AbstractTensor{N}, b::AbstractArray{<:Any, N}) where {N} = Array(a) - b
 
-@inline Base.:-(b::AbstractArray, a::AbstractTensor) = b - Array(a)
+@inline Base.:-(b::AbstractArray{<:Any, N}, a::AbstractTensor{N}) where {N} = b - Array(a)
 
 import Base: ==
-@inline (==)(a::AbstractTensor, b::AbstractTensor) = ((a.x == b.x) & (a.y == b.y) & (a.z == b.z))
+@inline (==)(a::AbstractTensor{N}, b::AbstractTensor{N}) where {N} = ((a.x == b.x) & (a.y == b.y) & (a.z == b.z))
 
-# `b` is part of some ring, more general than Number
-@inline *(b, v::T) where {T <: AbstractTensor} = @inline  begin
+@inline *(b::Number, v::T) where {T <: AbstractTensor} = @inline  begin
     bt = _my_convert(promote_type(typeof(b), nonzero_eltype(T)), b)
     constructor(T)(map(*, ntuple(i -> bt, Val(fieldcount(T))), fields(v))...)
 end
 
-@inline Base.:*(b, v::AbstractTensor) = b*v
+@inline *(v::AbstractTensor, b::Number) = b * v
 
-@inline Base.:*(b::Number, v::AbstractTensor) = b*v
+@inline Base.:*(b::Number, v::AbstractTensor) = b * v
 
-# `b` is part of some ring, more general than Number
-@inline *(v::AbstractTensor, b) = b * v
+@inline Base.:*(v::AbstractTensor, b::Number) = v * b
 
-@inline Base.:*(v::AbstractTensor, b) = b * v
-
-@inline Base.:*(v::AbstractTensor, b::Number) = b * v
+@inline _muladd(b::Number, v::T, u::T) where {T <: AbstractTensor} = @inline  begin
+    bt = _my_convert(promote_type(typeof(b), nonzero_eltype(T)), b)
+    constructor(T)(map(_muladd, ntuple(i -> bt, Val(fieldcount(T))), fields(v), fields(u))...)
+end
 
 @inline _muladd(a::Number, v::AbstractTensor{N}, u::AbstractTensor{N}) where {N} = Tensor(_muladd(a, v.x, u.x), _muladd(a, v.y, u.y), _muladd(a, v.z, u.z))
 
@@ -152,9 +151,9 @@ end
 
 const ⊗ = otimes
 
-@inline _muladd(a::Vec, b::Vec, c) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
+@inline _muladd(a::Vec, b::Vec, c::Number) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
 
-@inline _muladd(a::Vec, b::Vec, c::StaticBool) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
+#@inline _muladd(a::Vec, b::Vec, c::StaticBool) = _muladd(a.x, b.x, _muladd(a.y, b.y, _muladd(a.z, b.z, c)))
 
 @inline function _muladd(a::AbstractTensor{N1}, b::Vec, c::AbstractTensor{N2}) where {N1, N2}
     ((N1-1) === N2) || throw(DimensionMismatch())
@@ -174,15 +173,15 @@ end
 
 @inline Base.:*(T::AbstractTensor, B::AbstractTensor) = dot(T,B)
 
-@inline dotadd(a::Vec,b::Vec,c) = _muladd(a,b,c)
+@inline dotadd(a::Vec,b::Vec,c::Number) = _muladd(a,b,c)
 
 @inline dotadd(a::AbstractTensor,b::AbstractTensor,c::AbstractTensor) = _muladd(a,b,c)
 
 @inline inner(u::Vec, v::Vec) = dot(conj(u), v)
 
-@inline inneradd(u::Vec, v::Vec, c) = dotadd(conj(u), v, c)
+@inline inneradd(u::Vec, v::Vec, c::Number) = dotadd(conj(u), v, c)
 
-@inline inneradd(T1::AbstractTensor{N}, T2::AbstractTensor{N}, c) where {N} = inneradd(T1.x, T2.x, inneradd(T1.y, T2.y, inneradd(T1.z, T2.z, c)))
+@inline inneradd(T1::AbstractTensor{N}, T2::AbstractTensor{N}, c::Number) where {N} = inneradd(T1.x, T2.x, inneradd(T1.y, T2.y, inneradd(T1.z, T2.z, c)))
 
 @inline inner(T1::AbstractTensor{N}, T2::AbstractTensor{N}) where {N} = inneradd(T1.x, T2.x, inneradd(T1.y, T2.y, inner(T1.z,T2.z)))
 
@@ -194,7 +193,7 @@ end
 
 const ⊡ = dcontract
 
-@inline dcontractadd(a::Ten,b::Ten, c) = _muladd(a.xx, b.xx, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz,
+@inline dcontractadd(a::Ten,b::Ten, c::Number) = _muladd(a.xx, b.xx, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz,
                                          _muladd(a.yx, b.yx, _muladd(a.yy, b.yy, _muladd(a.yz, b.yz,
                                          _muladd(a.zx, b.zx, _muladd(a.zy, b.zy, _muladd(a.zz, b.zz, c)))))))))
 

@@ -191,8 +191,8 @@ end
 
 @inline inner(::SymmetricTensor{2}, ::AntiSymmetricTensor{2}) = 𝟎
 
-@inline inneradd(::AntiSymmetricTensor{2}, ::SymmetricTensor{2}, c) = c
+@inline inneradd(::AntiSymmetricTensor{2}, ::SymmetricTensor{2}, c::Number) = c
 
-@inline inneradd(::SymmetricTensor{2}, ::AntiSymmetricTensor{2}, c) = c
+@inline inneradd(::SymmetricTensor{2}, ::AntiSymmetricTensor{2}, c::Number) = c
 
 
