@@ -194,6 +194,19 @@ SymTen1Dz{T}(zz) where {T} = SymTen(Zero(), Zero(), Zero(),
 
 SymTen1Dz(zz) = SymTen1Dz{typeof(zz)}(zz)
 
+# Resolve ambiguities
+function SymTen3D{Zero}(a,b,c)
+    convert(Zero,a)
+    convert(Zero,b)
+    convert(Zero,c)
+    return SymTen()
+end
+
+function SymTen3D{Zero}(a)
+    convert(Zero,a)
+    return SymTen()
+end
+
 Base.@constprop :aggressive function Base.getindex(S::SymmetricTensor{2}, I::Vararg{Integer,2})
     tI = map(Int, I)
     @boundscheck _checkbounds(S, tI...)

@@ -114,6 +114,10 @@ AntiSymTen2Dyz{T}(yz) where {T} = AntiSymTen(Zero(), Zero(), convert(T, yz))
 
 AntiSymTen2Dyz(yz) = AntiSymTen2Dyz{typeof(yz)}(yz)
 
+function AntiSymTen3D{Zero}(a)
+    convert(Zero,a)
+    return AntiSymTen()
+end
 
 Base.@constprop :aggressive function Base.getindex(S::AntiSymmetricTensor{2}, I::Vararg{Integer,2})
 

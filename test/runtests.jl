@@ -16,6 +16,10 @@ my_isapprox(x, y) = isapprox(x, y)
 my_isapprox(x::SIMD.Vec{N, T}, y::Number) where {N, T} = isapprox(x, SIMD.Vec{N, T}(y))
 my_isapprox(y::Number, x::SIMD.Vec{N, T}) where {N, T} = isapprox(x, SIMD.Vec{N, T}(y))
 
+@testset "No Ambiguities" begin
+    @test length(detect_ambiguities(Base, LinearAlgebra, TensorsLite)) == 0
+end
+
 @testset "Internal operators definitions" begin
 
     for x in (One(), Zero(), rand())
@@ -76,6 +80,9 @@ const sz = SIMD.Vec(3.0, 4.0)
     @test typeof(rand(Tensor{1,Union{One,Zero,Float64},Float64,One,Zero})) === Tensor{1,Union{One,Zero,Float64},Float64,One,Zero}
 
     @test_throws ArgumentError Vec(y=Vec(x=1))
+
+    @test Vec2Dxy{Zero}(0,0) === Vec()
+    @test Vec1Dx{Zero}(0) === Vec()
 
 end
 
@@ -144,6 +151,10 @@ end
         @test T.zy === T[3,2]
         @test T.zz === T[3,3]
     end
+
+    @test Ten2Dxy{Zero}(0,0,0,0) === Ten()
+    @test Ten1Dx{Zero}(0) === Ten()
+
 end
 
 @testset "Vec size and length" begin
@@ -428,6 +439,9 @@ end
     @test typeof(𝐈 - rand(SymTen3D{Float64})) <: SymTen
     @test typeof(muladd(2.0, rand(SymTen3D{Float64}), 𝐈)) <: SymTen
     @test typeof(muladd(2.0, 𝐈, rand(SymTen3D{Float64}))) <: SymTen
+
+    @test SymTen2Dxy{Zero}(0,0,0) === SymTen()
+    @test SymTen1Dx{Zero}(0) === SymTen()
 end
 
 @testset "AntiSymTen" begin
@@ -486,6 +500,8 @@ end
         W = AntiSymmetricTensor(u,v,w)
         @test norm(W) ≈ norm(Array(W))
     end
+
+    @test AntiSymTen2Dxy{Zero}(0) === AntiSymTen()
 end
 
 @testset "VecArray" begin
@@ -628,6 +644,9 @@ end
     @test size(tensorarray(Vec1Dx{Float64}, 4, 3)) === (4,3)
 
     @test typeof(rand(Ten2Dxz{Float32}, 10)) === Ten2DxzArray{Float32,1}
+
+    @test eltype(Vec1DxArray{Zero}(2,2)) === Vec3D{Zero}
+    @test eltype(Ten1DxArray{Zero}(2,2)) === Ten3D{Zero}
 
 end
 
@@ -1009,6 +1028,11 @@ end
         el = u[1]
 
         s = rand(16)
+
+        r0 = s .* u
+        rout0 = similar(r0)
+        @test all(map(isapprox, apply_simd_op(rout0, *, u, s), r0))
+        @test all(map(isapprox, apply_simd_op(rout0, *, s, u), r0))
 
         for v in (Ten1DxArray(rand(16)), Ten2DyzArray(rand(16), rand(16), rand(16), rand(16)), SymTen2DxzArray(rand(16), rand(16), rand(16)), AntiSymmetricTensorArray(rand(16), rand(16), rand(16)))
             for op in (+, -, dot, inner, (x,y) -> inneradd(x,y,2.0), (x, y) -> muladd(x, y, el), (x, y) -> muladd(2.0, x, y), (x, y) -> muladd(x, 2.0, y))

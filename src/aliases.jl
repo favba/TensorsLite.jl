@@ -73,6 +73,18 @@ Vec1Dy(a) = Vec1Dy{typeof(a)}(a)
 Vec1Dz{T}(a) where {T} = Vec(Zero(), Zero(), convert(T, a))
 Vec1Dz(a) = Vec1Dz{typeof(a)}(a)
 
+#Resolve ambiguities
+function Vec3D{Zero}(a,b)
+    convert(Zero,a)
+    convert(Zero,b)
+    return Vec()
+end
+
+function Vec3D{Zero}(a)
+    convert(Zero,a)
+    return Vec()
+end
+
 ########################## Vec constructors ###########################
 
 ################ Ten constructors #####################
@@ -157,5 +169,19 @@ Ten1Dz{T}(zz) where {T} = Ten(𝟎, 𝟎, 𝟎,
                               𝟎, 𝟎, convert(T, zz))
 
 Ten1Dz(zz) = Ten1Dz{typeof(zz)}(zz)
+
+#Resolve ambiguities
+function Ten3D{Zero}(a,b,c,d)
+    convert(Zero,a)
+    convert(Zero,b)
+    convert(Zero,c)
+    convert(Zero,d)
+    return Ten()
+end
+
+function Ten3D{Zero}(a)
+    convert(Zero,a)
+    return Ten()
+end
 
 ################ Ten constructors #####################

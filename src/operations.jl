@@ -4,11 +4,11 @@ using Zeros: StaticBool
 
 #Helpful for generic AbstractArray codes. This is type piracy. Should we make a PR to Zeros.jl?
 Union{Zero, T}(x::Number) where {T<:Number} = T(x)::T
-Union{Zero, T}(x::Zero) where {T<:Number} = x
+Union{Zero, T}(x::Union{Zero,T}) where {T<:Number} = x
 Union{One, T}(x::Number) where {T<:Number} = T(x)::T
-Union{One, T}(x::One) where {T<:Number} = x
+Union{One, T}(x::Union{One,T}) where {T<:Number} = x
 Union{One, Zero, T}(x::Number) where {T<:Number} = T(x)::T
-Union{One, Zero, T}(x::Union{One, Zero}) where {T<:Number} = x
+Union{One, Zero, T}(x::Union{One, Zero,T}) where {T<:Number} = x
 
 # I'm also using my own `dot` function, and LinearAlgebra.dot is overloaded in ext/LinearAlgebraExt.jl
 #Using generated is easier than dealing with all the amibiguities...

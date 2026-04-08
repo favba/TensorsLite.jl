@@ -183,6 +183,9 @@ Vec1DyArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor1DyArray(T,Val{1}(),I..
 Vec1DzArray(a::AbstractArray{T,N}) where {T,N} = VecArray(z=a)
 Vec1DzArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor1DzArray(T,Val{1}(),I...)
 
+#Resolve ambiguities
+Vec1DxArray{Zero}(I::Vararg{Integer,N}) where {N} = Tensor1DxArray(Zero,Val{1}(),I...)
+
 Ten3DArray{T}(I::Vararg{Integer,N}) where {T,N} = TensorArray{T,2}(I...)
 TenArray{T}(I::Vararg{Integer,N}) where {T,N} = Ten3DArray{T}(I...)
 
@@ -204,6 +207,8 @@ Ten1DyArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor1DyArray(T,Val{2}(),I..
 Ten1DzArray(a::AbstractArray{T,N}) where {T<:Vec1Dz,N} = Tensor1DzArray(a)
 Ten1DzArray{T}(I::Vararg{Integer,N}) where {T,N} = Tensor1DzArray(T,Val{2}(),I...)
 
+#Resolve ambiguities
+Ten1DxArray{Zero}(I::Vararg{Integer,N}) where {N} = Tensor1DxArray(Zero,Val{2}(),I...)
 
 ####################################
 

@@ -6,6 +6,13 @@ import TensorsLite: dot, *, +, -, _muladd, Ten1D, SymTen1D, DiagTen, DiagSymTen
 
 import LinearAlgebra: LinearAlgebra, norm, ⋅, cross, normalize
 
+# Resolve method ambiguity for broadcasting, but I actually don't know when (or if) this
+# case would ever happen and if this would be a proper fix
+function Base.similar(bc::Base.Broadcast.Broadcasted{LinearAlgebra.StructuredMatrixStyle{T}}, ::Type{TT}) where {T, TT<:AbstractTensor}
+    s = length.(axes(bc))
+    return tensorarray(TT,s)
+end
+
 @inline LinearAlgebra.dot(a::AbstractTensor, b::AbstractTensor) = dot(a, b)
 @inline LinearAlgebra.dot(x::Vec, A::Ten, y::Vec) = dot(dot(x, A), y)
 
