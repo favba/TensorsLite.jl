@@ -1,23 +1,41 @@
 module TensorsLiteSIMDExt
 
 using Base: Constructor
-import TensorsLite: *, -, +, _muladd, dotadd, inneradd, dcontractadd, fields, constructor, sym_ten_fields
+import TensorsLite: _muladd, dotadd, inneradd, dcontractadd, fields, constructor, sym_ten_fields
 using TensorsLite, Zeros
 import SIMD
 
+Base.:+(v::SIMD.Vec, ::Zero) = v
+Base.:+(::Zero, v::SIMD.Vec) = v
+
+Base.:+(v::SIMD.Vec, ::One) = v + one(v)
+Base.:+(::One, v::SIMD.Vec) = v + one(v)
+
+Base.:-(v::SIMD.Vec, ::Zero) = v
+Base.:-(::Zero, v::SIMD.Vec) = -v
+
+Base.:-(v::SIMD.Vec, ::One) = v - one(v)
+Base.:-(::One, v::SIMD.Vec) = one(v) - v
+
+Base.:*(v::SIMD.Vec, ::One) = v
+Base.:*(::One, v::SIMD.Vec) = v
+
+Base.:*(v::Zero, ::SIMD.Vec) = v
+Base.:*(::SIMD.Vec, v::Zero) = v
+
 @inline my_div(a,b) = a / b
+
 @inline my_div(::Zero, ::SIMD.Vec) = Zero()
+
 @inline Base.:/(v::T, b::SIMD.Vec) where {T <: AbstractTensor} = @inline  begin
     TensorsLite.constructor(T)(map(my_div, TensorsLite.fields(v), ntuple(i -> b, Val(fieldcount(T))))...)
 end
 
-@inline *(b::SIMD.Vec, v::T) where {T <: AbstractTensor} = @inline  begin
+@inline Base.:*(b::SIMD.Vec, v::T) where {T <: AbstractTensor} = @inline  begin
     constructor(T)(map(*, ntuple(i -> b, Val(fieldcount(T))), fields(v))...)
 end
-@inline *(T::AbstractTensor, b::SIMD.Vec) = b*T
 
-Base.:*(b::SIMD.Vec, v::AbstractTensor) = b*v
-Base.:*(v::AbstractTensor, b::SIMD.Vec) = v*b
+@inline Base.:*(T::AbstractTensor, b::SIMD.Vec) = b*T
 
 @inline _muladd(a::SIMD.Vec, v::AbstractTensor{N}, u::AbstractTensor{N}) where {N} = Tensor(_muladd(a, v.x, u.x), _muladd(a, v.y, u.y), _muladd(a, v.z, u.z))
 

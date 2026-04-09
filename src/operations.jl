@@ -1,5 +1,4 @@
 
-# define my own *, +, - so I can extend those operators without commiting type piracy (For SIMDExt.jl)
 using Zeros: StaticBool
 
 #Helpful for generic AbstractArray codes. This is type piracy. Should we make a PR to Zeros.jl?
@@ -9,60 +8,6 @@ Union{One, T}(x::Number) where {T<:Number} = T(x)::T
 Union{One, T}(x::Union{One,T}) where {T<:Number} = x
 Union{One, Zero, T}(x::Number) where {T<:Number} = T(x)::T
 Union{One, Zero, T}(x::Union{One, Zero,T}) where {T<:Number} = x
-
-# I'm also using my own `dot` function, and LinearAlgebra.dot is overloaded in ext/LinearAlgebraExt.jl
-#Using generated is easier than dealing with all the amibiguities...
-@inline +(a) = Base.:+(a)
-
-@inline @generated function +(a::T1, b::T2) where {T1,T2}
-    if (T1 === Zero) && !(T2<:AbstractTensor)
-        return :(b)
-    elseif (T2 === Zero) && !(T1<:AbstractTensor)
-        return :(a)
-    elseif (T1 === One) && !(T2<:AbstractTensor)
-        return :(Base.:+(b,one(T2)))
-    elseif (T2 === One) && !(T1<:AbstractTensor)
-        return :(Base.:+(a,one(T1)))
-    else
-        return :(Base.:+(a, b))
-    end
-end
-
-@inline +(a::Vararg{Any,N}) where {N} = (+(a[Base.OneTo(N-1)]...)) + a[N] 
-
-@inline -(a) = Base.:-(a)
-
-@inline @generated function -(a::T1, b::T2) where {T1,T2}
-    if (T1 === Zero) && !(T2<:AbstractTensor)
-        return :(-b)
-    elseif (T2 === Zero) && !(T1<:AbstractTensor)
-        return :(a)
-    else
-        return :(Base.:-(a, b))
-    end
-end
-
-# `Zero`s will be the mark of a nill direction of a vector
-
-@inline @generated function *(a::T1, b::T2) where {T1,T2}
-    if (T1 === Zero)
-        if T2<:AbstractTensor
-            return :(constructor(T2)(map(*,ntuple(i->Zero(),Val(fieldcount(T2))),fields(v))...))
-        else
-            return :(Zero())
-        end
-    elseif (T2 === Zero)
-        return :(b*a)
-    elseif (T1 === One)
-        return :(b)
-    elseif (T2 === One)
-        return :(a)
-    else
-        return :(Base.:*(a,b))
-    end
-end
-
-@inline *(a::Vararg{Any,N}) where {N} = (*(a[Base.OneTo(N-1)]...)) * a[N] 
 
 @inline @generated function __muladd(a::T1, b::T2, c::T3) where {T1,T2,T3}
     if (T1<:StaticBool || T2<:StaticBool || T3<:StaticBool) 
@@ -101,16 +46,12 @@ end
 import Base: ==
 @inline (==)(a::AbstractTensor{N}, b::AbstractTensor{N}) where {N} = ((a.x == b.x) & (a.y == b.y) & (a.z == b.z))
 
-@inline *(b::Number, v::T) where {T <: AbstractTensor} = @inline  begin
+@inline Base.:*(b::Number, v::T) where {T <: AbstractTensor} = @inline  begin
     bt = _my_convert(promote_type(typeof(b), nonzero_eltype(T)), b)
     constructor(T)(map(*, ntuple(i -> bt, Val(fieldcount(T))), fields(v))...)
 end
 
-@inline *(v::AbstractTensor, b::Number) = b * v
-
-@inline Base.:*(b::Number, v::AbstractTensor) = b * v
-
-@inline Base.:*(v::AbstractTensor, b::Number) = v * b
+@inline Base.:*(v::AbstractTensor, b::Number) = b * v
 
 @inline _muladd(b::Number, v::T, u::T) where {T <: AbstractTensor} = @inline  begin
     bt = _my_convert(promote_type(typeof(b), nonzero_eltype(T)), b)
