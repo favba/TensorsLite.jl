@@ -183,23 +183,23 @@ end
     if N >= 2
         return quote
             if s === :xx
-                return getfield(getfield(T, :x), :x)
+                return getproperty(getfield(T, :x), :x)
             elseif s === :xy
-                return getfield(getfield(T, :y), :x)
+                return getproperty(getfield(T, :y), :x)
             elseif s === :xz
-                return getfield(getfield(T, :z), :x)
+                return getproperty(getfield(T, :z), :x)
             elseif s === :yx
-                return getfield(getfield(T, :x), :y)
+                return getproperty(getfield(T, :x), :y)
             elseif s === :yy
-                return getfield(getfield(T, :y), :y)
+                return getproperty(getfield(T, :y), :y)
             elseif s === :yz
-                return getfield(getfield(T, :z), :y)
+                return getproperty(getfield(T, :z), :y)
             elseif s === :zx
-                return getfield(getfield(T, :x), :z)
+                return getproperty(getfield(T, :x), :z)
             elseif s === :zy
-                return getfield(getfield(T, :y), :z)
+                return getproperty(getfield(T, :y), :z)
             elseif s === :zz
-                return getfield(getfield(T, :z), :z)
+                return getproperty(getfield(T, :z), :z)
             else
                 return getfield(T, s)
             end

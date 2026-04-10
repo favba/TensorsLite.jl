@@ -1067,6 +1067,20 @@ end
 end
 
 @testset "Fix Issues"  begin
+
     @test 𝐤⊗𝐤 === Tensor(z=𝐤)
+
+    let S = Tensor(rand(SymTen3D{Float64},3)...)
+        @test S.xx === (S.x).x
+        @test S.xy === (S.y).x
+        @test S.xz === (S.z).x
+        @test S.yx === (S.x).y
+        @test S.yy === (S.y).y
+        @test S.yz === (S.z).y
+        @test S.zx === (S.x).z
+        @test S.zy === (S.y).z
+        @test S.zz === (S.z).z
+    end
+
 end
 
