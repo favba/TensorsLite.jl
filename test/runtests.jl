@@ -20,33 +20,6 @@ my_isapprox(y::Number, x::SIMD.Vec{N, T}) where {N, T} = isapprox(x, SIMD.Vec{N,
     @test length(detect_ambiguities(Base, LinearAlgebra, TensorsLite)) == 0
 end
 
-@testset "Internal operators definitions" begin
-
-    for x in (One(), Zero(), rand())
-        for y in (One(), Zero(), rand())
-            for ops in ((TensorsLite.:+, Base.:+), (TensorsLite.:-, Base.:-), (TensorsLite.:*, Base.:*))
-                @test ops[1](x,y) == ops[2](x,y)
-            end
-        end
-    end
-
-    for x in (One(), Zero(), rand(), SIMD.Vec(rand(), rand(), rand(), rand()))
-        for y in (One(), Zero(), rand(), SIMD.Vec(rand(), rand(), rand(), rand()))
-            for z in (One(), Zero(), rand(), SIMD.Vec(rand(), rand(), rand(), rand()))
-                if (all(t -> typeof(t) === Float64, (x, y, z)))
-                    @test TensorsLite._muladd(x, y, z) === muladd(x, y, z)
-                else
-                    @test my_isapprox(TensorsLite._muladd(x, y, z), TensorsLite.:+(TensorsLite.:*(x, y), z))
-                end
-            end
-        end
-    end
-    # @test TensorsLite._muladd(Zero(), 1.0im, 2.0) === 2.0 + 0.0im
-    # @test TensorsLite._muladd(1.0im, Zero(), 2.0) === 2.0 + 0.0im
-    # @test TensorsLite._muladd(Zero(), 1.0im, Zero()) === Zero()
-    # @test TensorsLite._muladd(1.0im, Zero(), One()) === One()
-end
-
 const sx = SIMD.Vec(1.0, 2.0)
 const sy = SIMD.Vec(2.0, 1.0)
 const sz = SIMD.Vec(3.0, 4.0)

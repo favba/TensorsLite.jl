@@ -2,7 +2,7 @@ module TensorsLiteLinearAlgebraExt
 
 using TensorsLite, Zeros
 
-import TensorsLite: dot, _muladd, Ten1D, SymTen1D, DiagTen, DiagSymTen
+import TensorsLite: dot, Ten1D, SymTen1D, DiagTen, DiagSymTen
 
 import LinearAlgebra: LinearAlgebra, norm, ⋅, cross, normalize
 
@@ -39,7 +39,7 @@ end
     bx = b.x
     by = b.y
     bz = b.z
-    return  Vec(_muladd(ay, bz, -(az * by)), _muladd(az, bx, -(ax * bz)), _muladd(ax, by, -(ay * bx)))
+    return  Vec(muladd(ay, bz, -(az * by)), muladd(az, bx, -(ax * bz)), muladd(ax, by, -(ay * bx)))
 end
 
 base_type(::Type{T}) where {T} = T
@@ -62,7 +62,7 @@ base_type(::Type{Complex{T}}) where {T} = T
     Tyz = T.yz
     Tzz = T.zz
 
-    return _muladd((Txy*Tyz - Txz*Tyy), Tzx, _muladd((Tzy*Txz - Tzz*Txy), Tyx, (Tzz*Tyy - Tzy*Tyz )*Txx))
+    return muladd((Txy*Tyz - Txz*Tyy), Tzx, muladd((Tzy*Txz - Tzz*Txy), Tyx, (Tzz*Tyy - Tzy*Tyz )*Txx))
 
 end
 
@@ -83,7 +83,7 @@ end
     To2 = (T11 + T22)/2
     mD =  T12*T21 - T11*T22 
 
-    delta2 = _muladd(To2, To2, mD)
+    delta2 = muladd(To2, To2, mD)
 
     if _isnegative(delta2)
         deltac = fsqrt(complex(delta2))
@@ -108,7 +108,7 @@ end
     To2 = (T11 + T22)/2
     mD =  T12*T12 - T11*T22 
 
-    delta = fsqrt(_muladd(To2, To2, mD))
+    delta = fsqrt(muladd(To2, To2, mD))
 
     return (To2 + delta, To2 - delta)
 end
@@ -134,7 +134,7 @@ end
     To2 = (T11 + T22)/2
     mD =  T12*T21 - T11*T22 
 
-    delta2 = _muladd(To2, To2, mD)
+    delta2 = muladd(To2, To2, mD)
 
     if _isnegative(delta2)
 
@@ -223,7 +223,7 @@ end
     To2 = (T11 + T22)/2
     mD =  T12*T12 - T11*T22 
 
-    delta2 = _muladd(To2, To2, mD)
+    delta2 = muladd(To2, To2, mD)
     delta = fsqrt(delta2)
     L1 = To2 + delta
     L2 = To2 - delta
@@ -316,12 +316,12 @@ end
     e33mq = (e33-q)
 
     p1 = e12p2 + e13p2 + e23p2
-    p2 = _muladd(e11mq, e11mq, _muladd(e22mq, e22mq, _muladd(e33mq, e33mq, 2*p1)))
+    p2 = muladd(e11mq, e11mq, muladd(e22mq, e22mq, muladd(e33mq, e33mq, 2*p1)))
     p = fsqrt(inv(6)*p2)
 
 
     #r = ((e11mq)*(e22mq)*(e33mq) - (e11mq)*(e23p2) - (e12p2)*(e33mq) + 2*(e12*e13*e23) - (e13p2)*(e22mq))/(2*p*p*p)
-    r = ( _muladd(e11mq, e23p2, _muladd(e22mq, e13p2, e33mq*e12p2)) - _muladd(e11mq, e22mq*e33mq, 2*(e12*e13*e23)) ) / ((-2)*p*p*p)
+    r = ( muladd(e11mq, e23p2, muladd(e22mq, e13p2, e33mq*e12p2)) - muladd(e11mq, e22mq*e33mq, 2*(e12*e13*e23)) ) / ((-2)*p*p*p)
   
     # In exact arithmetic for a symmetric matrix  -1 <= r <= 1
     # but computation error can leave it slightly outside this range.
@@ -333,12 +333,12 @@ end
   
     # the eigenvalues satisfy eig.z >= eig.y >= eig.x
     #eig3 = q + 2*p*cos(ϕ)
-    eig3 = _muladd(aux, cos(ϕ), q)
+    eig3 = muladd(aux, cos(ϕ), q)
     # cos(x+y) = cos(x)*cos(y) - sin(x)*sin(y)
     #eig1 = q + 2*p*cos(ϕ+(2*π/3))  # q - 2*p*(cos(ϕ)/2 + (√3/2)sin(ϕ))
-    eig1 = _muladd(aux, cos(ϕ+(2*π/3)), q)  # q - 2*p*(cos(ϕ)/2 + (√3/2)sin(ϕ))
+    eig1 = muladd(aux, cos(ϕ+(2*π/3)), q)  # q - 2*p*(cos(ϕ)/2 + (√3/2)sin(ϕ))
     # eig2 = 3*q - eig1 - eig3     # since trace(E) = eig.x + eig.y + eig.z = 3q
-    eig2 = - _muladd(-3,q, eig1 + eig3)     # since trace(E) = eig.x + eig.y + eig.z = 3q
+    eig2 = - muladd(-3,q, eig1 + eig3)     # since trace(E) = eig.x + eig.y + eig.z = 3q
 
     return Vec(eig1,eig2,eig3)
 end

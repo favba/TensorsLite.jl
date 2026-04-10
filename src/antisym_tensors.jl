@@ -76,15 +76,17 @@ end
 
 @inline ==(a::AntiSymmetricTensor{N}, b::AntiSymmetricTensor{N}) where {N} = @inline reduce(&, map(==, fields(a), fields(b)))
 
-@inline function _muladd(a::Number, v::AntiSymmetricTensor{N}, u::AntiSymmetricTensor{N}) where {N}
+@inline function Base.muladd(a::Number, v::AntiSymmetricTensor{N}, u::AntiSymmetricTensor{N}) where {N}
     @inline begin
         at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
-        W = AntiSymmetricTensor(map(_muladd, ntuple(i -> at, Val(3)), fields(v), fields(u))...)
+        W = AntiSymmetricTensor(map(muladd, ntuple(i -> at, Val(3)), fields(v), fields(u))...)
     end
     return W
 end
 
-@inline _muladd(::Zero, ::AntiSymmetricTensor{N}, u::AntiSymmetricTensor{N}) where {N} = u
+@inline Base.muladd(::Zero, ::AntiSymmetricTensor{N}, u::AntiSymmetricTensor{N}) where {N} = u
+
+@inline Base.muladd(::One, w::AntiSymmetricTensor{N}, u::AntiSymmetricTensor{N}) where {N} = w+u
 
 @inline function AntiSymTen(a, b, c)
     if (a isa AbstractTensor || b isa AbstractTensor || c isa AbstractTensor)
@@ -187,9 +189,9 @@ end
     return AntiSymmetricTensor(nfields...)
 end
 
-@inline inner(a::AntiSymmetricTensor{2, <:Real}, b::AntiSymmetricTensor{2, <:Real}) = 2 * _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz * b.yz))
+@inline inner(a::AntiSymmetricTensor{2, <:Real}, b::AntiSymmetricTensor{2, <:Real}) = 2 * muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz * b.yz))
 
-@inline inneradd(a::AntiSymmetricTensor{2, <:Real}, b::AntiSymmetricTensor{2, <:Real}, c::Real) = _muladd(2, _muladd(a.xy, b.xy, _muladd(a.xz, b.xz, a.yz * b.yz)), c)
+@inline inneradd(a::AntiSymmetricTensor{2, <:Real}, b::AntiSymmetricTensor{2, <:Real}, c::Real) = muladd(2, muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz * b.yz)), c)
 
 @inline inner(::AntiSymmetricTensor{2}, ::SymmetricTensor{2}) = 𝟎
 
