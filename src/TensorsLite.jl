@@ -65,7 +65,7 @@ include("type_utils.jl")
 """
     AbstractTensor{N, T} <: AbstractArray{T, N}
 
-Supertype of all Tensor types. Represents any `N`th order tensor with eltype `T`.
+Supertype of all Tensor types. Represents any `N`th order tensor with element type `T`.
 """
 abstract type AbstractTensor{N, T} <: AbstractArray{T, N} end
 
@@ -77,13 +77,64 @@ Base.Broadcast.broadcastable(u::AbstractTensor) = (u,)
 
 A `N`th order tensor with eltype `T`.
 `N`th order tensors are implemented as vectors (1st order tensors) of `(N-1)`th order tensors.
+A `Tensor` will always have 3 elements, each associated with the `x`,`y`, and `z` directions. Lower dimensional tensors can be constructed by using compile time null values, which are constructed using the `Zero` number from the `Zeros` package.
 
+# Fields
+- `x::Tx`: The element associated with the first (x) dimension of the tensor. For a 1st order tensor `t` (a vector) this equivalent to `t[1]`, for a 2nd order tensor (a matrix) `t` this is equivalent to `t[:,1]`, for a 3rd order: `t[:,:,1]`, and so on for higher orders.
+- `y::Ty`: The element associated with the second (y) dimension of the tensor. For a 1st order tensor `t` (a vector) this equivalent to `t[2]`, for a 2nd order tensor (a matrix) `t`, this is equivalent to `t[:,2]`, for a 3rd order: `t[:,:,2]`, and so on for higher orders.
+- `z::Tz`: The element associated with the third (z) dimension of the tensor. For a 1st order tensor `t` (a vector) this equivalent to `t[3]`, for a 2nd order tensor (a matrix) `t`, this is equivalent to `t[:,3]`, for a 3rd order: `t[:,:,3]`, and so on for higher orders.
+
+# Properties (For `Tensor{N>=2}` only)
+- `xx`: Same as `t.x.x`. Ex.g.: For a 3d order tensor `t` this is equivalent to `t[:,1,1]`
+- `xy`: Same as `t.y.x`. Ex.g.: For a 3d order tensor `t` this is equivalent to `t[:,1,2]`
+- `xz`: Same as `t.z.x`. Ex.g.: For a 3d order tensor `t` this is equivalent to `t[:,1,3]`
+- `yx`: Same as `t.x.y`. Ex.g.: For a 3d order tensor `t` this is equivalent to `t[:,2,1]`
+- `yy`: Same as `t.y.y`. Ex.g.: For a 3d order tensor `t` this is equivalent to `t[:,2,2]`
+- `yz`: Same as `t.z.y`. Ex.g.: For a 3d order tensor `t` this is equivalent to `t[:,2,3]`
+- `zx`: Same as `t.x.z`. Ex.g.: For a 3d order tensor `t` this is equivalent to `t[:,3,1]`
+- `zy`: Same as `t.y.z`. Ex.g.: For a 3d order tensor `t` this is equivalent to `t[:,3,2]`
+- `zz`: Same as `t.z.z`. Ex.g.: For a 3d order tensor `t` this is equivalent to `t[:,3,3]`
 """
 struct Tensor{N, T, Tx, Ty, Tz} <: AbstractTensor{N, T}
     x::Tx
     y::Ty
     z::Tz
 
+    @doc """
+        Tensor(x, y, z) -> Tensor
+
+    If `x`,`y`,`z` are `Number`s (or of the same type `T` where `T` is not a `AbstractTensor`), returns a vector (`Tensor{1}`) with `x`,`y`,`z` as its elements.
+    The elements are promoted to a common type, with the exception of `Zero`s and `One`s, which maintains its type to denote any null or constant direction.
+
+    `x`,`y`,`z` can also be all `AbstractTensor`s of same order `N`, in which case the function returns a `Tensor{N+1}`, and the `eltype`s of `x`,`y`,`z` are promoted to a common type, again with the execption of `Zero`s and `Ones`.
+
+    # Examples
+    ```julia-repl
+    julia> v1 = Tensor(1,2.,Zero())
+    3-element Vec2Dxy{Float64}:
+    1.0
+    2.0
+    𝟎
+
+    julia> v2 = Tensor(3,4,Zero())
+    3-element Vec2Dxy{Int64}:
+    3
+    4
+    𝟎
+
+    julia> v3 = Tensor(Zero(),Zero(),Zero())
+    3-element Tensor{1, Zero, Zero, Zero, Zero}:
+    𝟎
+    𝟎
+    𝟎
+
+    julia> T = Tensor(v1,v2,v3)
+    3×3 Ten2Dxy{Float64}:
+    1.0  3.0  𝟎
+    2.0  4.0  𝟎
+    𝟎    𝟎    𝟎
+    ```
+    """
     @inline function Tensor(x, y, z)
 
         # AbstractTensor are only valid as input when they are all of the same order
@@ -123,8 +174,66 @@ include("vec_type_utils.jl")
 
 @inline Tensor{0}() = 𝟎
 @inline Tensor{1}() = Tensor(Zero(),Zero(),Zero())
+
+"""
+    Tensor{N}() -> Tensor{N}
+
+Returns a compile time constant null `Tensor` of order `N`.
+
+# Examples
+```julia-repl
+julia> Tensor{1}()
+3-element Tensor{1, Zero, Zero, Zero, Zero}:
+ 𝟎
+ 𝟎
+ 𝟎
+
+julia> Tensor{3}()
+3×3×3 Tensor{3, Zero, Tensor{2, Zero, Tensor{1, Zero, Zero, Zero, Zero}, Tensor{1, Zero, Zero, Zero, Zero}, Tensor{1, Zero, Zero, Zero, Zero}}, Tensor{2, Zero, Tensor{1, Zero, Zero, Zero, Zero}, Tensor{1, Zero, Zero, Zero, Zero}, Tensor{1, Zero, Zero, Zero, Zero}}, Tensor{2, Zero, Tensor{1, Zero, Zero, Zero, Zero}, Tensor{1, Zero, Zero, Zero, Zero}, Tensor{1, Zero, Zero, Zero, Zero}}}:
+[:, :, 1] =
+ 𝟎  𝟎  𝟎
+ 𝟎  𝟎  𝟎
+ 𝟎  𝟎  𝟎
+
+[:, :, 2] =
+ 𝟎  𝟎  𝟎
+ 𝟎  𝟎  𝟎
+ 𝟎  𝟎  𝟎
+
+[:, :, 3] =
+ 𝟎  𝟎  𝟎
+ 𝟎  𝟎  𝟎
+ 𝟎  𝟎  𝟎
+```
+"""
 @inline Tensor{N}() where N = Tensor(Tensor{N-1}(), Tensor{N-1}(), Tensor{N-1}())
 
+"""
+    Tensor(; x = Zero(), y = Zero(), z = Zero()) -> Tensor
+
+Returns a `Tensor` with elements `x`, `y`, `z`. Any unspecified elements are implicitly converted to an appropriate order compile time constant null `Tensor` or scalar.
+
+# Examples
+```julia-repl
+julia> v1 = Tensor(x=1, y=2.)
+3-element Vec2Dxy{Float64}:
+ 1.0
+ 2.0
+ 𝟎
+
+julia> v2 = Tensor(y=4, x=3)
+3-element Vec2Dxy{Int64}:
+ 3
+ 4
+ 𝟎
+
+julia> T = Tensor(x=v1, y=v2)
+3×3 Ten2Dxy{Float64}:
+ 1.0  3.0  𝟎
+ 2.0  4.0  𝟎
+ 𝟎    𝟎    𝟎
+```
+"""
 @inline function Tensor(;x=𝟎,y=𝟎,z=𝟎)
     if (x === 𝟎) && (y == 𝟎) && (z == 𝟎)
         return Tensor{1}()
