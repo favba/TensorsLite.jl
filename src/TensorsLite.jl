@@ -288,36 +288,31 @@ Base.@constprop :aggressive function Base.getindex(u::Tensor{N}, I::Vararg{Integ
     return @inbounds(getindex(getfield(u, @inbounds(I[N])), ntuple(i -> @inbounds(I[i]), Val{N-1}())...))
 end
 
-@inline @generated function Base.getproperty(T::Tensor{N}, s::Symbol) where N
-    if N >= 2
-        return quote
-            if s === :xx
-                return getproperty(getfield(T, :x), :x)
-            elseif s === :xy
-                return getproperty(getfield(T, :y), :x)
-            elseif s === :xz
-                return getproperty(getfield(T, :z), :x)
-            elseif s === :yx
-                return getproperty(getfield(T, :x), :y)
-            elseif s === :yy
-                return getproperty(getfield(T, :y), :y)
-            elseif s === :yz
-                return getproperty(getfield(T, :z), :y)
-            elseif s === :zx
-                return getproperty(getfield(T, :x), :z)
-            elseif s === :zy
-                return getproperty(getfield(T, :y), :z)
-            elseif s === :zz
-                return getproperty(getfield(T, :z), :z)
-            else
-                return getfield(T, s)
-            end
-        end
+@inline Base.getproperty(T::Tensor{1}, s::Symbol) = getfield(T, s)
+
+@inline function Base.getproperty(T::Tensor, s::Symbol)
+    if s === :xx
+        return getproperty(getfield(T, :x), :x)
+    elseif s === :xy
+        return getproperty(getfield(T, :y), :x)
+    elseif s === :xz
+        return getproperty(getfield(T, :z), :x)
+    elseif s === :yx
+        return getproperty(getfield(T, :x), :y)
+    elseif s === :yy
+        return getproperty(getfield(T, :y), :y)
+    elseif s === :yz
+        return getproperty(getfield(T, :z), :y)
+    elseif s === :zx
+        return getproperty(getfield(T, :x), :z)
+    elseif s === :zy
+        return getproperty(getfield(T, :y), :z)
+    elseif s === :zz
+        return getproperty(getfield(T, :z), :z)
     else
-        return :(getfield(T,s))
+        return getfield(T, s)
     end
 end
-
 
 # useful compile time constant tensors
 const 𝐢 = Vec1Dx(One())
