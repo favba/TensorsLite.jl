@@ -270,13 +270,13 @@ end
 
 sym_ten_fields(T::AbstractTensor) = (T.xx, T.xy, T.xz, T.yy, T.yz, T.zz)
 
-@inline Base.:+(a::SymmetricTensor{2}, b::Union{<:DiagTen,<:Ten1D}) = @inline SymmetricTensor(map(+, sym_ten_fields(a), sym_ten_fields(b))...)
-@inline Base.:+(b::Union{<:DiagTen,<:Ten1D}, a::SymmetricTensor{2}) = @inline SymmetricTensor(map(+, sym_ten_fields(a), sym_ten_fields(b))...)
+@inline Base.:+(a::SymmetricTensor{2}, b::DiagTen) = @inline SymmetricTensor(map(+, sym_ten_fields(a), sym_ten_fields(b))...)
+@inline Base.:+(b::DiagTen, a::SymmetricTensor{2}) = @inline SymmetricTensor(map(+, sym_ten_fields(a), sym_ten_fields(b))...)
 
-@inline Base.:-(a::SymmetricTensor{2}, b::Union{<:DiagTen,<:Ten1D}) = @inline SymmetricTensor(map(-, sym_ten_fields(a), sym_ten_fields(b))...)
-@inline Base.:-(b::Union{<:DiagTen,<:Ten1D}, a::SymmetricTensor{2}) = @inline SymmetricTensor(map(-, sym_ten_fields(b), sym_ten_fields(a))...)
+@inline Base.:-(a::SymmetricTensor{2}, b::DiagTen) = @inline SymmetricTensor(map(-, sym_ten_fields(a), sym_ten_fields(b))...)
+@inline Base.:-(b::DiagTen, a::SymmetricTensor{2}) = @inline SymmetricTensor(map(-, sym_ten_fields(b), sym_ten_fields(a))...)
 
-@inline function Base.muladd(a::Number, v::SymmetricTensor{2}, u::Union{<:DiagTen,<:Ten1D})
+@inline function Base.muladd(a::Number, v::SymmetricTensor{2}, u::DiagTen)
     @inline begin
         at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
         S = SymmetricTensor(map(muladd, ntuple(i -> at, Val(6)), sym_ten_fields(v), sym_ten_fields(u))...)
@@ -284,12 +284,18 @@ sym_ten_fields(T::AbstractTensor) = (T.xx, T.xy, T.xz, T.yy, T.yz, T.zz)
     return S
 end
 
-@inline function Base.muladd(a::Number, v::Union{<:DiagTen,<:Ten1D}, u::SymmetricTensor{2})
+@inline Base.muladd(::Zero, v::SymmetricTensor{2}, u::DiagTen) = u
+@inline Base.muladd(::One, v::SymmetricTensor{2}, u::DiagTen) = v + u
+
+@inline function Base.muladd(a::Number, v::DiagTen, u::SymmetricTensor{2})
     @inline begin
         at = convert(promote_type(typeof(a), nonzero_eltype(v), nonzero_eltype(u)), a)
         S = SymmetricTensor(map(muladd, ntuple(i -> at, Val(6)), sym_ten_fields(v), sym_ten_fields(u))...)
     end
     return S
 end
+
+@inline Base.muladd(::Zero, v::DiagTen, u::SymmetricTensor{2}) = u
+@inline Base.muladd(::One, v::DiagTen, u::SymmetricTensor{2}) = v + u
 
 @inline otimes(a::Tensor{1}) = SymmetricTensor(a.x*a.x, a.x*a.y, a.x*a.z, a.y*a.y, a.y*a.z, a.z*a.z)

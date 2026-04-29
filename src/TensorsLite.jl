@@ -15,8 +15,8 @@ export Vec, Ten, SymTen, AntiSymTen
 export Tensor, SymmetricTensor, AntiSymmetricTensor
 
 #Concrete aliases of Tensor types defined in this package
-export Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec1Dx, Vec1Dy, Vec1Dz
-export Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten1Dx, Ten1Dy, Ten1Dz
+export Vec3D, Vec2Dxy, Vec2Dxz, Vec2Dyz, Vec1Dx, Vec1Dy, Vec1Dz, Vec0D
+export Ten3D, Ten2Dxy, Ten2Dxz, Ten2Dyz, Ten1Dx, Ten1Dy, Ten1Dz, Ten0D
 export DiagTen3D, DiagTen2Dxy, DiagTen2Dxz, DiagTen2Dyz
 export SymTen3D, SymTen2Dxy, SymTen2Dxz, SymTen2Dyz, SymTen1Dx, SymTen1Dy, SymTen1Dz
 export DiagSymTen3D, DiagSymTen2Dxy, DiagSymTen2Dxz, DiagSymTen2Dyz

@@ -1,9 +1,9 @@
 
-@inline LinearAlgebra.eigvals(T::Union{<:Ten1D,<:SymTen1D,<:DiagTen,<:DiagSymTen}) = Vec(T.xx, T.yy, T.zz)
+@inline LinearAlgebra.eigvals(T::TT) where {TT<:Union{<:Ten1D,<:SymTen1D,<:DiagTen,<:DiagSymTen}} = Vec(T.xx, T.yy, T.zz)
 
 @inline LinearAlgebra.eigvecs(::Union{<:Ten1D,<:SymTen1D,<:DiagTen,<:DiagSymTen}) = 𝐈
 
-@inline LinearAlgebra.eigen(T::Union{<:Ten1D,<:SymTen1D,<:DiagTen,<:DiagSymTen}) = LinearAlgebra.Eigen(LinearAlgebra.eigvals(T), LinearAlgebra.eigvecs(T))
+@inline LinearAlgebra.eigen(T::TT) where {TT<:Union{<:Ten1D,<:SymTen1D,<:DiagTen,<:DiagSymTen}} = LinearAlgebra.Eigen(LinearAlgebra.eigvals(T), LinearAlgebra.eigvecs(T))
 
 @inline _isnegative(x) = x < 0
 
