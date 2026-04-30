@@ -25,7 +25,7 @@ export AntiSymTen3D, AntiSymTen2Dxy, AntiSymTen2Dxz, AntiSymTen2Dyz
 #Useful Union Tensor types (for method dispatch)
 export Vec2D, Vec1D, VecND, Ten2D, Ten1D, TenND
 export SymTen2D, SymTen1D, AntiSymTen2D
- 
+
 #Useful compile-time constant vectors and second order Tensors
 export 𝐢, 𝐣, 𝐤 # Canonical vector base
 export 𝐈 # Idetity Matrix
@@ -39,8 +39,8 @@ export dotadd, inner, inneradd, otimes, ⊗, dcontract, ⊡, dcontractadd
 #Abstract SOA Array of Tensor types
 export AbstractTensorArray
 
-#Abstract SOA Array of Tensor types aliases 
-export VecArray, TenArray, SymTenArray, AntiSymTenArray 
+#Abstract SOA Array of Tensor types aliases
+export VecArray, TenArray, SymTenArray, AntiSymTenArray
 
 #Concrete SOA Array of Tensors types
 export TensorArray, SymmetricTensorArray, AntiSymmetricTensorArray
@@ -315,18 +315,332 @@ end
 end
 
 # useful compile time constant tensors
+"""
+    𝐢 = Vec1Dx(One())
+
+Compile time constant unit 1D vector on the x direction. Useful for creating a vector using vector notation with no extra cost. See also [`𝐣`](@ref) and [`𝐤`](@ref)
+
+# Examples
+```julia-repl
+julia> vec(a,b,c) = a*𝐢 + b*𝐣 + c*𝐤
+vec (generic function with 1 method)
+
+julia> @code_typed vec(1,2,3)
+CodeInfo(
+1 ─ %1 = %new(Vec3D{Int64}, a, b, c)::Vec3D{Int64}
+└──      return %1
+) => Vec3D{Int64}
+
+```
+"""
 const 𝐢 = Vec1Dx(One())
+
+"""
+    𝐣 = Vec1Dy(One())
+
+Compile time constant unit 1D vector on the y direction. Useful for creating a vector using vector notation with no extra cost. See also [`𝐢`](@ref) and [`𝐤`](@ref)
+
+# Examples
+```julia-repl
+julia> vec(a,b,c) = a*𝐢 + b*𝐣 + c*𝐤
+vec (generic function with 1 method)
+
+julia> @code_typed vec(1,2,3)
+CodeInfo(
+1 ─ %1 = %new(Vec3D{Int64}, a, b, c)::Vec3D{Int64}
+└──      return %1
+) => Vec3D{Int64}
+
+```
+"""
 const 𝐣 = Vec1Dy(One())
+
+"""
+    𝐤 = Vec1Dz(One())
+
+Compile time constant unit 1D vector on the z direction. Useful for creating a vector using vector notation with no extra cost. See also [`𝐢`](@ref) and [`𝐣`](@ref)
+
+# Examples
+```julia-repl
+julia> vec(a,b,c) = a*𝐢 + b*𝐣 + c*𝐤
+vec (generic function with 1 method)
+
+julia> @code_typed vec(1,2,3)
+CodeInfo(
+1 ─ %1 = %new(Vec3D{Int64}, a, b, c)::Vec3D{Int64}
+└──      return %1
+) => Vec3D{Int64}
+
+```
+"""
 const 𝐤 = Vec1Dz(One())
+
+"""
+    𝐈 = Ten(𝐢, 𝐣, 𝐤)
+
+Compile time constant identity matrix.
+"""
 const 𝐈 = Tensor(𝐢, 𝐣, 𝐤)
+
+"""
+    𝐢𝐢 = Ten(xx=One())
+
+Compile time constant unit matrix for the xx element. Useful for creating 2nd order Tensors as a summation over a linear basis with no extra cost.
+See also [`𝐢𝐣`](@ref), [`𝐢𝐤`](@ref), [`𝐣𝐢`](@ref), [`𝐣𝐣`](@ref), [`𝐣𝐤`](@ref), [`𝐤𝐢`](@ref), [`𝐤𝐣`](@ref), [`𝐤𝐤`](@ref)
+
+# Examples
+```julia-repl
+julia> ten(xx,xy,xz,yx,yy,yz,zx,zy,zz) = xx*𝐢𝐢 + xy*𝐢𝐣 + xz*𝐢𝐤 + yx*𝐣𝐢 + yy*𝐣𝐣 + yz*𝐣𝐤 + zx*𝐤𝐢 + zy*𝐤𝐣 + zz*𝐤𝐤
+ten (generic function with 1 method)
+
+julia> @code_typed ten(1,2,3,4,5,6,7,8,9)
+CodeInfo(
+1 ───        goto #2
+2 ───        goto #3
+...
+120 ─        goto #121
+121 ─ %121 = %new(Vec3D{Int64}, xx, yx, zx)::Vec3D{Int64}
+│     %122 = %new(Vec3D{Int64}, xy, yy, zy)::Vec3D{Int64}
+│     %123 = %new(Vec3D{Int64}, xz, yz, zz)::Vec3D{Int64}
+│     %124 = %new(Ten3D{Int64}, %121, %122, %123)::Ten3D{Int64}
+└────        goto #122
+122 ─        return %124
+) => Ten3D{Int64}
+
+```
+"""
 const 𝐢𝐢 = Tensor(𝐢, Vec(), Vec())
+
+"""
+    𝐢𝐣 = Ten(xy=One())
+
+Compile time constant unit matrix for the xy element. Useful for creating 2nd order Tensors as a summation over a linear basis with no extra cost.
+See also [`𝐢𝐢`](@ref), [`𝐢𝐤`](@ref), [`𝐣𝐢`](@ref), [`𝐣𝐣`](@ref), [`𝐣𝐤`](@ref), [`𝐤𝐢`](@ref), [`𝐤𝐣`](@ref), [`𝐤𝐤`](@ref)
+
+# Examples
+```julia-repl
+julia> ten(xx,xy,xz,yx,yy,yz,zx,zy,zz) = xx*𝐢𝐢 + xy*𝐢𝐣 + xz*𝐢𝐤 + yx*𝐣𝐢 + yy*𝐣𝐣 + yz*𝐣𝐤 + zx*𝐤𝐢 + zy*𝐤𝐣 + zz*𝐤𝐤
+ten (generic function with 1 method)
+
+julia> @code_typed ten(1,2,3,4,5,6,7,8,9)
+CodeInfo(
+1 ───        goto #2
+2 ───        goto #3
+...
+120 ─        goto #121
+121 ─ %121 = %new(Vec3D{Int64}, xx, yx, zx)::Vec3D{Int64}
+│     %122 = %new(Vec3D{Int64}, xy, yy, zy)::Vec3D{Int64}
+│     %123 = %new(Vec3D{Int64}, xz, yz, zz)::Vec3D{Int64}
+│     %124 = %new(Ten3D{Int64}, %121, %122, %123)::Ten3D{Int64}
+└────        goto #122
+122 ─        return %124
+) => Ten3D{Int64}
+
+```
+"""
 const 𝐢𝐣 = Tensor(Vec(), 𝐢, Vec())
+
+"""
+    𝐢𝐤 = Ten(xz=One())
+
+Compile time constant unit matrix for the xz element. Useful for creating 2nd order Tensors as a summation over a linear basis with no extra cost.
+See also [`𝐢𝐢`](@ref), [`𝐢𝐣`](@ref), [`𝐣𝐢`](@ref), [`𝐣𝐣`](@ref), [`𝐣𝐤`](@ref), [`𝐤𝐢`](@ref), [`𝐤𝐣`](@ref), [`𝐤𝐤`](@ref)
+
+# Examples
+```julia-repl
+julia> ten(xx,xy,xz,yx,yy,yz,zx,zy,zz) = xx*𝐢𝐢 + xy*𝐢𝐣 + xz*𝐢𝐤 + yx*𝐣𝐢 + yy*𝐣𝐣 + yz*𝐣𝐤 + zx*𝐤𝐢 + zy*𝐤𝐣 + zz*𝐤𝐤
+ten (generic function with 1 method)
+
+julia> @code_typed ten(1,2,3,4,5,6,7,8,9)
+CodeInfo(
+1 ───        goto #2
+2 ───        goto #3
+...
+120 ─        goto #121
+121 ─ %121 = %new(Vec3D{Int64}, xx, yx, zx)::Vec3D{Int64}
+│     %122 = %new(Vec3D{Int64}, xy, yy, zy)::Vec3D{Int64}
+│     %123 = %new(Vec3D{Int64}, xz, yz, zz)::Vec3D{Int64}
+│     %124 = %new(Ten3D{Int64}, %121, %122, %123)::Ten3D{Int64}
+└────        goto #122
+122 ─        return %124
+) => Ten3D{Int64}
+
+```
+"""
 const 𝐢𝐤 = Tensor(Vec(), Vec(), 𝐢)
+
+"""
+    𝐣𝐢 = Ten(yx=One())
+
+Compile time constant unit matrix for the yx element. Useful for creating 2nd order Tensors as a summation over a linear basis with no extra cost.
+See also [`𝐢𝐢`](@ref), [`𝐢𝐣`](@ref), [`𝐢𝐤`](@ref), [`𝐣𝐣`](@ref), [`𝐣𝐤`](@ref), [`𝐤𝐢`](@ref), [`𝐤𝐣`](@ref), [`𝐤𝐤`](@ref)
+
+# Examples
+```julia-repl
+julia> ten(xx,xy,xz,yx,yy,yz,zx,zy,zz) = xx*𝐢𝐢 + xy*𝐢𝐣 + xz*𝐢𝐤 + yx*𝐣𝐢 + yy*𝐣𝐣 + yz*𝐣𝐤 + zx*𝐤𝐢 + zy*𝐤𝐣 + zz*𝐤𝐤
+ten (generic function with 1 method)
+
+julia> @code_typed ten(1,2,3,4,5,6,7,8,9)
+CodeInfo(
+1 ───        goto #2
+2 ───        goto #3
+...
+120 ─        goto #121
+121 ─ %121 = %new(Vec3D{Int64}, xx, yx, zx)::Vec3D{Int64}
+│     %122 = %new(Vec3D{Int64}, xy, yy, zy)::Vec3D{Int64}
+│     %123 = %new(Vec3D{Int64}, xz, yz, zz)::Vec3D{Int64}
+│     %124 = %new(Ten3D{Int64}, %121, %122, %123)::Ten3D{Int64}
+└────        goto #122
+122 ─        return %124
+) => Ten3D{Int64}
+
+```
+"""
 const 𝐣𝐢 = Tensor(𝐣, Vec(), Vec())
+
+"""
+    𝐣𝐣 = Ten(yy=One())
+
+Compile time constant unit matrix for the yy element. Useful for creating 2nd order Tensors as a summation over a linear basis with no extra cost.
+See also [`𝐢𝐢`](@ref), [`𝐢𝐣`](@ref), [`𝐢𝐤`](@ref), [`𝐣𝐢`](@ref), [`𝐣𝐤`](@ref), [`𝐤𝐢`](@ref), [`𝐤𝐣`](@ref), [`𝐤𝐤`](@ref)
+
+# Examples
+```julia-repl
+julia> ten(xx,xy,xz,yx,yy,yz,zx,zy,zz) = xx*𝐢𝐢 + xy*𝐢𝐣 + xz*𝐢𝐤 + yx*𝐣𝐢 + yy*𝐣𝐣 + yz*𝐣𝐤 + zx*𝐤𝐢 + zy*𝐤𝐣 + zz*𝐤𝐤
+ten (generic function with 1 method)
+
+julia> @code_typed ten(1,2,3,4,5,6,7,8,9)
+CodeInfo(
+1 ───        goto #2
+2 ───        goto #3
+...
+120 ─        goto #121
+121 ─ %121 = %new(Vec3D{Int64}, xx, yx, zx)::Vec3D{Int64}
+│     %122 = %new(Vec3D{Int64}, xy, yy, zy)::Vec3D{Int64}
+│     %123 = %new(Vec3D{Int64}, xz, yz, zz)::Vec3D{Int64}
+│     %124 = %new(Ten3D{Int64}, %121, %122, %123)::Ten3D{Int64}
+└────        goto #122
+122 ─        return %124
+) => Ten3D{Int64}
+
+```
+"""
 const 𝐣𝐣 = Tensor(Vec(), 𝐣, Vec())
+
+"""
+    𝐣𝐤 = Ten(yz=One())
+
+Compile time constant unit matrix for the yz element. Useful for creating 2nd order Tensors as a summation over a linear basis with no extra cost.
+See also [`𝐢𝐢`](@ref), [`𝐢𝐣`](@ref), [`𝐢𝐤`](@ref), [`𝐣𝐢`](@ref), [`𝐣𝐣`](@ref), [`𝐤𝐢`](@ref), [`𝐤𝐣`](@ref), [`𝐤𝐤`](@ref)
+
+# Examples
+```julia-repl
+julia> ten(xx,xy,xz,yx,yy,yz,zx,zy,zz) = xx*𝐢𝐢 + xy*𝐢𝐣 + xz*𝐢𝐤 + yx*𝐣𝐢 + yy*𝐣𝐣 + yz*𝐣𝐤 + zx*𝐤𝐢 + zy*𝐤𝐣 + zz*𝐤𝐤
+ten (generic function with 1 method)
+
+julia> @code_typed ten(1,2,3,4,5,6,7,8,9)
+CodeInfo(
+1 ───        goto #2
+2 ───        goto #3
+...
+120 ─        goto #121
+121 ─ %121 = %new(Vec3D{Int64}, xx, yx, zx)::Vec3D{Int64}
+│     %122 = %new(Vec3D{Int64}, xy, yy, zy)::Vec3D{Int64}
+│     %123 = %new(Vec3D{Int64}, xz, yz, zz)::Vec3D{Int64}
+│     %124 = %new(Ten3D{Int64}, %121, %122, %123)::Ten3D{Int64}
+└────        goto #122
+122 ─        return %124
+) => Ten3D{Int64}
+
+```
+"""
 const 𝐣𝐤 = Tensor(Vec(), Vec(), 𝐣)
+
+"""
+    𝐤𝐢 = Ten(zx=One())
+
+Compile time constant unit matrix for the zx element. Useful for creating 2nd order Tensors as a summation over a linear basis with no extra cost.
+See also [`𝐢𝐢`](@ref), [`𝐢𝐣`](@ref), [`𝐢𝐤`](@ref), [`𝐣𝐢`](@ref), [`𝐣𝐣`](@ref), [`𝐣𝐤`](@ref), [`𝐤𝐣`](@ref), [`𝐤𝐤`](@ref)
+
+# Examples
+```julia-repl
+julia> ten(xx,xy,xz,yx,yy,yz,zx,zy,zz) = xx*𝐢𝐢 + xy*𝐢𝐣 + xz*𝐢𝐤 + yx*𝐣𝐢 + yy*𝐣𝐣 + yz*𝐣𝐤 + zx*𝐤𝐢 + zy*𝐤𝐣 + zz*𝐤𝐤
+ten (generic function with 1 method)
+
+julia> @code_typed ten(1,2,3,4,5,6,7,8,9)
+CodeInfo(
+1 ───        goto #2
+2 ───        goto #3
+...
+120 ─        goto #121
+121 ─ %121 = %new(Vec3D{Int64}, xx, yx, zx)::Vec3D{Int64}
+│     %122 = %new(Vec3D{Int64}, xy, yy, zy)::Vec3D{Int64}
+│     %123 = %new(Vec3D{Int64}, xz, yz, zz)::Vec3D{Int64}
+│     %124 = %new(Ten3D{Int64}, %121, %122, %123)::Ten3D{Int64}
+└────        goto #122
+122 ─        return %124
+) => Ten3D{Int64}
+
+```
+"""
 const 𝐤𝐢 = Tensor(𝐤, Vec(), Vec())
+
+"""
+    𝐤𝐣 = Ten(zy=One())
+
+Compile time constant unit matrix for the zy element. Useful for creating 2nd order Tensors as a summation over a linear basis with no extra cost.
+See also [`𝐢𝐢`](@ref), [`𝐢𝐣`](@ref), [`𝐢𝐤`](@ref), [`𝐣𝐢`](@ref), [`𝐣𝐣`](@ref), [`𝐣𝐤`](@ref), [`𝐤𝐢`](@ref), [`𝐤𝐤`](@ref)
+
+# Examples
+```julia-repl
+julia> ten(xx,xy,xz,yx,yy,yz,zx,zy,zz) = xx*𝐢𝐢 + xy*𝐢𝐣 + xz*𝐢𝐤 + yx*𝐣𝐢 + yy*𝐣𝐣 + yz*𝐣𝐤 + zx*𝐤𝐢 + zy*𝐤𝐣 + zz*𝐤𝐤
+ten (generic function with 1 method)
+
+julia> @code_typed ten(1,2,3,4,5,6,7,8,9)
+CodeInfo(
+1 ───        goto #2
+2 ───        goto #3
+...
+120 ─        goto #121
+121 ─ %121 = %new(Vec3D{Int64}, xx, yx, zx)::Vec3D{Int64}
+│     %122 = %new(Vec3D{Int64}, xy, yy, zy)::Vec3D{Int64}
+│     %123 = %new(Vec3D{Int64}, xz, yz, zz)::Vec3D{Int64}
+│     %124 = %new(Ten3D{Int64}, %121, %122, %123)::Ten3D{Int64}
+└────        goto #122
+122 ─        return %124
+) => Ten3D{Int64}
+
+```
+"""
 const 𝐤𝐣 = Tensor(Vec(), 𝐤, Vec())
+
+"""
+    𝐤𝐤 = Ten(zz=One())
+
+Compile time constant unit matrix for the zz element. Useful for creating 2nd order Tensors as a summation over a linear basis with no extra cost.
+See also [`𝐢𝐢`](@ref), [`𝐢𝐣`](@ref), [`𝐢𝐤`](@ref), [`𝐣𝐢`](@ref), [`𝐣𝐣`](@ref), [`𝐣𝐤`](@ref), [`𝐤𝐢`](@ref), [`𝐤𝐣`](@ref)
+
+# Examples
+```julia-repl
+julia> ten(xx,xy,xz,yx,yy,yz,zx,zy,zz) = xx*𝐢𝐢 + xy*𝐢𝐣 + xz*𝐢𝐤 + yx*𝐣𝐢 + yy*𝐣𝐣 + yz*𝐣𝐤 + zx*𝐤𝐢 + zy*𝐤𝐣 + zz*𝐤𝐤
+ten (generic function with 1 method)
+
+julia> @code_typed ten(1,2,3,4,5,6,7,8,9)
+CodeInfo(
+1 ───        goto #2
+2 ───        goto #3
+...
+120 ─        goto #121
+121 ─ %121 = %new(Vec3D{Int64}, xx, yx, zx)::Vec3D{Int64}
+│     %122 = %new(Vec3D{Int64}, xy, yy, zy)::Vec3D{Int64}
+│     %123 = %new(Vec3D{Int64}, xz, yz, zz)::Vec3D{Int64}
+│     %124 = %new(Ten3D{Int64}, %121, %122, %123)::Ten3D{Int64}
+└────        goto #122
+122 ─        return %124
+) => Ten3D{Int64}
+
+```
+"""
 const 𝐤𝐤 = Tensor(Vec(), Vec(), 𝐤)
 
 include("operations.jl")
