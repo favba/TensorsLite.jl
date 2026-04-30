@@ -123,7 +123,7 @@ struct Tensor{N, T, Tx, Ty, Tz} <: AbstractTensor{N, T}
     𝟎
 
     julia> v3 = Tensor(Zero(),Zero(),Zero())
-    3-element Tensor{1, Zero, Zero, Zero, Zero}:
+    3-element Vec0D:
     𝟎
     𝟎
     𝟎
@@ -183,13 +183,13 @@ Returns a compile time constant null `Tensor` of order `N`.
 # Examples
 ```julia-repl
 julia> Tensor{1}()
-3-element Tensor{1, Zero, Zero, Zero, Zero}:
+3-element Vec0D:
  𝟎
  𝟎
  𝟎
 
 julia> Tensor{3}()
-3×3×3 Tensor{3, Zero, Tensor{2, Zero, Tensor{1, Zero, Zero, Zero, Zero}, Tensor{1, Zero, Zero, Zero, Zero}, Tensor{1, Zero, Zero, Zero, Zero}}, Tensor{2, Zero, Tensor{1, Zero, Zero, Zero, Zero}, Tensor{1, Zero, Zero, Zero, Zero}, Tensor{1, Zero, Zero, Zero, Zero}}, Tensor{2, Zero, Tensor{1, Zero, Zero, Zero, Zero}, Tensor{1, Zero, Zero, Zero, Zero}, Tensor{1, Zero, Zero, Zero, Zero}}}:
+3×3×3 Tensor{3, Zero, Ten0D, Ten0D, Ten0D}:
 [:, :, 1] =
  𝟎  𝟎  𝟎
  𝟎  𝟎  𝟎
