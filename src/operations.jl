@@ -58,25 +58,9 @@ end
 
 @inline Base.conj(a::T) where {T <: AbstractTensor} = @inline constructor(T)(map(conj, fields(a))...)
 
-@inline _otimes(a,b) = a*b
 
-@inline _otimes(a::AbstractTensor, b::AbstractTensor) = Tensor(_otimes(a, b.x), _otimes(a, b.y), _otimes(a, b.z))
+################ Tensor operations ##########################
 
-@inline otimes(a::AbstractTensor, b::AbstractTensor) = _otimes(a,b)
-
-const ⊗ = otimes
-
-@inline Base.muladd(a::Vec, b::Vec, c::Number) = muladd(a.x, b.x, muladd(a.y, b.y, muladd(a.z, b.z, c)))
-
-@inline function Base.muladd(a::AbstractTensor{N1}, b::Vec, c::AbstractTensor{N2}) where {N1, N2}
-    ((N1-1) === N2) || throw(DimensionMismatch())
-    return muladd(a.x, b.x, muladd(a.y, b.y, muladd(a.z, b.z, c)))
-end
-
-@inline function Base.muladd(a::AbstractTensor{N1}, b::AbstractTensor{N2}, c::AbstractTensor{N3}) where {N1, N2, N3}
-    ((N1+N2-2) === N3) || throw(DimensionMismatch())
-    return Tensor(muladd(a, b.x, c.x), muladd(a, b.y, c.y), muladd(a, b.z, c.z))
-end
 
 @inline dot(a::AbstractTensor,b::Vec) = muladd(a.x, b.x, muladd(a.y, b.y, a.z*b.z))
 
@@ -84,9 +68,22 @@ end
 
 @inline Base.:*(T::AbstractTensor, B::AbstractTensor) = dot(T,B)
 
-@inline dotadd(a::Vec,b::Vec,c::Number) = muladd(a,b,c)
+@inline dotadd(a::Vec, b::Vec, c::Number) = muladd(a.x, b.x, muladd(a.y, b.y, muladd(a.z, b.z, c)))
 
-@inline dotadd(a::AbstractTensor,b::AbstractTensor,c::AbstractTensor) = muladd(a,b,c)
+@inline function dotadd(a::AbstractTensor{N1}, b::Vec, c::AbstractTensor{N2}) where {N1, N2}
+    ((N1-1) === N2) || throw(DimensionMismatch())
+    return muladd(a.x, b.x, muladd(a.y, b.y, muladd(a.z, b.z, c)))
+end
+
+@inline function dotadd(a::AbstractTensor{N1}, b::AbstractTensor{N2}, c::AbstractTensor{N3}) where {N1, N2, N3}
+    ((N1+N2-2) === N3) || throw(DimensionMismatch())
+    return Tensor(dotadd(a, b.x, c.x), dotadd(a, b.y, c.y), dotadd(a, b.z, c.z))
+end
+
+@inline Base.muladd(A::AbstractTensor, B::AbstractTensor, C) = dotadd(A, B, C)
+
+#Fix ambiguity with LinearAlgebra
+@inline Base.muladd(A::Ten, B::Union{Vec, Ten}, C::Union{Number, AbstractArray}) = dotadd(A, B, C)
 
 @inline inner(u::Vec, v::Vec) = dot(conj(u), v)
 
@@ -95,6 +92,7 @@ end
 @inline inneradd(T1::AbstractTensor{N}, T2::AbstractTensor{N}, c::Number) where {N} = inneradd(T1.x, T2.x, inneradd(T1.y, T2.y, inneradd(T1.z, T2.z, c)))
 
 @inline inner(T1::AbstractTensor{N}, T2::AbstractTensor{N}) where {N} = inneradd(T1.x, T2.x, inneradd(T1.y, T2.y, inner(T1.z,T2.z)))
+
 
 @inline dcontract(a::AbstractTensor,b::Ten) = muladd(a.xx, b.xx, muladd(a.xy, b.xy, muladd(a.xz, b.xz,
                                               muladd(a.yx, b.yx, muladd(a.yy, b.yy, muladd(a.yz, b.yz,
@@ -119,3 +117,20 @@ end
     ((N-2 + N2-2) === N3) || throw(DimensionMismatch())
     return Tensor(dcontractadd(A, B.x, C.x), dcontractadd(A, B.y, C.y), dcontractadd(A, B.z, C.z)) 
 end
+
+@inline _otimes(a,b) = a*b
+
+@inline _otimes(a::AbstractTensor, b::AbstractTensor) = Tensor(_otimes(a, b.x), _otimes(a, b.y), _otimes(a, b.z))
+
+#We use internal `_otimes` so we can define `_otimes(::Any, ::Any)` and don't make `otimes` work with anything other then AbstractTensors
+@inline otimes(a::AbstractTensor, b::AbstractTensor) = _otimes(a, b)
+
+@inline otimes(a::AbstractTensor) = otimes(a, a)
+
+@inline _otimesadd(a, b, c) = muladd(a, b, c)
+
+@inline _otimesadd(a::AbstractTensor, b::AbstractTensor, c::AbstractTensor) = Tensor(_otimesadd(a, b.x, c.x), _otimesadd(a, b.y, c.y), _otimesadd(a, b.z, c.z))
+
+@inline otimesadd(a::AbstractTensor, b::AbstractTensor, c::AbstractTensor) = _otimesadd(a, b, c)
+
+const ⊗ = otimes

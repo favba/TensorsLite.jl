@@ -239,6 +239,7 @@ _rand(::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
                     @test inner(u, v) ≈ dot(Au, Av)
                     @test inneradd(u, v, 2.0) ≈ (dot(Au, Av) + 2.0)
                     @test u ⊗ v ≈ Au * transpose(Av)
+                    @test otimesadd(u, v, u ⊗ v) ≈ 2(u ⊗ v)
                 end
             end
         end
@@ -271,6 +272,7 @@ end
                 @test op(u) ≈ op(Au)
             end
             @test norm(u) ≈ norm(Au)
+            @test otimes(u) == otimes(u,u)
         end
         for T2 in (Int64, Float64, ComplexF64)
             vn = (
@@ -297,6 +299,7 @@ end
                     @test dotadd(u, v, v) ≈ (Au * Av + Av)
                     @test inner(u, v) ≈ dot(Au, Av)
                     @test inneradd(u, v, 3.0) ≈ (dot(Au, Av) + 3.0)
+                    @test otimesadd(u, v, u ⊗ v) ≈ 2(u ⊗ v)
                 end
             end
         end

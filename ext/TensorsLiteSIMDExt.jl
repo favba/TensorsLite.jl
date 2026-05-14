@@ -27,9 +27,7 @@ end
 
 @inline Base.muladd(v::AbstractTensor{N}, a::SIMD.Vec, u::AbstractTensor{N}) where {N} = muladd(a, v, u)
 
-@inline Base.muladd(a::Vec, b::Vec, c::SIMD.Vec) = muladd(a.x, b.x, muladd(a.y, b.y, muladd(a.z, b.z, c)))
-
-@inline dotadd(a::Vec,b::Vec,c::SIMD.Vec) = muladd(a,b,c)
+@inline dotadd(a::Vec,b::Vec,c::SIMD.Vec) = muladd(a.x, b.x, muladd(a.y, b.y, muladd(a.z, b.z, c)))
 
 @inline inneradd(u::Vec, v::Vec, c::SIMD.Vec) = dotadd(conj(u), v, c)
 
