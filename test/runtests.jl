@@ -334,11 +334,11 @@ end
                 for v in vn
                     Av = Array{nonzero_eltype(v)}(v)
 
+                    @test T ⋅ v ≈ AT * Av
                     @test T * v ≈ AT * Av
-                    @test v * T ≈ transpose(AT) * Av
+                    @test v ⋅ T ≈ transpose(AT) * Av
                     @test muladd(T, v, v) ≈ (AT * Av + Av)
                     @test dotadd(T, v, v) ≈ (AT * Av + Av)
-                    @test muladd(v, T, v) ≈ (transpose(AT) * Av + Av)
                     @test dotadd(v, T, v) ≈ (transpose(AT) * Av + Av)
                     @test dot(v, T, v) ≈ dot(conj(Av), AT * Av)
                 end
@@ -713,22 +713,10 @@ end
 
     let a1 = rand(3, 3),a2 = rand(3, 3),a3 = rand(3, 3), T = AntiSymmetricTensorArray(a1, a2, a3)
         zero_vec = Array{Zero}(undef, size(T))
-        # @test T.xx == zero_vec
-        # @test T.xy === a1
-        # @test T.xz === a2
-        # @test T.yx == -a1
-        # @test T.yy == zero_vec
-        # @test T.yz === a3
-        # @test T.zx == -a2
-        # @test T.zy == -a3
-        # @test T.zz == zero_vec
 
         @test T == object_and_preserve(T)[1]
         @test Base.mightalias(AntiSymmetricTensorArray(xz = T.xy), T)
 
-        # @test T.x == VecArray(zero_vec, -a1, -a2)
-        # @test T.y == VecArray(a1, zero_vec, -a3)
-        # @test T.z == VecArray(a2, a3, zero_vec)
 
         @test T[5] === AntiSymTen(a1[5], a2[5], a3[5])
         @test T[2, 3] === AntiSymTen(a1[2, 3], a2[2, 3], a3[2, 3])

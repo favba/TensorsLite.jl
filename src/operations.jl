@@ -66,7 +66,7 @@ end
 
 @inline dot(A::AbstractTensor, B::AbstractTensor) = Tensor(dot(A,B.x), dot(A, B.y), dot(A, B.z)) 
 
-@inline Base.:*(T::AbstractTensor, B::AbstractTensor) = dot(T,B)
+@inline Base.:*(T::Ten, B::Union{Ten,Vec}) = dot(T,B)
 
 @inline dotadd(a::Vec, b::Vec, c::Number) = muladd(a.x, b.x, muladd(a.y, b.y, muladd(a.z, b.z, c)))
 
@@ -80,10 +80,9 @@ end
     return Tensor(dotadd(a, b.x, c.x), dotadd(a, b.y, c.y), dotadd(a, b.z, c.z))
 end
 
-@inline Base.muladd(A::AbstractTensor, B::AbstractTensor, C) = dotadd(A, B, C)
+@inline Base.muladd(A::Ten, B::Vec, C::Vec) = dotadd(A, B, C)
 
-#Fix ambiguity with LinearAlgebra
-@inline Base.muladd(A::Ten, B::Union{Vec, Ten}, C::Union{Number, AbstractArray}) = dotadd(A, B, C)
+@inline Base.muladd(A::Ten, B::Ten, C::Ten) = dotadd(A, B, C)
 
 @inline inner(u::Vec, v::Vec) = dot(conj(u), v)
 
