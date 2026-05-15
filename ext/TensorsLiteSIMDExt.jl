@@ -1,6 +1,5 @@
 module TensorsLiteSIMDExt
 
-using Base: Constructor
 import TensorsLite: dotadd, inneradd, dcontractadd, fields, constructor, sym_ten_fields
 using TensorsLite, Zeros
 import SIMD
@@ -10,7 +9,7 @@ import SIMD
 @inline my_div(::Zero, ::SIMD.Vec) = Zero()
 
 @inline Base.:/(v::T, b::SIMD.Vec) where {T <: AbstractTensor} = @inline  begin
-    TensorsLite.constructor(T)(map(my_div, TensorsLite.fields(v), ntuple(i -> b, Val(fieldcount(T))))...)
+    constructor(T)(map(my_div, fields(v), ntuple(i -> b, Val(fieldcount(T))))...)
 end
 
 @inline Base.:*(b::SIMD.Vec, v::T) where {T <: AbstractTensor} = @inline  begin

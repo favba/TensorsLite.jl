@@ -280,18 +280,18 @@ struct IndexHelper{N}
     i::NTuple{N,Int}
 end
 
-@inline (s::IndexHelper{N})(A) where {N} = @inbounds(Base.getindex(A,(s.i)...))
-@inline (s::IndexHelper{N})(A,v) where {N} = @inbounds(Base.setindex!(A,v,(s.i)...))
+@inline (s::IndexHelper{N})(A) where {N} = @inline @inbounds(Base.getindex(A,(s.i)...))
+@inline (s::IndexHelper{N})(A,v) where {N} = @inline @inbounds(Base.setindex!(A,v,(s.i)...))
 
 @inline function Base.getindex(A::AbstractTensorArray{T}, i::Int) where T<:AbstractTensor
     @boundscheck checkbounds(A, i)
-    r = constructor(T)(map(IndexHelper((i,)),fields(A))...)
+    @inline r = constructor(T)(map(IndexHelper((i,)),fields(A))...)
     return r
 end
 
 @inline function Base.getindex(A::AbstractTensorArray{T, N}, I::Vararg{Int, N}) where {T, N}
     @boundscheck checkbounds(A, I...)
-    r = constructor(T)(map(IndexHelper(I),fields(A))...)
+    @inline r = constructor(T)(map(IndexHelper(I),fields(A))...)
     return r
 end
 
