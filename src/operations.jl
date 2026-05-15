@@ -68,6 +68,11 @@ end
 
 @inline Base.:*(T::Ten, B::Union{Ten,Vec}) = dot(T,B)
 
+"""
+    dotadd(x::AbstractTensor{N}, y::AbstractTensor{M}, z::Union{AbstractTensor{N + M - 2}, Nuber) -> Union{AbstractTensor{N + M - 2}, Number}
+
+Equivalent to `dot(x, y) + z`, but uses combined multiply-add ([`muladd`](@ref)) on every computation for efficiency. See [`muladd`](@ref) and [`LinearAlgebra.dot`](@ref).
+"""
 @inline dotadd(a::Vec, b::Vec, c::Number) = muladd(a.x, b.x, muladd(a.y, b.y, muladd(a.z, b.z, c)))
 
 @inline function dotadd(a::AbstractTensor{N1}, b::Vec, c::AbstractTensor{N2}) where {N1, N2}
@@ -84,15 +89,30 @@ end
 
 @inline Base.muladd(A::Ten, B::Ten, C::Ten) = dotadd(A, B, C)
 
+"""
+    inner(a::AbstractTensor{N}, b::AbstractTensor{N}) -> Number
+
+Compute the inner product between two `N`th order tensors. For complex tensors, the first tensor is conjugated.
+"""
 @inline inner(u::Vec, v::Vec) = dot(conj(u), v)
 
+"""
+    inneradd(a::AbstractTensor{N}, b::AbstractTensor{N}, c::Number) -> Number
+
+Equivalent to `inner(a,b) + c`, but uses combined multiply-add ([`muladd`](@ref)) on every computation for efficiency. See [`muladd`](@ref) and [`inner`](@ref).
+"""
 @inline inneradd(u::Vec, v::Vec, c::Number) = dotadd(conj(u), v, c)
 
 @inline inneradd(T1::AbstractTensor{N}, T2::AbstractTensor{N}, c::Number) where {N} = inneradd(T1.x, T2.x, inneradd(T1.y, T2.y, inneradd(T1.z, T2.z, c)))
 
 @inline inner(T1::AbstractTensor{N}, T2::AbstractTensor{N}) where {N} = inneradd(T1.x, T2.x, inneradd(T1.y, T2.y, inner(T1.z,T2.z)))
 
+"""
+    dcontract(a::AbstractTensor{N>=2}, b::AbstractTensor{M>=2}) -> Union{AbstractTensor{N + M - 4}, Number}
 
+Contracts (sums over the product of the elements) the two innermost indices of tensors `a` and `b`. The result is a tensor of order `N + M - 4`. If `N == M == 2` returns a `Number`.
+The symbol `⊡`, writen `\\boxdot`, is overloaded for this operation. 
+"""
 @inline dcontract(a::AbstractTensor,b::Ten) = muladd(a.xx, b.xx, muladd(a.xy, b.xy, muladd(a.xz, b.xz,
                                               muladd(a.yx, b.yx, muladd(a.yy, b.yy, muladd(a.yz, b.yz,
                                               muladd(a.zx, b.zx, muladd(a.zy, b.zy, a.zz*b.zz))))))))
@@ -101,6 +121,11 @@ end
 
 const ⊡ = dcontract
 
+"""
+    dcontractadd(a::AbstractTensor{N>=2}, b::AbstractTensor{M>=2}, c::Union{AbstractTensor{N + M - 4}, Number}) -> Union{AbstractTensor{N + M - 4}, Number}
+
+Equivalent to `dcontract(a,b) + c`, but uses combined multiply-add ([`muladd`](@ref)) on every computation for efficiency. See [`muladd`](@ref) and [`dcontract`](@ref).
+"""
 @inline dcontractadd(a::Ten,b::Ten, c::Number) = muladd(a.xx, b.xx, muladd(a.xy, b.xy, muladd(a.xz, b.xz,
                                          muladd(a.yx, b.yx, muladd(a.yy, b.yy, muladd(a.yz, b.yz,
                                          muladd(a.zx, b.zx, muladd(a.zy, b.zy, muladd(a.zz, b.zz, c)))))))))
@@ -117,19 +142,35 @@ end
     return Tensor(dcontractadd(A, B.x, C.x), dcontractadd(A, B.y, C.y), dcontractadd(A, B.z, C.z)) 
 end
 
+#We use internal `_otimes` so we can define `_otimes(::Any, ::Any)` and don't make `otimes` work with anything other then AbstractTensors
 @inline _otimes(a,b) = a*b
 
 @inline _otimes(a::AbstractTensor, b::AbstractTensor) = Tensor(_otimes(a, b.x), _otimes(a, b.y), _otimes(a, b.z))
 
-#We use internal `_otimes` so we can define `_otimes(::Any, ::Any)` and don't make `otimes` work with anything other then AbstractTensors
+"""
+    otimes(a::AbstractTensor{N}, b::AbstractTensor{M}) -> AbstractTensor{N + M}
+
+Computes the open (tensor) product between two tensors. The result is a tensor of order `N + M`.
+The symbol `⊗`, writen `\\otimes`, is overloaded for this operation. 
+"""
 @inline otimes(a::AbstractTensor, b::AbstractTensor) = _otimes(a, b)
 
+"""
+    otimes(a::AbstractTensor{N}) -> AbstractTensor{N + N}
+
+Equivalent to `otimes(a,a)`. If `N == 1`, returns a `SymmetricTensor{2}`.
+"""
 @inline otimes(a::AbstractTensor) = otimes(a, a)
 
 @inline _otimesadd(a, b, c) = muladd(a, b, c)
 
 @inline _otimesadd(a::AbstractTensor, b::AbstractTensor, c::AbstractTensor) = Tensor(_otimesadd(a, b.x, c.x), _otimesadd(a, b.y, c.y), _otimesadd(a, b.z, c.z))
 
+"""
+    otimesadd(a::AbstractTensor{N}, b::AbstractTensor{M}, c::AbstractTensor{N + M}) -> AbstractTensor{N + M}
+
+Equivalent to `otimes(a,b) + c`, but uses combined multiply-add ([`muladd`](@ref)) on every computation for efficiency. See [`muladd`](@ref) and [`otimes`](@ref).
+"""
 @inline otimesadd(a::AbstractTensor, b::AbstractTensor, c::AbstractTensor) = _otimesadd(a, b, c)
 
 const ⊗ = otimes
