@@ -45,6 +45,8 @@ const sz = SIMD.Vec(3.0, 4.0)
 
     @test typeof(rand(Vec2Dyz{Float16})) === Vec2Dyz{Float16}
 
+    @test typeof(rand(Vec2Dyz)) === Vec2Dyz{Float64}
+
     @test Tensor() === Tensor(Zero(),Zero(),Zero())
     @test Tensor(x=1,y=2.0) === Tensor(1.0,2.0,Zero())
 
@@ -105,6 +107,7 @@ end
     @test Ten1Dz(1) === Ten(zz=1)
 
     @test typeof(rand(Ten2Dyz{Float16})) === Ten2Dyz{Float16}
+    @test typeof(rand(Ten3D)) === Ten3D{Float64}
     @test typeof(rand(tensor_type_3D(Val(2),Float32))) === Ten3D{Float32}
     @test typeof(rand(tensor_type_2Dxy(Val(2),Float32))) === Ten2Dxy{Float32}
     @test typeof(rand(tensor_type_2Dxz(Val(2),Float32))) === Ten2Dxz{Float32}
@@ -1112,6 +1115,8 @@ end
         @test S.zy === (S.y).z
         @test S.zz === (S.z).z
     end
+
+    @test typeof(rand(DiagTen2Dxy, 2, 2)) === TensorArray{DiagTen2Dxy{Float64}, 2, Vec1DxArray{Float64, 2}, Vec1DyArray{Float64, 2}, Vec1DzArray{Zero, 2}}
 
 end
 
