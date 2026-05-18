@@ -189,6 +189,10 @@ end
     return AntiSymmetricTensor(nfields...)
 end
 
+################# Especializations ################################
+
+@inline antisym_ten_fields(T::AbstractTensor) = (T.xy, T.xz, T.yz)
+
 @inline inner(a::AntiSymmetricTensor{2, <:Real}, b::AntiSymmetricTensor{2, <:Real}) = 2 * muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz * b.yz))
 
 @inline inneradd(a::AntiSymmetricTensor{2, <:Real}, b::AntiSymmetricTensor{2, <:Real}, c::Real) = muladd(2, muladd(a.xy, b.xy, muladd(a.xz, b.xz, a.yz * b.yz)), c)
@@ -201,4 +205,21 @@ end
 
 @inline inneradd(::SymmetricTensor{2}, ::AntiSymmetricTensor{2}, c::Number) = c
 
+@inline dot(W::AntiSymmetricTensor{2}) = SymTen(dot_upper(W,W)...)
 
+@inline symmetric(::AntiSymTen) = SymTen()
+
+@inline antisymmetric(W::AntiSymTen) = W
+
+@inline antisymmetric(::SymTen) = AntiSymTen()
+
+"""
+    antisymmetric(T::Ten) -> AntiSymTen
+
+Computes the antisymmetric part of `T`, defined as `(T - transpose(T)) / 2`. See also [`symmetric`](@ref)
+"""
+@inline function antisymmetric(T::Ten)
+    Tu = antisym_ten_fields(T) ./ 2
+    Td = antisym_ten_fields(transpose(T)) ./ 2
+    AntiSymTen(map(-, Tu, Td)...)
+end

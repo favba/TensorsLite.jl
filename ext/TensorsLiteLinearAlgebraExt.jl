@@ -13,7 +13,21 @@ function Base.similar(bc::Base.Broadcast.Broadcasted{LinearAlgebra.StructuredMat
     return tensorarray(TT,s)
 end
 
+"""
+    dot(a::AbstractTensor{N}, b::AbstractTensor{M}) -> AbstractTensor{N + M - 2}
+
+Contracts (sums over the product of the elements) the innermost indices of tensors `a` and `b`. The result is a tensor of order `N + M - 2`. If `N == M == 1` returns a `Number`.
+See also [`dotadd`](@ref), [`tdot`](@ref), [`dott`](@ref) and [`inner`](@ref).
+"""
 @inline LinearAlgebra.dot(a::AbstractTensor, b::AbstractTensor) = dot(a, b)
+
+"""
+    dot(a::AbstractTensor{N}) -> AbstractTensor{2N - 2}
+
+Equivalent to `dot(a, a)`. Returns a `SymTen` if `a` is either a `SymTen` or `AntiSymTen`.
+"""
+@inline LinearAlgebra.dot(a::AbstractTensor) = dot(a)
+
 @inline LinearAlgebra.dot(x::Vec, A::Ten, y::Vec) = dot(dot(x, A), y)
 
 @inline fsqrt(x) = @fastmath sqrt(x)

@@ -66,6 +66,8 @@ end
 
 @inline dot(A::AbstractTensor, B::AbstractTensor) = Tensor(dot(A,B.x), dot(A, B.y), dot(A, B.z)) 
 
+@inline dot(a::AbstractTensor) = dot(a,a)
+
 @inline Base.:*(T::Ten, B::Union{Ten,Vec}) = dot(T,B)
 
 """
@@ -108,7 +110,7 @@ Equivalent to `inner(a,b) + c`, but uses combined multiply-add ([`muladd`](@ref)
 @inline inner(T1::AbstractTensor{N}, T2::AbstractTensor{N}) where {N} = inneradd(T1.x, T2.x, inneradd(T1.y, T2.y, inner(T1.z,T2.z)))
 
 """
-    dcontract(a::AbstractTensor{N>=2}, b::AbstractTensor{M>=2}) -> Union{AbstractTensor{N + M - 4}, Number}
+    dcontract(a::AbstractTensor{N>=2}, b::AbstractTensor{M>=2}) -> AbstractTensor{N + M - 4}
 
 Contracts (sums over the product of the elements) the two innermost indices of tensors `a` and `b`. The result is a tensor of order `N + M - 4`. If `N == M == 2` returns a `Number`.
 The symbol `⊡`, writen `\\boxdot`, is overloaded for this operation. 
@@ -174,3 +176,15 @@ Equivalent to `otimes(a,b) + c`, but uses combined multiply-add ([`muladd`](@ref
 @inline otimesadd(a::AbstractTensor, b::AbstractTensor, c::AbstractTensor) = _otimesadd(a, b, c)
 
 const ⊗ = otimes
+
+@inline function dot_upper(A::AbstractTensor{2}, B::AbstractTensor{2})
+    (
+        muladd(A.xx, B.xx, muladd(A.xy, B.yx, A.xz*B.zx)),
+        muladd(A.xx, B.xy, muladd(A.xy, B.yy, A.xz*B.zy)),
+        muladd(A.xx, B.xz, muladd(A.xy, B.yz, A.xz*B.zz)),
+        muladd(A.yx, B.xy, muladd(A.yy, B.yy, A.yz*B.zy)),
+        muladd(A.yx, B.xz, muladd(A.yy, B.yz, A.yz*B.zz)),
+        muladd(A.zx, B.xz, muladd(A.zy, B.yz, A.zz*B.zz)),
+    )
+end
+

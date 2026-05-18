@@ -1,3 +1,4 @@
+using Core: Typeof
 using TensorsLite: SymTenArray, AntiSymTenArray, DiagSymTen, DiagSymTen3D
 using TensorsLite
 using Zeros
@@ -273,6 +274,7 @@ end
             end
             @test norm(u) ≈ norm(Au)
             @test otimes(u) == otimes(u,u)
+            @test dot(u) ≈ dot(u,u)
         end
         for T2 in (Int64, Float64, ComplexF64)
             vn = (
@@ -418,6 +420,23 @@ end
 
     @test SymTen2Dxy{Zero}(0,0,0) === SymTen()
     @test SymTen1Dx{Zero}(0) === SymTen()
+
+    let T = rand(Ten3D{Float64}), S = rand(SymTen3D{Float64})
+        @test typeof(dot(S)) == SymTen3D{Float64}
+        @test dot(S) ≈ dot(S, S)
+
+        @test typeof(dott(T)) == SymTen3D{Float64}
+        @test dott(T) ≈ dot(T, T')
+
+        @test typeof(tdot(T)) == SymTen3D{Float64}
+        @test tdot(T) ≈ dot(T', T)
+
+        @test typeof(symmetric(T)) == SymTen3D{Float64}
+        @test symmetric(T) ≈ (T + T') / 2
+
+        @test symmetric(S) === S
+    end
+
 end
 
 @testset "AntiSymTen" begin
@@ -478,6 +497,27 @@ end
     end
 
     @test AntiSymTen2Dxy{Zero}(0) === AntiSymTen()
+
+    let W = rand(AntiSymTen3D{Float64}), S = rand(SymTen3D{Float64}), T = rand(Ten3D{Float64})
+        @test typeof(dot(W)) == SymTen3D{Float64}
+        @test dot(W) ≈ dot(W, W)
+
+        @test typeof(dott(W)) == SymTen3D{Float64}
+        @test dott(W) ≈ dot(W, W')
+
+        @test typeof(tdot(W)) == SymTen3D{Float64}
+        @test tdot(W) ≈ dot(W', W)
+
+        @test antisymmetric(W) === W
+
+        @test symmetric(W) === SymTen()
+
+        @test antisymmetric(S) === AntiSymTen()
+
+        @test typeof(antisymmetric(T)) === AntiSymTen3D{Float64}
+
+        @test antisymmetric(T) ≈ (T - T') / 2
+    end
 end
 
 @testset "VecArray" begin

@@ -35,6 +35,7 @@ export 𝐤𝐢, 𝐤𝐣, 𝐤𝐤
 
 #Tensor operators
 export dotadd, inner, inneradd, otimes, ⊗, otimesadd, dcontract, ⊡, dcontractadd
+export dott, tdot, symmetric, antisymmetric
 
 #Abstract SOA Array of Tensor types
 export AbstractTensorArray

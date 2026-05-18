@@ -299,3 +299,33 @@ end
 @inline Base.muladd(::One, v::DiagTen, u::SymmetricTensor{2}) = v + u
 
 @inline otimes(a::Tensor{1}) = SymmetricTensor(a.x*a.x, a.x*a.y, a.x*a.z, a.y*a.y, a.y*a.z, a.z*a.z)
+
+@inline dot(S::SymmetricTensor{2}) = SymTen(dot_upper(S,S)...)
+
+"""
+    dott(x::Ten) -> SymTen
+
+Equivalent to `dot(x, transpose(x))`, but returns a `SymmetricTensor{2}`. See [`LinearAlgebra.dot`](@ref).
+See also [`tdot`](@ref)
+"""
+@inline dott(T::AbstractTensor{2}) = SymTen(dot_upper(T, transpose(T))...)
+
+"""
+    tdot(x::Ten) -> SymTen
+
+Equivalent to `dot(transpose(x), x)`, but returns a `SymmetricTensor{2}`. See [`LinearAlgebra.dot`](@ref).
+See also [`dott`](@ref)
+"""
+@inline tdot(T::AbstractTensor{2}) = SymTen(dot_upper(transpose(T), T)...)
+
+@inline symmetric(S::SymTen) = S
+
+"""
+    symmetric(T::Ten) -> SymTen
+
+Computes the symmetric part of `T`, defined as `(T + transpose(T)) / 2`. See also [`antisymmetric`](@ref)
+"""
+@inline function symmetric(T::AbstractTensor{2})
+    hT = T / 2
+    SymTen(map(+, sym_ten_fields(hT), sym_ten_fields(transpose(hT)))...)
+end
