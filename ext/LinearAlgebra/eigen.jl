@@ -236,7 +236,7 @@ end
     e23 = S.yz
     e33 = S.zz
 
-    q = inv(3)*(e11 + e22 + e33)
+    q = (e11 + e22 + e33) / 3
 
     e12p2 = e12^2
     e13p2 = e13^2
@@ -248,7 +248,7 @@ end
 
     p1 = e12p2 + e13p2 + e23p2
     p2 = muladd(e11mq, e11mq, muladd(e22mq, e22mq, muladd(e33mq, e33mq, 2*p1)))
-    p = fsqrt(inv(6)*p2)
+    p = fsqrt(p2 / 6)
 
 
     #r = ((e11mq)*(e22mq)*(e33mq) - (e11mq)*(e23p2) - (e12p2)*(e33mq) + 2*(e12*e13*e23) - (e13p2)*(e22mq))/(2*p*p*p)
@@ -258,7 +258,7 @@ end
     # but computation error can leave it slightly outside this range.
     r = _fix(r)
 
-    ϕ = inv(3)*acos(r)
+    ϕ = acos(r) / 3
 
     aux = 2*p
   
@@ -267,7 +267,7 @@ end
     eig3 = muladd(aux, cos(ϕ), q)
     # cos(x+y) = cos(x)*cos(y) - sin(x)*sin(y)
     #eig1 = q + 2*p*cos(ϕ+(2*π/3))  # q - 2*p*(cos(ϕ)/2 + (√3/2)sin(ϕ))
-    eig1 = muladd(aux, cos(ϕ+(2*π/3)), q)  # q - 2*p*(cos(ϕ)/2 + (√3/2)sin(ϕ))
+    eig1 = muladd(aux, cos(ϕ+(2*oftype(ϕ,π)/3)), q)  # q - 2*p*(cos(ϕ)/2 + (√3/2)sin(ϕ))
     # eig2 = 3*q - eig1 - eig3     # since trace(E) = eig.x + eig.y + eig.z = 3q
     eig2 = - muladd(-3,q, eig1 + eig3)     # since trace(E) = eig.x + eig.y + eig.z = 3q
 

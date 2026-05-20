@@ -25,6 +25,28 @@ const sx = SIMD.Vec(1.0, 2.0)
 const sy = SIMD.Vec(2.0, 1.0)
 const sz = SIMD.Vec(3.0, 4.0)
 
+@testset "Fix Issues"  begin
+
+    @test 𝐤⊗𝐤 === Tensor(z=𝐤)
+
+    let S = Tensor(rand(SymTen3D{Float64},3)...)
+        @test S.xx === (S.x).x
+        @test S.xy === (S.y).x
+        @test S.xz === (S.z).x
+        @test S.yx === (S.x).y
+        @test S.yy === (S.y).y
+        @test S.yz === (S.z).y
+        @test S.zx === (S.x).z
+        @test S.zy === (S.y).z
+        @test S.zz === (S.z).z
+    end
+
+    @test typeof(rand(DiagTen2Dxy, 2, 2)) === TensorArray{DiagTen2Dxy{Float64}, 2, Vec1DxArray{Float64, 2}, Vec1DyArray{Float64, 2}, Vec1DzArray{Zero, 2}}
+
+    @test eltype(eigvals(rand(SymTen3D{Float16}))) === Float16
+
+end
+
 @testset "Vec Constructors" begin
 
     @test Vec1Dx(1).x === 1
@@ -1098,25 +1120,5 @@ end
         @test r_eigen(T, eigen(T))
         @test eigvals(T) ≈ eigen(T).values
     end
-end
-
-@testset "Fix Issues"  begin
-
-    @test 𝐤⊗𝐤 === Tensor(z=𝐤)
-
-    let S = Tensor(rand(SymTen3D{Float64},3)...)
-        @test S.xx === (S.x).x
-        @test S.xy === (S.y).x
-        @test S.xz === (S.z).x
-        @test S.yx === (S.x).y
-        @test S.yy === (S.y).y
-        @test S.yz === (S.z).y
-        @test S.zx === (S.x).z
-        @test S.zy === (S.y).z
-        @test S.zz === (S.z).z
-    end
-
-    @test typeof(rand(DiagTen2Dxy, 2, 2)) === TensorArray{DiagTen2Dxy{Float64}, 2, Vec1DxArray{Float64, 2}, Vec1DyArray{Float64, 2}, Vec1DzArray{Zero, 2}}
-
 end
 
