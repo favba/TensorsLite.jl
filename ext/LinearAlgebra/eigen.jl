@@ -18,10 +18,10 @@
 
     if _isnegative(delta2)
         deltac = fsqrt(complex(delta2))
-        return (To2 + deltac, To2 - deltac)
+        return (To2 - deltac, To2 + deltac)
     else
         delta = fsqrt(delta2)
-        return (To2 + delta, To2 - delta)
+        return (To2 - delta, To2 + delta)
     end
 
 end
@@ -41,7 +41,7 @@ end
 
     delta = fsqrt(muladd(To2, To2, mD))
 
-    return (To2 + delta, To2 - delta)
+    return (To2 - delta, To2 + delta)
 end
                                                                         #xx, xy, xz, yy, yz, zz
 @inline LinearAlgebra.eigvals(S::SymmetricTensor{2, Union{Zero, T1, T2}, T1, T1, Zero, T1, Zero, T2 }) where {T1, T2} =
@@ -53,11 +53,11 @@ end
 @inline LinearAlgebra.eigvals(S::SymmetricTensor{2, Union{Zero, T1, T2}, T2, Zero, Zero, T1, T1, T1 }) where {T1, T2} =
     Vec2Dyz(_eigvals_Sym2D(S.yy, S.yz, S.zz)...) + S.xx*𝐢
 
-@inline LinearAlgebra.eigvals(S::AntiSymTen2Dxy) = Vec2Dxy(S.xy*im, -S.xy*im)
+@inline LinearAlgebra.eigvals(S::AntiSymTen2Dxy) = Vec2Dxy(-S.xy*im, S.xy*im)
 
-@inline LinearAlgebra.eigvals(S::AntiSymTen2Dxz) = Vec2Dxz(S.xz*im, -S.xz*im)
+@inline LinearAlgebra.eigvals(S::AntiSymTen2Dxz) = Vec2Dxz(-S.xz*im, S.xz*im)
 
-@inline LinearAlgebra.eigvals(S::AntiSymTen2Dyz) = Vec2Dyz(S.yz*im, -S.yz*im)
+@inline LinearAlgebra.eigvals(S::AntiSymTen2Dyz) = Vec2Dyz(-S.yz*im, S.yz*im)
 
 
 @inline function _eigen_Ten2D(T11, T12, T21, T22)
@@ -84,7 +84,7 @@ end
             )
         end
 
-        return ((L1c, L2c), ((Vc[1].x, Vc[1].y), (Vc[2].x, Vc[2].y)))
+        return ((L2c, L1c), ((-Vc[2].x, -Vc[2].y), (Vc[1].x, Vc[1].y)))
 
     else
 
@@ -103,7 +103,7 @@ end
             )
         end
 
-        return ((L1, L2), ((V[1].x, V[1].y), (V[2].x, V[2].y)))
+        return ((L2, L1), ((-V[2].x, -V[2].y), (V[1].x, V[1].y)))
 
     end
 
@@ -162,9 +162,9 @@ end
     u1 = normalize((L1 - T22)*𝐢 + T12*𝐣)
 
     u2 = cross(𝐤, u1)
-    V = ((u1.x, u1.y), (u2.x, u2.y))
+    V = ((-u2.x, -u2.y), (u1.x, u1.y))
 
-    return ((L1, L2), V)
+    return ((L2, L1), V)
 end
 
 @inline function LinearAlgebra.eigen(S::SymmetricTensor{2, Union{Zero, T1, T2}, T1, T1, Zero, T1, Zero, T2 }) where {T1, T2}
@@ -197,7 +197,7 @@ end
     maux = -aux
     v1 = Vec2Dxy(aux*im, maux)
     v2 = Vec2Dxy(maux*im, maux)
-    return LinearAlgebra.Eigen(Vec2Dxy(L1, L2), Tensor(v1,v2,𝐤))
+    return LinearAlgebra.Eigen(Vec2Dxy(L2, L1), Tensor(-v2,v1,𝐤))
 end
 
 @inline function LinearAlgebra.eigen(S::AntiSymTen2Dxz)
@@ -209,7 +209,7 @@ end
     maux = -aux
     v1 = Vec2Dxz(aux*im, maux)
     v2 = Vec2Dxz(maux*im, maux)
-    return LinearAlgebra.Eigen(Vec2Dxz(L1, L2), Tensor(v1, 𝐣, v2))
+    return LinearAlgebra.Eigen(Vec2Dxz(L2, L1), Tensor(-v2, 𝐣, v1))
 end
 
 @inline function LinearAlgebra.eigen(S::AntiSymTen2Dyz)
@@ -221,7 +221,7 @@ end
     maux = -aux
     v1 = Vec2Dyz(aux*im, maux)
     v2 = Vec2Dyz(maux*im, maux)
-    return LinearAlgebra.Eigen(Vec2Dyz(L1, L2), Tensor(𝐢, v1, v2))
+    return LinearAlgebra.Eigen(Vec2Dyz(L2, L1), Tensor(𝐢, -v2, v1))
 end
 
 @inline _fix(r::T) where {T<:AbstractFloat} = max(-one(T), min(r, one(T)))

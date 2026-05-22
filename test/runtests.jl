@@ -45,6 +45,19 @@ const sz = SIMD.Vec(3.0, 4.0)
 
     @test eltype(eigvals(rand(SymTen3D{Float16}))) === Float16
 
+    for t in (rand(Ten2Dxy), rand(SymTen2Dxy), rand(AntiSymTen2Dxy))
+        e = eigvals(t)
+        @test real(e.x) <= real(e.y)
+    end
+    for t in (rand(Ten2Dxz), rand(SymTen2Dxz), rand(AntiSymTen2Dxz))
+        e = eigvals(t)
+        @test real(e.x) <= real(e.z)
+    end
+    for t in (rand(Ten2Dyz), rand(SymTen2Dyz), rand(AntiSymTen2Dyz))
+        e = eigvals(t)
+        @test real(e.y) <= real(e.z)
+    end
+
 end
 
 @testset "Vec Constructors" begin
