@@ -25,6 +25,17 @@ const sx = SIMD.Vec(1.0, 2.0)
 const sy = SIMD.Vec(2.0, 1.0)
 const sz = SIMD.Vec(3.0, 4.0)
 
+@testset "Base Methods" begin
+    for T in (rand(Ten3D), rand(SymTen3D))
+        for op in (sum, maximum, minimum, x -> any(<(0.2), x), x -> all(>(0.2), x), x -> reduce(*, x),
+                   y -> sum(x->x*x, y), y -> maximum(x->x*x, y), y -> minimum(x->x*x, y) )
+           @test op(T) ≈ op(Array(T))
+        end
+        map(sqrt, T) ≈ map(sqrt, Array(T))
+    end
+
+end
+
 @testset "Fix Issues"  begin
 
     @test 𝐤⊗𝐤 === Tensor(z=𝐤)
