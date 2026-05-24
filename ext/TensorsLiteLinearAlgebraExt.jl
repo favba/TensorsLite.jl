@@ -84,4 +84,6 @@ end
 
 include("LinearAlgebra/eigen.jl")
 
+include("LinearAlgebra/inv.jl")
+
 end

@@ -1146,3 +1146,23 @@ end
     end
 end
 
+test_inv(a::Ten) = a ≈ 𝐈
+test_inv(a::Union{<:Ten2Dxy, <:SymTen2Dxy, <:DiagTen2Dxy, <:DiagSymTen2Dxy}) = a ≈ (𝐢𝐢 + 𝐣𝐣)
+test_inv(a::Union{<:Ten2Dxz, <:SymTen2Dxz, <:DiagTen2Dxz, <:DiagSymTen2Dxz}) =  a ≈ (𝐢𝐢 + 𝐤𝐤)
+test_inv(a::Union{<:Ten2Dyz, <:SymTen2Dyz, <:DiagTen2Dyz, <:DiagSymTen2Dyz}) = a ≈ (𝐣𝐣 + 𝐤𝐤)
+test_inv(a::Union{<:Ten1Dx, <:SymTen1Dx}) = a ≈ 𝐢𝐢
+test_inv(a::Union{<:Ten1Dy, <:SymTen1Dy}) = a ≈ 𝐣𝐣
+test_inv(a::Union{<:Ten1Dz, <:SymTen1Dz}) = a ≈ 𝐤𝐤
+
+@testset "inv" begin
+    for T in (rand(Ten3D), rand(Ten2Dxy), rand(Ten2Dxz), rand(Ten2Dyz), rand(Ten1Dx), rand(Ten1Dy), rand(Ten1Dz),
+              rand(Ten2Dxy) + rand(Ten1Dz), rand(Ten2Dxz) + rand(Ten1Dy), rand(Ten2Dyz) + rand(Ten1Dx),
+              rand(DiagTen3D), rand(DiagTen2Dxy), rand(DiagTen2Dxz), rand(DiagTen2Dyz),
+              rand(SymTen3D), rand(SymTen2Dxy), rand(SymTen2Dxz), rand(SymTen2Dyz), rand(SymTen1Dx), rand(SymTen1Dy), rand(SymTen1Dz),
+              rand(SymTen2Dxy) + rand(SymTen1Dz), rand(SymTen2Dxz) + rand(SymTen1Dy), rand(SymTen2Dyz) + rand(SymTen1Dx),
+              rand(DiagSymTen3D), rand(DiagSymTen2Dxy), rand(DiagSymTen2Dxz), rand(DiagSymTen2Dyz),
+              )
+        @test test_inv(inv(T)*T)
+    end
+end
+
