@@ -2,7 +2,7 @@ module TensorsLiteLinearAlgebraExt
 
 using TensorsLite, Zeros
 
-import TensorsLite: dot, Ten1D, SymTen1D, DiagTen, DiagSymTen
+import TensorsLite: dot, DiagTen, DiagSymTen
 
 import LinearAlgebra: LinearAlgebra, norm, ⋅, cross, normalize
 

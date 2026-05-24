@@ -92,13 +92,13 @@ const SymTen1D{T} = Union{SymTen1Dx{T}, SymTen1Dy{T}, SymTen1Dz{T}}
 
 const SymTenMaybe2Dxy{T, Tz} = SymmetricTensor{2, Union{T, Tz}, T, T, Tz, T, Tz, Tz}
 
-const DiagSymTen3D{T} = SymmetricTensor{2, Union{T,Zero}, T, Zero, Zero, T, Zero, T}
+const DiagSymTen{Txx, Tyy, Tzz} = SymmetricTensor{2, Union{Txx, Tyy, Tzz, Zero}, Txx, Zero, Zero, Tyy, Zero, Tzz}
 
-const DiagSymTen2Dxy{T} = SymmetricTensor{2, Union{T,Zero}, T, Zero, Zero, T, Zero, Zero}
-const DiagSymTen2Dxz{T} = SymmetricTensor{2, Union{T,Zero}, T, Zero, Zero, Zero, Zero, T}
-const DiagSymTen2Dyz{T} = SymmetricTensor{2, Union{T,Zero}, Zero, Zero, Zero, T, Zero, T}
+const DiagSymTen3D{T} = DiagSymTen{T, T, T}
 
-const DiagSymTen{T} = Union{DiagSymTen3D{T}, DiagSymTen2Dxy{T}, DiagSymTen2Dxz{T}, DiagSymTen2Dyz{T}}
+const DiagSymTen2Dxy{T} = DiagSymTen{T, T, Zero}
+const DiagSymTen2Dxz{T} = DiagSymTen{T, Zero, T}
+const DiagSymTen2Dyz{T} = DiagSymTen{Zero, T, T}
 
 #################################### Aliases ###############################################
 
