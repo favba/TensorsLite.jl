@@ -1057,11 +1057,11 @@ The elements are promoted to a common type, with the exception of `Zero`s and `O
 
 # Examples
 ```julia-repl
-julia> T = DiagTen(1,2.,One())
-3-element Vec2Dxy{Float64}:
- 1.0
- 2.0
- 𝟎
+julia> T = TensorsLite.DiagTen(1,2.,One())
+3×3 Tensor{2, Union{One, Zero, Float64}, Vec1Dx{Float64}, Vec1Dy{Float64}, Vec1Dz{One}}:
+ 1.0  𝟎    𝟎
+ 𝟎    2.0  𝟎
+ 𝟎    𝟎    𝟏
 
 ```
 """
