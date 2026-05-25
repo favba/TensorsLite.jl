@@ -144,6 +144,9 @@ end
     @test typeof(Tensor(z=Vec1Dz(1.0))) === Ten1Dz{Float64}
 
     @test Ten3D(1,2,3,4,5,6,7,8,9) === Ten(1,2,3,4,5,6,7,8,9)
+    @test Ten3D(Vec1Dx(1), Vec1Dy(2), Vec1Dz(3.0)) === Ten(1.0, 0.0, 0.0,
+                                                           0.0, 2.0, 0.0,
+                                                           0.0, 0.0, 3.0)
     @test Ten2Dxy(1,2,3,4.) === Ten(xx=1.0, xy=2.0, yx=3.0, yy=4.0)
     @test Ten2Dxz(1,2,3,4.) === Ten(xx=1.0, xz=2.0, zx=3.0, zz=4.0)
     @test Ten2Dyz(1,2,3,4.) === Ten(yy=1.0, yz=2.0, zy=3.0, zz=4.0)
@@ -177,6 +180,12 @@ end
 
     @test Ten2Dxy{Zero}(0,0,0,0) === Ten()
     @test Ten1Dx{Zero}(0) === Ten()
+
+    @test TensorsLite.DiagTen(One(), One(), One()) === 𝐈
+    @test DiagTen3D(One(), One(), 1.0f0) === convert(DiagTen3D{Float32}, 𝐈)
+    @test DiagTen2Dxy(2.0, 1.0f0) === Ten(xx=2.0, yy=1.0)
+    @test DiagTen2Dxz(2.0, 1.0f0) === Ten(xx=2.0, zz=1.0)
+    @test DiagTen2Dyz(2.0, 1.0f0) === Ten(yy=2.0, zz=1.0)
 
 end
 
