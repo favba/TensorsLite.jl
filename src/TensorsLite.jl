@@ -107,7 +107,7 @@ struct Tensor{N, T, Tx, Ty, Tz} <: AbstractTensor{N, T}
     If `x`,`y`,`z` are `Number`s (or of the same type `T` where `T` is not an `AbstractTensor`), returns a vector (`Tensor{1}`) with `x`,`y`,`z` as its elements.
     The elements are promoted to a common type, with the exception of `Zero`s and `One`s, which maintains its type to denote any null or constant direction.
 
-    `x`,`y`,`z` can also be all `AbstractTensor`s of same order `N`, in which case the function returns a `Tensor{N+1}`, and the `eltype`s of `x`,`y`,`z` are promoted to a common type, again with the execption of `Zero`s and `Ones`.
+    `x`,`y`,`z` can also be all `AbstractTensor`s of same order `N`, in which case the function returns a `Tensor{N+1}`, and the `eltype`s of `x`,`y`,`z` are promoted to a common type, again with the execption of `Zero`s and `One`s.
 
     # Examples
     ```julia-repl
