@@ -177,7 +177,7 @@ include("vec_type_utils.jl")
 @inline Tensor{1}() = Tensor(Zero(),Zero(),Zero())
 
 """
-    Tensor{N}() -> Tensor{N}
+    Tensor{N}() -> Tensor{N, Zero}
 
 Returns a compile time constant null `Tensor` of order `N`.
 

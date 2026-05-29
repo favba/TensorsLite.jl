@@ -148,28 +148,28 @@ Type alias for diagonal matrices (2nd order tensors) with diagonal elements of t
 const DiagTen{Txx, Tyy, Tzz} = Tensor{2, Union{Txx, Tyy, Tzz, Zero}, Vec1Dx{Txx}, Vec1Dy{Tyy}, Vec1Dz{Tzz}}
 
 """
-    DiagTen3D{T} === Tensor{2, T, Vec1Dx{T}, Vec1Dy{T}, Vec1Dz{T}}
+    DiagTen3D{T} === Tensor{2, Union{T, Zero}, Vec1Dx{T}, Vec1Dy{T}, Vec1Dz{T}}
 
 Concrete type alias of 3D 2nd order diagonal tensors with non-null values of type `T`.
 """
 const DiagTen3D{T} = DiagTen{T,T,T}
 
 """
-    DiagTen2Dxy{T} === Tensor{2, T, Vec1Dx{T}, Vec1Dy{T}, Vec1Dz{Zero}}
+    DiagTen2Dxy{T} === Tensor{2, Union{T, Zero}, Vec1Dx{T}, Vec1Dy{T}, Vec1Dz{Zero}}
 
 Concrete type alias of 2D 2nd order diagonal tensors on the x-y plane with non-null values of type `T`.
 """
 const DiagTen2Dxy{T} = DiagTen{T, T, Zero}
 
 """
-    DiagTen2Dxz{T} === Tensor{2, T, Vec1Dx{T}, Vec1Dy{Zero}, Vec1Dz{T}}
+    DiagTen2Dxz{T} === Tensor{2, Union{T, Zero}, Vec1Dx{T}, Vec1Dy{Zero}, Vec1Dz{T}}
 
 Concrete type alias of 2D 2nd order diagonal tensors on the x-z plane with non-null values of type `T`.
 """
 const DiagTen2Dxz{T} = DiagTen{T, Zero, T}
 
 """
-    DiagTen2Dyz{T} === Tensor{2, T, Vec1Dx{Zero}, Vec1Dy{T}, Vec1Dz{T}}
+    DiagTen2Dyz{T} === Tensor{2, Union{T, Zero}, Vec1Dx{Zero}, Vec1Dy{T}, Vec1Dz{T}}
 
 Concrete type alias of 2D 2nd order diagonal tensors on the y-z plane with non-null values of type `T`.
 """
