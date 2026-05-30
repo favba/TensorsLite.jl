@@ -8,6 +8,11 @@ function _my_convert(T::Type, x::T1) where {T1}
     return convert(T, x)
 end
 
+function _my_convert_antisym(T::Type, x::T1) where {T1}
+    T1 === Zero && return x
+    return convert(T, x)
+end
+
 @inline function __non_StaticBool_type(T::Type)
     if T isa Union
         if T.b isa Union
@@ -56,6 +61,6 @@ end
 @inline _filter_type_zero_and_one(::Type{One}, rest::Vararg{Type, N}) where {N} = (_filter_type_zero_and_one(rest...)...,)
 @inline _filter_type_zero_and_one(x::Type, rest::Vararg{Type, N}) where {N} = (x, _filter_type_zero_and_one(rest...)...)
 
-@inline _promote_type() = Zero
+@inline _promote_type() = Union{Zero, One}
 @inline _promote_type(types::Vararg{Any, N}) where {N} = promote_type(types...)
 @inline promote_type_ignoring_Zero_and_One(types::Vararg{Any, N}) where {N} = _promote_type(_filter_type_zero_and_one(types...)...)

@@ -19,10 +19,13 @@ struct AntiSymmetricTensor{N, T, Tyx, Tzx, Tzy} <: AbstractAntiSymmetricTensor{N
         Tyx = typeof(xy)
         Tzx = typeof(xz)
         Tzy = typeof(yz)
-        Tf = promote_type_ignoring_Zero_and_One(Tyx, Tzx, Tzy)
-        yxn = _my_convert(Tf, xy)
-        zxn = _my_convert(Tf, xz)
-        zyn = _my_convert(Tf, yz)
+        mTyx = Base.promote_op(Base.:-, Tyx)
+        mTzx = Base.promote_op(Base.:-, Tzx)
+        mTzy = Base.promote_op(Base.:-, Tzy)
+        Tf = promote_type_ignoring_Zero_and_One(mTyx, mTzx, mTzy)
+        yxn = _my_convert_antisym(Tf, xy)
+        zxn = _my_convert_antisym(Tf, xz)
+        zyn = _my_convert_antisym(Tf, yz)
 
         Tyxf = typeof(yxn)
         Tzxf = typeof(zxn)
@@ -127,12 +130,12 @@ Base.@constprop :aggressive function Base.getindex(S::AntiSymmetricTensor{2}, I:
     @boundscheck _checkbounds(S, tI...)
     t = (tI[1], tI[2])
 
-    t === (2, 1) && return S.yx
-    t === (1, 2) && return -S.yx
-    t === (3, 1) && return S.zx
-    t === (1, 3) && return -S.zx
-    t === (3, 2) && return S.zy
-    t === (2, 3) && return -S.zy
+    t === (2, 1) && return -S.xy
+    t === (3, 1) && return -S.xz
+    t === (1, 2) && return S.xy
+    t === (3, 2) && return -S.yz
+    t === (1, 3) && return S.xz
+    t === (2, 3) && return S.yz
     # if (t === (1,1) || t === (2,2) || t === (3,3))
     return 𝟎
 end
@@ -144,12 +147,12 @@ Base.@constprop :aggressive function Base.getindex(S::AntiSymmetricTensor{N}, I:
     t = (tI[N-1], tI[N])
     mtI = tI[Base.OneTo(N-2)]
 
-    t === (2, 1) && return @inbounds(S.yx[mtI...])
-    t === (1, 2) && return -@inbounds(S.yx[mtI...])
-    t === (3, 1) && return @inbounds(S.zx[mtI...])
-    t === (1, 3) && return -@inbounds(S.zx[mtI...])
-    t === (3, 2) && return @inbounds(S.zy[mtI...])
-    t === (2, 3) && return -@inbounds(S.zy[mtI...])
+    t === (2, 1) && return -@inbounds(S.xy[mtI...])
+    t === (3, 1) && return -@inbounds(S.xz[mtI...])
+    t === (1, 2) && return @inbounds(S.xy[mtI...])
+    t === (3, 2) && return -@inbounds(S.yz[mtI...])
+    t === (1, 3) && return @inbounds(S.xz[mtI...])
+    t === (2, 3) && return @inbounds(S.yz[mtI...])
     # if (t === (1,1) || t === (2,2) || t === (3,3))
     return 𝟎
 end
