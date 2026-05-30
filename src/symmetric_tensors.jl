@@ -2,7 +2,7 @@
 """
     AbstractSymmetricTensor{N, T} <: AbstractTensor{N, T}
 
-Represents any `N`th order tensor with element type `T` and some symmetry over its indices.
+Represents any `N`th order tensor with element type `T` and symmetry over its last two indices.
 """
 abstract type AbstractSymmetricTensor{N, T} <: AbstractTensor{N, T} end
 
@@ -201,7 +201,6 @@ const SymTen1D{T} = Union{SymTen1Dx{T}, SymTen1Dy{T}, SymTen1Dz{T}}
 
 const SymTen0D = SymTen3D{Zero}
 
-#Needed because of ambiguity of type aliases for Ten0D (Ten0D === Ten3D{Zero} === Ten2Dxy{Zero} === Ten1Dx{Zero} === ... === Ten1Dz{Zero})
 function Base.show(io::IO, ::Type{SymTen0D})
     print(io, "SymTen0D")
 end
