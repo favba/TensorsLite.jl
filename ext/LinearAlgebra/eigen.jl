@@ -1,4 +1,4 @@
-for TT in (DiagTen, DiagSymTen, Ten1Dx, Ten1Dy, Ten1Dz, SymTen1Dx, SymTen1Dy, SymTen1Dz)
+for TT in (DiagTen, DiagSymTen, Ten1Dx, Ten1Dy, Ten1Dz, SymTen1Dx, SymTen1Dy, SymTen1Dz, TensorsLite.Ten0D, TensorsLite.SymTen0D)
     @inline LinearAlgebra.eigvals(T::TT) = Vec(T.xx, T.yy, T.zz)
     @inline LinearAlgebra.eigvecs(::TT) = 𝐈
     @inline LinearAlgebra.eigen(T::TT) = LinearAlgebra.Eigen(LinearAlgebra.eigvals(T), LinearAlgebra.eigvecs(T))
@@ -42,14 +42,14 @@ end
 
     return (To2 - delta, To2 + delta)
 end
-                                                                        #xx, xy, xz, yy, yz, zz
-@inline LinearAlgebra.eigvals(S::SymmetricTensor{2, Union{Zero, T1, T2}, T1, T1, Zero, T1, Zero, T2 }) where {T1, T2} =
+                                                                                     #xx, xy, xz, yy, yz, zz
+@inline LinearAlgebra.eigvals(S::SymmetricTensor{2, Union{Zero, Txx, Txy, Tyy, Tzz}, Txx, Txy, Zero, Tyy, Zero, Tzz}) where {Txx, Txy, Tyy, Tzz} =
     Vec2Dxy(_eigvals_Sym2D(S.xx, S.xy, S.yy)...) + S.zz*𝐤
 
-@inline LinearAlgebra.eigvals(S::SymmetricTensor{2, Union{Zero, T1, T2}, T1, Zero, T1, T2, Zero, T1 }) where {T1, T2} =
+@inline LinearAlgebra.eigvals(S::SymmetricTensor{2, Union{Zero, Txx, Txz, Tyy, Tzz}, Txx, Zero, Txz, Tyy, Zero, Tzz}) where {Txx, Txz, Tyy, Tzz} =
     Vec2Dxz(_eigvals_Sym2D(S.xx, S.xz, S.zz)...) + S.yy*𝐣
 
-@inline LinearAlgebra.eigvals(S::SymmetricTensor{2, Union{Zero, T1, T2}, T2, Zero, Zero, T1, T1, T1 }) where {T1, T2} =
+@inline LinearAlgebra.eigvals(S::SymmetricTensor{2, Union{Zero, Txx, Tyy, Tyz, Tzz}, Txx, Zero, Zero, Tyy, Tyz, Tzz}) where {Txx, Tyy, Tyz, Tzz} =
     Vec2Dyz(_eigvals_Sym2D(S.yy, S.yz, S.zz)...) + S.xx*𝐢
 
 @inline LinearAlgebra.eigvals(S::AntiSymTen2Dxy) = Vec2Dxy(-S.xy*im, S.xy*im)
@@ -166,21 +166,21 @@ end
     return ((L2, L1), V)
 end
 
-@inline function LinearAlgebra.eigen(S::SymmetricTensor{2, Union{Zero, T1, T2}, T1, T1, Zero, T1, Zero, T2 }) where {T1, T2}
+@inline function LinearAlgebra.eigen(S::SymmetricTensor{2, Union{Zero, Txx, Txy, Tyy, Tzz}, Txx, Txy, Zero, Tyy, Zero, Tzz}) where {Txx, Txy, Tyy, Tzz}
     evals, evecs = _eigen_SymTen2D(S.xx, S.xy, S.yy)
     e = Vec2Dxy(evals...) + S.zz*𝐤
     ev = Tensor(Vec2Dxy(evecs[1]...), Vec2Dxy(evecs[2]...), 𝐤)
     return LinearAlgebra.Eigen(e, ev)
 end
 
-@inline function LinearAlgebra.eigen(S::SymmetricTensor{2, Union{Zero, T1, T2}, T1, Zero, T1, T2, Zero, T1 }) where {T1, T2}
+@inline function LinearAlgebra.eigen(S::SymmetricTensor{2, Union{Zero, Txx, Txz, Tyy, Tzz}, Txx, Zero, Txz, Tyy, Zero, Tzz}) where {Txx, Txz, Tyy, Tzz}
     evals, evecs = _eigen_SymTen2D(S.xx, S.xz, S.zz)
     e = Vec2Dxz(evals...) + S.yy*𝐣
     ev = Tensor(Vec2Dxz(evecs[1]...), 𝐣, Vec2Dxz(evecs[2]...))
     return LinearAlgebra.Eigen(e, ev)
 end
 
-@inline function LinearAlgebra.eigen(S::SymmetricTensor{2, Union{Zero, T1, T2}, T2, Zero, Zero, T1, T1, T1 }) where {T1, T2}
+@inline function LinearAlgebra.eigen(S::SymmetricTensor{2, Union{Zero, Txx, Tyy, Tyz, Tzz}, Txx, Zero, Zero, Tyy, Tyz, Tzz}) where {Txx, Tyy, Tyz, Tzz}
     evals, evecs = _eigen_SymTen2D(S.yy, S.yz, S.zz)
     e = Vec2Dyz(evals...) + S.xx*𝐢
     ev = Tensor(𝐢, Vec2Dyz(evecs[1]...), Vec2Dyz(evecs[2]...))
