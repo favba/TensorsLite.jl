@@ -656,23 +656,47 @@ include("sym_antisym_vecarray.jl")
 
 #### some useful Base methods #######
 
-@inline Base.reduce(op::F, v::AbstractTensor{N,T}) where {F <: Function, N, T<:Number} = @inline op(op(reduce(op, v.x), reduce(op, v.y)), reduce(op, v.z))
+@inline Base.reduce(op::F, v::Vec) where {F <: Function} = @inline op(op(v.x, v.y), v.z)
+
+#Fix ambiguities
+@inline Base.reduce(::typeof(hcat), v::Vec{<:Union{<:AbstractVector, <:AbstractMatrix}}) = @inline reduce(hcat, Array(v))
+@inline Base.reduce(::typeof(vcat), v::Vec{<:Union{<:AbstractVector, <:AbstractMatrix}}) = @inline reduce(vcat, Array(v))
+
+@inline Base.reduce(op::F, v::AbstractTensor) where {F <: Function} = @inline op(op(reduce(op, v.x), reduce(op, v.y)), reduce(op, v.z))
+
+@inline Base.sum(v::Vec) = v.x + v.y + v.z
 
 @inline Base.sum(v::AbstractTensor) = sum(v.x) + sum(v.y) + sum(v.z)
 
+@inline Base.sum(op::F, v::Vec) where {F <: Function} = @inline op(v.x) + op(v.y) + op(v.z)
+
 @inline Base.sum(op::F, v::AbstractTensor) where {F <: Function} = @inline sum(op,v.x) + sum(op,v.y) + sum(op,v.z)
+
+@inline Base.map(f::F, vecs::Vararg{Vec}) where {F <: Function} = @inline(Tensor(f(_x.(vecs)...), f(_y.(vecs)...), f(_z.(vecs)...)))
 
 @inline Base.map(f::F, vecs::Vararg{AbstractTensor{N}}) where {F <: Function, N} = @inline(Tensor(map(f, _x.(vecs)...), map(f, _y.(vecs)...), map(f, _z.(vecs)...)))
 
+@inline Base.maximum(v::Vec) = max(v.x, v.y, v.z)
+
 @inline Base.maximum(v::AbstractTensor) = max(maximum(v.x), maximum(v.y), maximum(v.z))
+
+@inline Base.maximum(f::F, v::Vec) where {F <: Function} = max(f(v.x), f(v.y), f(v.z))
 
 @inline Base.maximum(f::F, v::AbstractTensor) where {F <: Function} = max(maximum(f, v.x), maximum(f, v.y), maximum(f, v.z))
 
+@inline Base.minimum(v::Vec) = min(v.x, v.y, v.z)
+
 @inline Base.minimum(v::AbstractTensor) = min(minimum(v.x), minimum(v.y), minimum(v.z))
+
+@inline Base.minimum(f::F, v::Vec) where {F <: Function} = min(f(v.x), f(v.y), f(v.z))
 
 @inline Base.minimum(f::F, v::AbstractTensor) where {F <: Function} = min(minimum(f, v.x), minimum(f, v.y), minimum(f, v.z))
 
+@inline Base.any(f::F, v::Vec) where {F <: Function} = f(v.x) || f(v.y) || f(v.z)
+
 @inline Base.any(f::F, v::AbstractTensor) where {F <: Function} = any(f, v.x) || any(f, v.y) || any(f, v.z)
+
+@inline Base.all(f::F, v::Vec) where {F <: Function} = f(v.x) && f(v.y) && f(v.z)
 
 @inline Base.all(f::F, v::AbstractTensor) where {F <: Function} = all(f, v.x) && all(f, v.y) && all(f, v.z)
 
@@ -683,30 +707,49 @@ include("sym_antisym_vecarray.jl")
 @inline _yz(u::AbstractTensor) = u.yz
 @inline _zz(u::AbstractTensor) = u.zz
 
+@inline Base.map(f::F, vecs::Vararg{SymmetricTensor{2}}) where {F <: Function} = @inline(SymmetricTensor(f(_xx.(vecs)...), f(_xy.(vecs)...), f(_xz.(vecs)...),
+                                                                                                            f(_yy.(vecs)...), f(_yz.(vecs)...), f(_zz.(vecs)...)))
+
 @inline Base.map(f::F, vecs::Vararg{SymmetricTensor{N}}) where {F <: Function, N} = @inline(SymmetricTensor(map(f, _xx.(vecs)...), map(f, _xy.(vecs)...), map(f, _xz.(vecs)...),
                                                                                                             map(f, _yy.(vecs)...), map(f, _yz.(vecs)...), map(f, _zz.(vecs)...)))
 
-@inline Base.sum(v::SymmetricTensor) = muladd(2, sum(v.xy) + sum(v.xz) + sum(v.yz), sum(v.xx) + sum(v.yy) + sum(v.zz)) 
+@inline Base.sum(v::SymmetricTensor{2}) = muladd(2, v.xy + v.xz + v.yz, v.xx + v.yy + v.zz)
 
-@inline Base.sum(op::F, v::SymmetricTensor) where {F <: Function} = muladd(2, sum(op, v.xy) + sum(op, v.xz) + sum(op, v.yz), sum(op, v.xx) + sum(op, v.yy) + sum(op, v.zz)) 
+@inline Base.sum(v::SymmetricTensor) = muladd(2, sum(v.xy) + sum(v.xz) + sum(v.yz), sum(v.xx) + sum(v.yy) + sum(v.zz))
+
+@inline Base.sum(op::F, v::SymmetricTensor{2}) where {F <: Function} = muladd(2, op(v.xy) + op(v.xz) + op(v.yz), op(v.xx) + op(v.yy) + op(v.zz))
+
+@inline Base.sum(op::F, v::SymmetricTensor) where {F <: Function} = muladd(2, sum(op, v.xy) + sum(op, v.xz) + sum(op, v.yz), sum(op, v.xx) + sum(op, v.yy) + sum(op, v.zz))
+
+@inline Base.maximum(v::SymmetricTensor{2}) = max(sym_ten_fields(v)...)
 
 @inline Base.maximum(v::SymmetricTensor) = max(maximum(v.xx), maximum(v.xy), maximum(v.xz),
                                                               maximum(v.yy), maximum(v.yz),
                                                                              maximum(v.zz))
 
+@inline Base.maximum(op::F, v::SymmetricTensor{2}) where {F <: Function} = max(map(op, sym_ten_fields(v))...)
+
 @inline Base.maximum(op::F, v::SymmetricTensor) where {F <: Function} = max(maximum(op, v.xx), maximum(op, v.xy), maximum(op, v.xz),
                                                                                                maximum(op, v.yy), maximum(op, v.yz),
                                                                                                                   maximum(op, v.zz))
+
+@inline Base.minimum(v::SymmetricTensor{2}) = min(sym_ten_fields(v)...)
 
 @inline Base.minimum(v::SymmetricTensor) = min(minimum(v.xx), minimum(v.xy), minimum(v.xz),
                                                               minimum(v.yy), minimum(v.yz),
                                                                              minimum(v.zz))
 
+@inline Base.minimum(op::F, v::SymmetricTensor{2}) where {F <: Function} = min(map(op, sym_ten_fields(v))...)
+
 @inline Base.minimum(op::F, v::SymmetricTensor) where {F <: Function} = min(minimum(op, v.xx), minimum(op, v.xy), minimum(op, v.xz),
                                                                                                minimum(op, v.yy), minimum(op, v.yz),
                                                                                                                   minimum(op, v.zz))
 
+@inline Base.any(f::F, v::SymmetricTensor{2}) where {F <: Function} = f(v.xx) || f(v.xy) || f(v.xz) || f(v.yy) || f(v.yz) || f(v.zz)
+
 @inline Base.any(f::F, v::SymmetricTensor) where {F <: Function} = any(f, v.xx) || any(f, v.xy) || any(f, v.xz) || any(f, v.yy) || any(f, v.yz) || any(f, v.zz)
+
+@inline Base.all(f::F, v::SymmetricTensor{2}) where {F <: Function} = f(v.xx) && f(v.xy) && f(v.xz) && f(v.yy) && f(v.yz) && f(v.zz)
 
 @inline Base.all(f::F, v::SymmetricTensor) where {F <: Function} = all(f, v.xx) && all(f, v.xy) && all(f, v.xz) && all(f, v.yy) && all(f, v.yz) && all(f, v.zz)
 
