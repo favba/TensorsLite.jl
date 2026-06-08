@@ -274,153 +274,195 @@ end
     return Vec(eig1,eig2,eig3)
 end
 
-@inline function LinearAlgebra.eigen(S::SymTen)
+@inline function jacobi_rotation_coefficients(S::SymTen, ::Val{P}) where {P}
 
-    λ1, λ2, λ3 = LinearAlgebra.eigvals(S)
+    if P === :xy
+        a12 = S.xy
+        a11 = S.xx
+        a22 = S.yy
+    elseif P === :xz
+        a12 = S.xz
+        a11 = S.xx
+        a22 = S.zz
+    elseif P === :yz
+        a12 = S.yz
+        a11 = S.yy
+        a22 = S.zz
+    end
 
-    ######################### This part was adapted from https://github.com/KristofferC/Tensors.jl/blob/master/src/eigen.jl #################################
+    if typeof(a12) === Zero
+        T = promote_type(typeof(a11), typeof(a22))
+        return (One(), Zero())
+    end
 
-      # Calculate the first eigenvector
-        # This should be orthogonal to these three rows of A - λ1*I
-        # Use all combinations of cross products and choose the "best" one
-    R = S - λ1*𝐈
+    T = promote_type(typeof(a11), typeof(a22), typeof(a12))
 
-    r1 = R.x
-    r2 = R.y
-    r3 = R.z
+    _iszero = iszero(a12)
 
-    n1 = r1 ⋅ r1
-    n2 = r2 ⋅ r2
-    n3 = r3 ⋅ r3
+    τ = (a22 - a11) / (2a12)
 
-    r12 = cross(r1, r2)
-    r23 = cross(r2, r3)
-    r31 = cross(r3, r1)
+    t = copysign(one(T), τ) / (abs(τ) + fsqrt(1 + τ*τ))
 
-    n12 = r12 ⋅ r12
-    n23 = r23 ⋅ r23
-    n31 = r31 ⋅ r31
+    c = inv(fsqrt(1 + t*t))
 
-    # we want best angle so we put all norms on same footing
-    # (cheaper to multiply by third nᵢ rather than divide by the two involved)
+    s = t*c
 
-    nr12 = r12 / fsqrt(n12)
-    nr31 = r31 / fsqrt(n31)
-    nr23 = r23 / fsqrt(n23)
+    c = ifelse(_iszero, one(c), c)
 
-    ϕ1 = ifelse(n12 * n3 > n23 * n1,
-        ifelse(n12 * n3 > n31 * n2,
-            nr12,
-            nr31
-        ),
-        ifelse(n23 * n1 > n31 * n2,
-            nr23,
-            nr31
-        )
-    )
+    s = ifelse(_iszero, zero(s), s)
 
-    # Calculate the second eigenvector
-    # This should be orthogonal to the previous eigenvector and the three
-    # rows of A - λ2*I. However, we need to "solve" the remaining 2x2 subspace
-    # problem in case the cross products are identically or nearly zero
-
-    # The remaing 2x2 subspace is:
-    abs2x = abs2(ϕ1.x)
-    abs2y = abs2(ϕ1.y)
-    abs2z = abs2(ϕ1.z)
-
-    aux_flag = abs2x < abs2y
-
-    r1 = inv(fsqrt(abs2x + abs2z))
-    r2 = inv(fsqrt(abs2y + abs2z))
-
-    ze = zero(ϕ1.x)
-    ox = ifelse(aux_flag, -ϕ1.z*r1, ze)
-    oy = ifelse(aux_flag, ze, ϕ1.z*r2)
-    oz = ifelse(aux_flag, ϕ1.x*r1, -ϕ1.y*r2)
-    
-    orthogonal1 = Vec(ox,oy,oz)
-
-    orthogonal2 = cross(ϕ1, orthogonal1)
-
-    # The projected 2x2 eigenvalue problem is C x = 0 where C is the projection
-    # of (A - λ2*I) onto the subspace {orthogonal1, orthogonal2}
-    a_orth_1 = S ⋅ orthogonal1
-
-    a_orth_2 = S ⋅ orthogonal2
-
-    mλ2 = -λ2
-    c11 = dotadd(orthogonal1, a_orth_1, mλ2)
-    c12 = orthogonal1 ⋅ a_orth_2
-    c22 = dotadd(orthogonal2, a_orth_2, mλ2)
-
-    # Solve this robustly (some values might be small or zero)
-    c11² = abs2(c11)
-    c12² = abs2(c12)
-    c22² = abs2(c22)
-
-    # Boolean flags
-    b11_22 = c11² >= c22²
-    b11_12 = c11² >= c12²
-    b22_12 = c22² >= c12²
-    b_nonzero = (c11² > 0) | (c12² > 0)
-
-    # Select numerator/denominator
-    num = ifelse(b11_22,
-        ifelse(b11_12,
-            c12,
-            c11
-        ),
-        ifelse(b22_12,
-            c12,
-            c22
-        )
-    )
-
-    den = ifelse(b11_22,
-        ifelse(b11_12,
-            c11,
-            c12
-        ),
-        ifelse(b22_12,
-            c22,
-            c12
-        )
-    )
-
-    tmp = num / den
-    invnorm = inv(fsqrt(1 + abs2(tmp)))
-    tmp_invnorm = tmp * invnorm
-
-    p1 = ifelse(b11_22,
-        ifelse(b11_12,
-            tmp_invnorm,
-            invnorm
-        ),
-        ifelse(b22_12,
-            invnorm,
-            tmp_invnorm
-        )
-    )
-
-    p2 = ifelse(b11_22,
-        ifelse(b11_12,
-            invnorm,
-            tmp_invnorm
-        ),
-        ifelse(b22_12,
-            tmp_invnorm,
-            invnorm
-        )
-    )
-
-    ϕ2 = ifelse(b11_22 & !b_nonzero,
-        orthogonal1,
-        p1*orthogonal1 - p2*orthogonal2
-    )
-    
-    # The third eigenvector is a simple cross product of the other two
-    ϕ3 = cross(ϕ1, ϕ2) # should be normalized already
-     
-    return LinearAlgebra.Eigen(Vec3D(λ1,λ2,λ3),Tensor(ϕ1,ϕ2,ϕ3))
+    return (c, s)
 end
+
+@inline function build_jacobi_rotation_matrix(S::SymTen, vp::Val{P}) where {P} 
+    c, s = jacobi_rotation_coefficients(S, vp)
+    if P === :xy
+        return Ten(xx = c, xy = s, yx = -s, yy = c, zz = One())
+    elseif P === :xz
+        return Ten(xx = c, xz = s, zx = -s, zz = c, yy = One())
+    elseif P === :yz
+        return Ten(yy = c, yz = s, zy = -s, zz = c, xx = One())
+    end
+end
+
+@inline function apply_jocobi_rotation(S::SymTen, R::Ten, ::Val{P}) where {P}
+    SR = S*R
+    Rt = transpose(R)
+
+    xx = muladd(Rt.xx, SR.xx, muladd(Rt.xy, SR.yx, Rt.xz*SR.zx))
+    yy = muladd(Rt.yx, SR.xy, muladd(Rt.yy, SR.yy, Rt.yz*SR.zy))
+    zz = muladd(Rt.zx, SR.xz, muladd(Rt.zy, SR.yz, Rt.zz*SR.zz))
+
+    if P === :xy
+        xy = Zero()
+    else
+        xy = muladd(Rt.xx, SR.xy, muladd(Rt.xy, SR.yy, Rt.xz*SR.zy))
+    end
+
+    if P === :xz
+        xz = Zero()
+    else
+        xz = muladd(Rt.xx, SR.xz, muladd(Rt.xy, SR.yz, Rt.xz*SR.zz))
+    end
+
+    if P === :yz
+        yz = Zero()
+    else
+        yz = muladd(Rt.yx, SR.xz, muladd(Rt.yy, SR.yz, Rt.yz*SR.zz))
+    end
+
+    return SymTen(xx, xy, xz, yy, yz, zz)
+end
+
+@inline function sort_eigen(v, T)
+    a = v.x
+    b = v.y
+    c = v.z
+
+    at = T.x
+    bt = T.y
+    ct = T.z
+
+    m1 = a > b 
+
+    a, b = ifelse(m1, b, a), ifelse(m1, a, b)
+    at, bt = ifelse(m1, bt, at), ifelse(m1, at, bt)
+
+    m2 = b > c
+
+    b, c = ifelse(m2, c, b), ifelse(m2, b, c)
+    bt, ct = ifelse(m2, ct, bt), ifelse(m2, bt, ct)
+
+    m3 = a > b
+
+    a, b = ifelse(m3, b, a), ifelse(m3, a, b)
+    at, bt = ifelse(m3, bt, at), ifelse(m3, at, bt)
+
+    return (Vec(a,b,c), Ten(at, bt, ct))
+end
+
+@inline _not_converged(S::SymTen{<:Number}, a_tol) = 2*(abs(S.xy) + abs(S.xz) + abs(S.yz)) >= a_tol
+
+#For SIMD
+@inline _not_converged(S::SymTen, a_tol) = all(2*(abs(S.xy) + abs(S.xz) + abs(S.yz)) >= a_tol)
+
+@inline function LinearAlgebra.eigen(S::SymTen)
+    Vxy = Val{:xy}()
+    Vxz = Val{:xz}()
+    Vyz = Val{:yz}()
+
+    a_tol = eps(maximum(abs, S))
+
+    _Gxy = build_jacobi_rotation_matrix(S, Vxy)
+    _S1 = apply_jocobi_rotation(S, _Gxy, Vxy)
+    _V1 = _Gxy
+
+    _Gxz = build_jacobi_rotation_matrix(_S1, Vxz) 
+    _S2 = apply_jocobi_rotation(_S1, _Gxz, Vxz) 
+    _V2 = _V1 * _Gxz
+
+    _Gyz = build_jacobi_rotation_matrix(_S2, Vyz) 
+
+    S3 = apply_jocobi_rotation(_S2, _Gyz, Vyz)
+    V3 = _V2 * _Gyz
+
+    i = 1
+    while _not_converged(S3, a_tol) && (i <= 10)
+        Gxy = build_jacobi_rotation_matrix(S3, Vxy)
+        S1 = apply_jocobi_rotation(S3, Gxy, Vxy)
+        V1 = V3 * Gxy
+
+        Gxz = build_jacobi_rotation_matrix(S1, Vxz) 
+        S2 = apply_jocobi_rotation(S1, Gxz, Vxz) 
+        V2 = V1 * Gxz
+
+        Gyz = build_jacobi_rotation_matrix(S2, Vyz) 
+
+        S3 = apply_jocobi_rotation(S2, Gyz, Vyz)
+        V3 = V2 * Gyz
+        i+=1
+    end
+
+    _λ = Vec(S3.xx, S3.yy, S3.zz)
+
+    λ, Vf = sort_eigen(_λ, V3)
+
+    return LinearAlgebra.Eigen(λ, Vf)
+end
+
+@inline function LinearAlgebra.eigvals(S::SymTen)
+    Vxy = Val{:xy}()
+    Vxz = Val{:xz}()
+    Vyz = Val{:yz}()
+
+    a_tol = eps(maximum(abs, S))
+
+    _Gxy = build_jacobi_rotation_matrix(S, Vxy)
+    _S1 = apply_jocobi_rotation(S, _Gxy, Vxy)
+
+    _Gxz = build_jacobi_rotation_matrix(_S1, Vxz) 
+    _S2 = apply_jocobi_rotation(_S1, _Gxz, Vxz) 
+
+    _Gyz = build_jacobi_rotation_matrix(_S2, Vyz) 
+
+    S3 = apply_jocobi_rotation(_S2, _Gyz, Vyz)
+
+    while _not_converged(S3, a_tol) && (i <= 9)
+        Gxy = build_jacobi_rotation_matrix(S3, Vxy)
+        S1 = apply_jocobi_rotation(S3, Gxy, Vxy)
+
+        Gxz = build_jacobi_rotation_matrix(S1, Vxz) 
+        S2 = apply_jocobi_rotation(S1, Gxz, Vxz) 
+
+        Gyz = build_jacobi_rotation_matrix(S2, Vyz) 
+
+        S3 = apply_jocobi_rotation(S2, Gyz, Vyz)
+        i+=1
+    end
+
+    λ = sort(Vec(S3.xx, S3.yy, S3.zz))
+
+    return λ
+end
+
+@inline LinearAlgebra.eigvecs(S::Ten) = LinearAlgebra.eigen(S).vectors

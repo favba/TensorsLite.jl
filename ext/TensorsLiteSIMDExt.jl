@@ -99,9 +99,33 @@ Base.@propagate_inbounds function Base.setindex!(arr::AbstractTensorArray{T, N},
     return arr
 end
 
+@inline Base.ifelse(b::SIMD.Vec{L, Bool}, T1::AbstractTensor{N}, T2::AbstractTensor{N}) where {L, N} = Tensor(ifelse(b, T1.x, T2.x), ifelse(b, T1.y, T2.y), ifelse(b, T1.z, T2.z))
+
+@inline Base.ifelse(b::SIMD.Vec{L, Bool}, S1::AbstractSymmetricTensor{N}, S2::AbstractSymmetricTensor{N}) where {L, N} =
+    SymmetricTensor(ifelse(b, S1.xx, S2.xx), ifelse(b, S1.xy, S2.xy), ifelse(b, S1.xz, S2.xz),ifelse(b, S1.yy, S2.yy),ifelse(b, S1.yz, S2.yz),ifelse(b, S1.zz, S2.zz))
+
 # Type piracy? Needed while https://github.com/eschnett/SIMD.jl/pull/157 isn't accepted.
 Base.@propagate_inbounds Base.setindex!(a::AbstractArray{T}, s::Number, indx::SIMDIndex{N}, I::Vararg) where {T,N} = Base.setindex!(a, SIMD.Vec{N,T}(s), indx, I...)
 Base.@propagate_inbounds Base.setindex!(a::AbstractArray{Zero}, s::Zero, indx::SIMDIndex{N}, I::Vararg) where {N} = a
 Base.@propagate_inbounds Base.setindex!(a::AbstractArray{One}, s::One, indx::SIMDIndex{N}, I::Vararg) where {N} = a
+
+@inline Base.ifelse(b::SIMD.Vec{N,Bool}, v1, v2) where {N} = SIMD.vifelse(b, v1, v2)
+
+@inline _unsigned(::Type{Float64}) = UInt64
+@inline _unsigned(::Type{Float32}) = UInt32
+@inline _unsigned(::Type{Float16}) = UInt16
+
+@inline function Base.eps(x::SIMD.Vec{N, T}) where {N, T<:AbstractFloat} 
+    TU = _unsigned(T)
+    y = reinterpret(SIMD.Vec{N, T}, reinterpret(SIMD.Vec{N, TU}, x) ⊻ one(TU))
+    return abs(x - y)
+end
+
+@inline Base.eps(::Type{SIMD.Vec{N, T}}) where {N, T<:AbstractFloat} = SIMD.Vec{N, T}(eps(T))
+
+@inline Base.float(v::SIMD.Vec{N, <:AbstractFloat}) where {N} = v
+
+@inline Base.:*(b::Bool, v::SIMD.Vec) = ifelse(b, v, zero(v))
+@inline Base.:*(v::SIMD.Vec, b::Bool) = ifelse(b, v, zero(v))
 
 end
