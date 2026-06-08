@@ -40,21 +40,13 @@ Equivalent to `dot(a, a)`. Returns a `SymTen` if `a` is either a `SymTen` or `An
 
 @inline LinearAlgebra.norm(u::Vec1Dz, ::Real = 2) = abs(u.z)
 
-@inline LinearAlgebra.norm(::VecND{Zero}, ::Real = 2) = 𝟎
+@inline LinearAlgebra.norm(::Vec0D, ::Real = 2) = 𝟎
 
 @inline LinearAlgebra.normalize(u::AbstractTensor) = u / norm(u)
 
 @inline LinearAlgebra.normalize(u::AbstractTensor{N,Zero}) where {N} = u
 
-@inline function LinearAlgebra.cross(a::Vec, b::Vec)
-    ax = a.x
-    ay = a.y
-    az = a.z
-    bx = b.x
-    by = b.y
-    bz = b.z
-    return  Vec(muladd(ay, bz, -(az * by)), muladd(az, bx, -(ax * bz)), muladd(ax, by, -(ay * bx)))
-end
+@inline LinearAlgebra.cross(a::Vec, b::Vec) = TensorsLite.cross(a, b)
 
 base_type(::Type{T}) where {T} = T
 base_type(::Type{Complex{T}}) where {T} = T
@@ -84,6 +76,6 @@ end
 
 include("LinearAlgebra/eigen.jl")
 
-include("LinearAlgebra/inv.jl")
+# include("LinearAlgebra/inv.jl")
 
 end
