@@ -242,6 +242,12 @@ Concrete type alias of 2D 2nd order diagonal tensors on the y-z plane with non-n
 """
 const DiagSymTen2Dyz{T} = DiagSymTen{Zero, T, T}
 
+#Useful for dispatch
+const DDiagSymTen = SymmetricTensor{2, <:Any, <:Any, Zero, Zero, <:Any, Zero, <:Any}
+const QuasiSymTen2Dxy = SymmetricTensor{2, <:Any, <:Any, <:Any, Zero, <:Any, Zero, <:Any}
+const QuasiSymTen2Dxz = SymmetricTensor{2, <:Any, <:Any, Zero, <:Any, <:Any, Zero, <:Any}
+const QuasiSymTen2Dyz = SymmetricTensor{2, <:Any, <:Any, Zero, Zero, <:Any, <:Any, <:Any}
+
 #################################### Aliases ###############################################
 
 @inline constructor(::Type{T}) where {T <: SymmetricTensor} = SymmetricTensor

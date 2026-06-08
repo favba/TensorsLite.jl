@@ -1,4 +1,4 @@
-for TT in (DiagTen, DiagSymTen, Ten1Dx, Ten1Dy, Ten1Dz, SymTen1Dx, SymTen1Dy, SymTen1Dz, TensorsLite.Ten0D, TensorsLite.SymTen0D)
+for TT in (DDiagTen, DDiagSymTen, TensorsLite.Ten0D, TensorsLite.SymTen0D)
     @inline LinearAlgebra.eigvals(T::TT) = Vec(T.xx, T.yy, T.zz)
     @inline LinearAlgebra.eigvecs(::TT) = 𝐈
     @inline LinearAlgebra.eigen(T::TT) = LinearAlgebra.Eigen(LinearAlgebra.eigvals(T), LinearAlgebra.eigvecs(T))
@@ -25,10 +25,6 @@ end
 
 end
 
-const QuasiTen2Dxy = Tensor{2, <:Any, <:Tensor{1, <:Any, <:Any, <:Any, Zero}, <:Tensor{1, <:Any, <:Any, <:Any, Zero}, <:Tensor{1, <:Any, Zero, Zero, <:Any}}
-const QuasiTen2Dxz = Tensor{2, <:Any, <:Tensor{1, <:Any, <:Any, Zero, <:Any}, <:Tensor{1, <:Any, Zero, <:Any, Zero}, <:Tensor{1, <:Any, <:Any, Zero, <:Any}}
-const QuasiTen2Dyz = Tensor{2, <:Any, <:Tensor{1, <:Any, <:Any, Zero, Zero}, <:Tensor{1, <:Any, Zero, <:Any, <:Any}, <:Tensor{1, <:Any, Zero, <:Any, <:Any}}
-
 @inline LinearAlgebra.eigvals(T::QuasiTen2Dxy) =
     Vec2Dxy(_eigvals_Ten2D(T.xx, T.xy, T.yx, T.yy)...) + T.zz*𝐤
 
@@ -46,10 +42,6 @@ const QuasiTen2Dyz = Tensor{2, <:Any, <:Tensor{1, <:Any, <:Any, Zero, Zero}, <:T
 
     return (To2 - delta, To2 + delta)
 end
-
-const QuasiSymTen2Dxy = SymmetricTensor{2, <:Any, <:Any, <:Any, Zero, <:Any, Zero, <:Any}
-const QuasiSymTen2Dxz = SymmetricTensor{2, <:Any, <:Any, Zero, <:Any, <:Any, Zero, <:Any}
-const QuasiSymTen2Dyz = SymmetricTensor{2, <:Any, <:Any, Zero, Zero, <:Any, <:Any, <:Any}
 
 @inline LinearAlgebra.eigvals(S::QuasiSymTen2Dxy) =
     Vec2Dxy(_eigvals_Sym2D(S.xx, S.xy, S.yy)...) + S.zz*𝐤

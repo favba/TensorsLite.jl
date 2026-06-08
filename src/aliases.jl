@@ -22,6 +22,8 @@ Concrete type alias of 2D vectors on the x-y plane with non-null values of type 
 """
 const Vec2Dxy{T} = Tensor{1, Union{Zero, T}, T, T, Zero}
 
+const DVec2Dxy = Tensor{1, <:Any, <:Any, <:Any, Zero}
+
 """
     Vec2Dxz{T} === Tensor{1, Union{T, Zero}, T, Zero, T}
 
@@ -29,12 +31,16 @@ Concrete type alias of 2D vectors on the x-z plane with non-null values of type 
 """
 const Vec2Dxz{T} = Tensor{1, Union{Zero, T}, T, Zero, T}
 
+const DVec2Dxz = Tensor{1, <:Any, <:Any, Zero, <:Any}
+
 """
     Vec2Dyz{T} === Tensor{1, Union{T, Zero}, Zero, T, T}
 
 Concrete type alias of 2D vectors on the y-z plane with non-null values of type `T`.
 """
 const Vec2Dyz{T} = Tensor{1, Union{Zero, T}, Zero, T, T}
+
+const DVec2Dyz = Tensor{1, <:Any, Zero, <:Any, <:Any}
 
 const Vec2D{T} = Union{Vec2Dxy{T}, Vec2Dxz{T}, Vec2Dyz{T}}
 
@@ -45,6 +51,8 @@ Concrete type alias of 1D vectors on the x direction with non-null value of type
 """
 const Vec1Dx{T} = Tensor{1, Union{Zero, T}, T, Zero, Zero}
 
+const DVec1Dx = Tensor{1, <:Any, <:Any, Zero, Zero}
+
 """
     Vec1Dy{T} === Tensor{1, Union{T, Zero}, Zero, T, Zero}
 
@@ -52,12 +60,16 @@ Concrete type alias of 1D vectors on the y direction with non-null value of type
 """
 const Vec1Dy{T} = Tensor{1, Union{Zero, T}, Zero, T, Zero}
 
+const DVec1Dy = Tensor{1, <:Any, Zero, <:Any, Zero}
+
 """
     Vec1Dz{T} === Tensor{1, Union{T, Zero}, Zero, Zero, T}
 
 Concrete type alias of 1D vectors on the z direction with non-null value of type `T`.
 """
 const Vec1Dz{T} = Tensor{1, Union{Zero, T}, Zero, Zero, T}
+
+const DVec1Dz = Tensor{1, <:Any, Zero, Zero, <:Any}
 
 const Vec1D{T} = Union{Vec1Dx{T}, Vec1Dy{T}, Vec1Dz{T}}
 const VecND{T} = Union{Vec3D{T}, Vec2D{T}, Vec1D{T}}
@@ -93,6 +105,8 @@ Concrete type alias of 2D 2nd order tensors on the x-y plane with non-null value
 """
 const Ten2Dxy{T} = Tensor{2, Union{Zero, T}, Vec2Dxy{T}, Vec2Dxy{T}, Vec0D}
 
+const DTen2Dxy = Tensor{2, <:Any, <:DVec2Dxy, <:DVec2Dxy, Vec0D}
+
 """
     Ten2Dxz{T} === Tensor{2, Union{T, Zero}, Vec2Dxy{T}, Vec2Dxy{Zero}, Vec2Dxy{T}}
 
@@ -100,12 +114,16 @@ Concrete type alias of 2D 2nd order tensors on the x-z plane with non-null value
 """
 const Ten2Dxz{T} = Tensor{2, Union{Zero, T}, Vec2Dxz{T}, Vec0D, Vec2Dxz{T}}
 
+const DTen2Dxz = Tensor{2, <:Any, <:DVec2Dxz, Vec0D, <:DVec2Dxz}
+
 """
     Ten2Dyz{T} === Tensor{2, Union{T, Zero}, Vec2Dyz{Zero}, Vec2Dyz{T}, Vec2Dyz{T}}
 
 Concrete type alias of 2D 2nd order tensors on the y-z plane with non-null values of type `T`.
 """
 const Ten2Dyz{T} = Tensor{2, Union{Zero, T}, Vec0D, Vec2Dyz{T}, Vec2Dyz{T}}
+
+const DTen2Dyz = Tensor{2, <:Any, Vec0D, <:DVec2Dyz, <:DVec2Dyz}
 
 const Ten2D{T} = Union{Ten2Dxy{T}, Ten2Dxz{T}, Ten2Dyz{T}}
 
@@ -116,6 +134,8 @@ Concrete type alias of 1D 2nd order tensors on the x direction with a non-null v
 """
 const Ten1Dx{T} = Tensor{2, Union{Zero, T}, Vec1Dx{T}, Vec0D, Vec0D}
 
+const DTen1Dx = Tensor{2, <:Any, <:DVec1Dx, Vec0D, Vec0D}
+
 """
     Ten1Dy{T} === Tensor{2, Union{T, Zero}, Vec1Dy{Zero}, Vec1Dy{T}, Vec1Dy{Zero}}
 
@@ -123,12 +143,16 @@ Concrete type alias of 1D 2nd order tensors on the y direction with a non-null v
 """
 const Ten1Dy{T} = Tensor{2, Union{Zero, T}, Vec0D, Vec1Dy{T}, Vec0D}
 
+const DTen1Dy = Tensor{2, <:Any, Vec0D, <:DVec1Dy, Vec0D}
+
 """
     Ten1Dz{T} === Tensor{2, Union{T, Zero}, Vec1Dz{Zero}, Vec1Dz{Zero}, Vec1Dz{T}}
 
 Concrete type alias of 1D 2nd order tensors on the z direction with a non-null value of type `T`.
 """
 const Ten1Dz{T} = Tensor{2, Union{Zero, T}, Vec0D, Vec0D, Vec1Dz{T}}
+
+const DTen1Dz = Tensor{2, <:Any, Vec0D, Vec0D, <:DVec1Dz}
 
 const Ten1D{T} = Union{Ten1Dx{T}, Ten1Dy{T}, Ten1Dz{T}}
 const TenND{T} = Union{Ten3D{T}, Ten2D{T}, Ten1D{T}}
@@ -146,6 +170,8 @@ end
 Type alias for diagonal matrices (2nd order tensors) with diagonal elements of types `Txx`, `Tyy` and `Tzz`, respectively.
 """
 const DiagTen{Txx, Tyy, Tzz} = Tensor{2, Union{Txx, Tyy, Tzz, Zero}, Vec1Dx{Txx}, Vec1Dy{Tyy}, Vec1Dz{Tzz}}
+
+const DDiagTen = Tensor{2, <:Any, <:DVec1Dx, <:DVec1Dy, <:DVec1Dz}
 
 """
     DiagTen3D{T} === Tensor{2, Union{T, Zero}, Vec1Dx{T}, Vec1Dy{T}, Vec1Dz{T}}
@@ -176,6 +202,11 @@ Concrete type alias of 2D 2nd order diagonal tensors on the y-z plane with non-n
 const DiagTen2Dyz{T} = DiagTen{Zero, T, T}
 
 const TenMaybe2Dxy{T, Tz} = Tensor{2, Union{T, Tz}, VecMaybe2Dxy{T, Tz}, VecMaybe2Dxy{T, Tz}, Vec3D{Tz}}
+
+#Useful for dispatch of inv, eigen, etc
+const QuasiTen2Dxy = Tensor{2, <:Any, <:DVec2Dxy, <:DVec2Dxy, <:DVec1Dz}
+const QuasiTen2Dxz = Tensor{2, <:Any, <:DVec2Dxz, <:DVec1Dy, <:DVec2Dxz}
+const QuasiTen2Dyz = Tensor{2, <:Any, <:DVec1Dx, <:DVec2Dyz, <:DVec2Dyz}
 
 ########################## aliases ###########################
 

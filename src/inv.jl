@@ -1,11 +1,19 @@
+@inline function cross(a::Vec, b::Vec)
+    ax = a.x
+    ay = a.y
+    az = a.z
+    bx = b.x
+    by = b.y
+    bz = b.z
+    return  Vec(muladd(ay, bz, -(az * by)), muladd(az, bx, -(ax * bz)), muladd(ax, by, -(ay * bx)))
+end
+
 _try_inv(::Zero) = Zero()
 _try_inv(x) = inv(x)
 
-function _inv end
-
-for TT in (DiagTen, Ten1Dx, Ten1Dy, Ten1Dz)
-    @inline TensorsLiteLinearAlgebraExt._inv(T::TT) = Ten(Vec1Dx(_try_inv(T.xx)), Vec1Dy(_try_inv(T.yy)), Vec1Dz(_try_inv(T.zz))) 
-end
+@inline _inv(T::Ten0D) = T
+ 
+@inline _inv(T::DDiagTen) = Ten(Vec1Dx(_try_inv(T.xx)), Vec1Dy(_try_inv(T.yy)), Vec1Dz(_try_inv(T.zz))) 
 
 @inline function _inv2D(a, b, c, d)
     mb = -b
@@ -15,19 +23,19 @@ end
     return (d*idet, mb*idet, -c*idet,  a*idet)
 end
 
-@inline function _inv(T::Tensor{2, Union{T1,Tz,Zero}, Vec2Dxy{T1}, Vec2Dxy{T1}, Vec1Dz{Tz}}) where {T1, Tz}
-    iTxx, iTxy, iTyx, iTyy = _inv2D(T.xx, T.xy, T.yx, T.yy)
-    return Ten(Vec2Dxy(iTxx, iTyx), Vec2Dxy(iTxy, iTyy), Vec1Dz(_try_inv(T.zz)))
+@inline function _inv(A::QuasiTen2Dxy)
+    iTxx, iTxy, iTyx, iTyy = _inv2D(A.xx, A.xy, A.yx, A.yy)
+    return Ten(Vec2Dxy(iTxx, iTyx), Vec2Dxy(iTxy, iTyy), Vec1Dz(_try_inv(A.zz)))
 end
 
-@inline function _inv(T::Tensor{2, Union{T1,Ty,Zero}, Vec2Dxz{T1}, Vec1Dy{Ty}, Vec2Dxz{T1}}) where {T1, Ty}
-    iTxx, iTxz, iTzx, iTzz = _inv2D(T.xx, T.xz, T.zx, T.zz)
-    return Ten(Vec2Dxz(iTxx, iTzx), Vec1Dy(_try_inv(T.yy)), Vec2Dxz(iTxz, iTzz))
+@inline function _inv(A::QuasiTen2Dxz)
+    iTxx, iTxz, iTzx, iTzz = _inv2D(A.xx, A.xz, A.zx, A.zz)
+    return Ten(Vec2Dxz(iTxx, iTzx), Vec1Dy(_try_inv(A.yy)), Vec2Dxz(iTxz, iTzz))
 end
 
-@inline function _inv(T::Tensor{2, Union{T1,Tx,Zero}, Vec1Dx{Tx}, Vec2Dyz{T1}, Vec2Dyz{T1}}) where {T1, Tx}
-    iTyy, iTyz, iTzy, iTzz = _inv2D(T.yy, T.yz, T.zy, T.zz)
-    return Ten(Vec1Dx(_try_inv(T.xx)), Vec2Dyz(iTyy, iTzy), Vec2Dyz(iTyz, iTzz))
+@inline function _inv(A::QuasiTen2Dyz)
+    iTyy, iTyz, iTzy, iTzz = _inv2D(A.yy, A.yz, A.zy, A.zz)
+    return Ten(Vec1Dx(_try_inv(A.xx)), Vec2Dyz(iTyy, iTzy), Vec2Dyz(iTyz, iTzz))
 end
 
 @inline function _inv(T::Ten)
@@ -46,9 +54,9 @@ end
     return transpose(Ten(y0, y1, y2))
 end
 
-for TT in (DiagSymTen, SymTen1Dx, SymTen1Dy, SymTen1Dz)
-    @inline TensorsLiteLinearAlgebraExt._inv(T::TT) = SymTen(_try_inv(T.xx), Zero(), Zero(), _try_inv(T.yy), Zero(), _try_inv(T.zz))
-end
+@inline _inv(S::SymTen0D) = S
+
+@inline _inv(S::DDiagSymTen) = SymTen(_try_inv(S.xx), Zero(), Zero(), _try_inv(S.yy), Zero(), _try_inv(S.zz))
 
 @inline function _inv2D(a, b, d)
     mb = -b
@@ -58,17 +66,17 @@ end
     return (d*idet, mb*idet,  a*idet)
 end
 
-@inline function _inv(S::SymmetricTensor{2, Union{T,Tz,Zero}, T, T, Zero, T, Zero, Tz}) where {T, Tz}
+@inline function _inv(S::QuasiSymTen2Dxy)
     iSxx, iSxy, iSyy = _inv2D(S.xx, S.xy, S.yy)
     return SymTen(iSxx, iSxy, Zero(), iSyy, Zero(), _try_inv(S.zz))
 end
 
-@inline function _inv(S::SymmetricTensor{2, Union{T,Ty,Zero}, T, Zero, T, Ty, Zero, T}) where {T, Ty}
+@inline function _inv(S::QuasiSymTen2Dxz)
     iSxx, iSxz, iSzz = _inv2D(S.xx, S.xz, S.zz)
     return SymTen(iSxx, Zero(), iSxz, _try_inv(S.yy), Zero(), iSzz)
 end
 
-@inline function _inv(S::SymmetricTensor{2, Union{T,Tx,Zero}, Tx, Zero, Zero, T, T, T}) where {T, Tx}
+@inline function _inv(S::QuasiSymTen2Dyz)
     iSyy, iSyz, iSzz = _inv2D(S.yy, S.yz, S.zz)
     return SymTen(_try_inv(S.xx), Zero(), Zero(), iSyy, iSyz, iSzz)
 end
@@ -96,5 +104,5 @@ end
     return idet * SymTen(m11, m12, m13, m22, m23, m33)
 end
 
-@inline LinearAlgebra.inv(T::Ten) = _inv(T)
+@inline Base.inv(T::Ten) = _inv(T)
 
