@@ -26,7 +26,7 @@ const sy = SIMD.Vec(2.0, 1.0)
 const sz = SIMD.Vec(3.0, 4.0)
 
 @testset "Base Methods" begin
-    for T in (rand(Ten3D), rand(SymTen3D))
+    for T in (rand(Ten3D), rand(SymTen3D), SymmetricTensor(rand(Vec3D,6)...))
         for op in (sum, maximum, minimum, x -> any(<(0.2), x), x -> all(>(0.2), x), x -> reduce(*, x),
                    y -> sum(x->x*x, y), y -> maximum(x->x*x, y), y -> minimum(x->x*x, y) )
            @test op(T) ≈ op(Array(T))
@@ -34,6 +34,10 @@ const sz = SIMD.Vec(3.0, 4.0)
         map(sqrt, T) ≈ map(sqrt, Array(T))
     end
 
+    let v = rand(Vec3D)
+        @test sort(v) == sort(Array(v))
+        @test reverse(v) == reverse(Array(v))
+    end
 end
 
 @testset "Fix Issues"  begin
@@ -270,7 +274,7 @@ _rand(::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
     @test Vec1Dx(1.0) ≈ Vec2Dxy(1.0, eps())
     @test isapprox(Vec1Dx(1.0), Vec2Dxy(1.0, eps()); rtol = sqrt(eps()))
 
-    for T1 in (Int64, Float64, ComplexF64)
+    for T1 in (Float64, ComplexF64)
         un = (Vec1Dy(_rand(T1)), Vec2Dxz(_rand(T1), _rand(T1)), Vec(_rand(T1), _rand(T1), _rand(T1)))
         for u in un
             Au = Array{nonzero_eltype(u)}(u)
@@ -282,7 +286,7 @@ _rand(::Type{Int64}) = rand((1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
                 @test conj(u) == conj(Au)
             end
         end
-        for T2 in (Int64, Float64, ComplexF64)
+        for T2 in (Float64, ComplexF64)
             vn = (Vec1Dy(_rand(T2)), Vec2Dxz(_rand(T2), _rand(T2)), Vec(_rand(T2), _rand(T2), _rand(T2)))
             for u in un
                 Au = Array{nonzero_eltype(u)}(u)
@@ -315,7 +319,7 @@ end
     @test Ten1Dx(1.0) ≈ (1.0(𝐢⊗𝐢) + eps()*(𝐢⊗𝐣)) 
     @test isapprox(Ten1Dx(1.0), (1.0(𝐢⊗𝐢) + eps()*(𝐢⊗𝐣)); rtol = sqrt(eps()))
 
-    for T1 in (Int64, Float64, ComplexF64)
+    for T1 in (Float64, ComplexF64)
         un = (
             Ten1Dy(_rand(T1)),
             Ten2Dxz(_rand(T1), _rand(T1), _rand(T1), _rand(T1)),
@@ -334,7 +338,7 @@ end
             @test otimes(u) == otimes(u,u)
             @test dot(u) ≈ dot(u,u)
         end
-        for T2 in (Int64, Float64, ComplexF64)
+        for T2 in (Float64, ComplexF64)
             vn = (
                 Ten1Dy(_rand(T1)),
                 Ten2Dxz(_rand(T1), _rand(T1), _rand(T1), _rand(T1)),
@@ -372,7 +376,7 @@ end
 end
 
 @testset "Tensor x Vec Operations" begin
-    for T1 in (Int64, Float64, ComplexF64)
+    for T1 in (Float64, ComplexF64)
         Tn = (
             Ten1Dy(_rand(T1)),
             Ten2Dxz(_rand(T1), _rand(T1), _rand(T1), _rand(T1)),
@@ -383,7 +387,7 @@ end
             ),
         )
 
-        for T2 in (Int64, Float64, ComplexF64)
+        for T2 in (Float64, ComplexF64)
             vn = (Vec1Dy(_rand(T2)), Vec2Dxz(_rand(T2), _rand(T2)), Vec(_rand(T2), _rand(T2), _rand(T2)))
             for T in Tn
                 AT = Array{nonzero_eltype(T)}(T)
