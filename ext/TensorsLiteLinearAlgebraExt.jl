@@ -76,6 +76,7 @@ end
 
 @inline LinearAlgebra.det(::AntiSymTen) = 𝟎
 
+include("LinearAlgebra/qr.jl")
 include("LinearAlgebra/eigen.jl")
 
 # include("LinearAlgebra/inv.jl")
