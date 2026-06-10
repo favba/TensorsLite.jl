@@ -1167,15 +1167,23 @@ test_inv(a::Union{<:Ten1Dx, <:SymTen1Dx}) = a ≈ 𝐢𝐢
 test_inv(a::Union{<:Ten1Dy, <:SymTen1Dy}) = a ≈ 𝐣𝐣
 test_inv(a::Union{<:Ten1Dz, <:SymTen1Dz}) = a ≈ 𝐤𝐤
 
-@testset "inv" begin
+@testset "QR, inv" begin
     for T in (rand(Ten3D), rand(Ten2Dxy), rand(Ten2Dxz), rand(Ten2Dyz), rand(Ten1Dx), rand(Ten1Dy), rand(Ten1Dz),
               rand(Ten2Dxy) + rand(Ten1Dz), rand(Ten2Dxz) + rand(Ten1Dy), rand(Ten2Dyz) + rand(Ten1Dx),
               rand(DiagTen3D), rand(DiagTen2Dxy), rand(DiagTen2Dxz), rand(DiagTen2Dyz),
               rand(SymTen3D), rand(SymTen2Dxy), rand(SymTen2Dxz), rand(SymTen2Dyz), rand(SymTen1Dx), rand(SymTen1Dy), rand(SymTen1Dz),
               rand(SymTen2Dxy) + rand(SymTen1Dz), rand(SymTen2Dxz) + rand(SymTen1Dy), rand(SymTen2Dyz) + rand(SymTen1Dx),
               rand(DiagSymTen3D), rand(DiagSymTen2Dxy), rand(DiagSymTen2Dxz), rand(DiagSymTen2Dyz),
+              rand(Ten3D{ComplexF64}), rand(Ten2Dxy{ComplexF64}), rand(Ten2Dxz{ComplexF64}), rand(Ten2Dyz{ComplexF64}), rand(Ten1Dx{ComplexF64}), rand(Ten1Dy{ComplexF64}), rand(Ten1Dz{ComplexF64}),
+              rand(Ten2Dxy{ComplexF64}) + rand(Ten1Dz{ComplexF64}), rand(Ten2Dxz{ComplexF64}) + rand(Ten1Dy{ComplexF64}), rand(Ten2Dyz{ComplexF64}) + rand(Ten1Dx{ComplexF64}),
+              rand(DiagTen3D{ComplexF64}), rand(DiagTen2Dxy{ComplexF64}), rand(DiagTen2Dxz{ComplexF64}), rand(DiagTen2Dyz{ComplexF64}),
+              rand(SymTen3D{ComplexF64}), rand(SymTen2Dxy{ComplexF64}), rand(SymTen2Dxz{ComplexF64}), rand(SymTen2Dyz{ComplexF64}), rand(SymTen1Dx{ComplexF64}), rand(SymTen1Dy{ComplexF64}), rand(SymTen1Dz{ComplexF64}),
+              rand(SymTen2Dxy{ComplexF64}) + rand(SymTen1Dz{ComplexF64}), rand(SymTen2Dxz{ComplexF64}) + rand(SymTen1Dy{ComplexF64}), rand(SymTen2Dyz{ComplexF64}) + rand(SymTen1Dx{ComplexF64}),
+              rand(DiagSymTen3D{ComplexF64}), rand(DiagSymTen2Dxy{ComplexF64}), rand(DiagSymTen2Dxz{ComplexF64}), rand(DiagSymTen2Dyz{ComplexF64}),
               )
         @test test_inv(inv(T)*T)
+        Q, R = qr(T)
+        @test Q*R ≈ T
     end
 end
 
