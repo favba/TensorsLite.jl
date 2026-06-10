@@ -73,6 +73,9 @@ end
         @test real(e.y) <= real(e.z)
     end
 
+    let T = Ten(xx=One(), xy=One(), yx=rand())
+        @test eigvals(T) == eigen(T).values
+    end
 end
 
 @testset "Vec Constructors" begin

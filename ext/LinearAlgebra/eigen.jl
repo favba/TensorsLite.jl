@@ -108,13 +108,20 @@ end
 
 end
 
-@inline _out_eltype(::Type{T}) where {T} = Base.promote_op(fsqrt, T)
+function _dummy_ten_2d(T11, T12, T21, T22)
+    To2 = (T11 + T22)/2
+    mD =  T12*T21 - T11*T22
+    delta2 = muladd(To2, To2, mD)
+    return fsqrt(abs(delta2))
+end
+
+@inline _out_eltype(T11, T12, T21, T22) = Base.promote_op(_dummy_ten_2d, typeof(T11), typeof(T12), typeof(T21), typeof(T22))
 
 @inline function LinearAlgebra.eigen(T::QuasiTen2Dxy)
     evals, evecs = _eigen_Ten2D(T.xx, T.xy, T.yx, T.yy)
     e = Vec2Dxy(evals...) + T.zz*𝐤
     ev = Tensor(Vec2Dxy(evecs[1]...), Vec2Dxy(evecs[2]...), 𝐤)
-    To1 = _out_eltype(promote_type(typeof(T.xx), typeof(T.xy), typeof(T.yx), typeof(T.yy)))
+    To1 = _out_eltype(T.xx, T.xy, T.yx, T.yy)
     CTo1 = Complex{To1}
     T2 = typeof(T.zz)
     CTo2 = T2 === Zero ? Zero : CTo1
@@ -127,7 +134,7 @@ end
     evals, evecs = _eigen_Ten2D(T.xx, T.xz, T.zx, T.zz)
     e = Vec2Dxz(evals...) + T.yy*𝐣
     ev = Tensor(Vec2Dxz(evecs[1]...), 𝐣, Vec2Dxz(evecs[2]...))
-    To1 = _out_eltype(promote_type(typeof(T.xx), typeof(T.xz), typeof(T.zx), typeof(T.zz)))
+    To1 = _out_eltype(T.xx, T.xz, T.zx, T.zz)
     CTo1 = Complex{To1}
     T2 = typeof(T.yy)
     CTo2 = T2 === Zero ? Zero : CTo1
@@ -140,7 +147,7 @@ end
     evals, evecs = _eigen_Ten2D(T.yy, T.yz, T.zy, T.zz)
     e = Vec2Dyz(evals...) + T.xx*𝐢
     ev = Tensor(𝐢, Vec2Dyz(evecs[1]...), Vec2Dyz(evecs[2]...))
-    To1 = _out_eltype(promote_type(typeof(T.yy), typeof(T.yz), typeof(T.zy), typeof(T.zz)))
+    To1 = _out_eltype(T.yy, T.yz, T.zy, T.zz)
     CTo1 = Complex{To1}
     T2 = typeof(T.xx)
     CTo2 = T2 === Zero ? Zero : CTo1
