@@ -77,6 +77,8 @@ end
 
 @inline LinearAlgebra.det(::AntiSymTen) = 𝟎
 
+@inline LinearAlgebra.diag(T::Ten) = Vec(T.xx, T.yy, T.zz)
+@inline LinearAlgebra.diagm(v::Vec) = TensorsLite.DiagTen(v.x, v.y, v.z)
 
 include("LinearAlgebra/lu.jl")
 include("LinearAlgebra/qr.jl")
