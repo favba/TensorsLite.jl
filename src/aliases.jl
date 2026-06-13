@@ -208,6 +208,19 @@ const QuasiTen2Dxy = Tensor{2, <:Any, <:DVec2Dxy, <:DVec2Dxy, <:DVec1Dz}
 const QuasiTen2Dxz = Tensor{2, <:Any, <:DVec2Dxz, <:DVec1Dy, <:DVec2Dxz}
 const QuasiTen2Dyz = Tensor{2, <:Any, <:DVec1Dx, <:DVec2Dyz, <:DVec2Dyz}
 
+const DUTriTen = Tensor{2, <:Any, <:DVec1Dx, <:DVec2Dxy, <:Vec}
+const DLTriTen = Tensor{2, <:Any, <:Vec, <:DVec2Dyz, <:DVec1Dz}
+
+const UTriTen3D{T} = Tensor{2, Union{T, Zero}, Vec1Dx{T}, Vec2Dxy{T}, Vec3D{T}}
+const UTriTen2Dxy{T} = Tensor{2, Union{T, Zero}, Vec1Dx{T}, Vec2Dxy{T}, Vec0D}
+const UTriTen2Dxz{T} = Tensor{2, Union{T, Zero}, Vec1Dx{T}, Vec0D, Vec2Dxz{T}}
+const UTriTen2Dyz{T} = Tensor{2, Union{T, Zero}, Vec0D, Vec1Dy{T}, Vec2Dyz{T}}
+
+const LTriTen3D{T} = Tensor{2, Union{T, Zero}, Vec3D{T}, Vec2Dyz{T}, Vec1Dz{T}}
+const LTriTen2Dxy{T} = Tensor{2, Union{T, Zero}, Vec2Dxy{T}, Vec1Dy{T}, Vec0D}
+const LTriTen2Dxz{T} = Tensor{2, Union{T, Zero}, Vec2Dxz{T}, Vec0D, Vec1Dz{T}}
+const LTriTen2Dyz{T} = Tensor{2, Union{T, Zero}, Vec0D, Vec2Dyz{T}, Vec1Dz{T}}
+
 ########################## aliases ###########################
 
 ########################## Vec constructors ###########################

@@ -21,6 +21,8 @@ export DiagTen3D, DiagTen2Dxy, DiagTen2Dxz, DiagTen2Dyz
 export SymTen3D, SymTen2Dxy, SymTen2Dxz, SymTen2Dyz, SymTen1Dx, SymTen1Dy, SymTen1Dz
 export DiagSymTen3D, DiagSymTen2Dxy, DiagSymTen2Dxz, DiagSymTen2Dyz
 export AntiSymTen3D, AntiSymTen2Dxy, AntiSymTen2Dxz, AntiSymTen2Dyz
+export UTriTen3D, UTriTen2Dxy, UTriTen2Dxz, UTriTen2Dyz
+export LTriTen3D, LTriTen2Dxy, LTriTen2Dxz, LTriTen2Dyz
 
 #Useful Union Tensor types (for method dispatch)
 export Vec2D, Vec1D, VecND, Ten2D, Ten1D, TenND
@@ -314,6 +316,12 @@ end
         return getfield(T, s)
     end
 end
+
+#Useful for deconstruction: x, y, z = v
+@inline Base.iterate(v::Vec) = (v.x, Val{:y}())
+@inline Base.iterate(v::Vec, ::Val{:y}) = (v.y, Val{:z}())
+@inline Base.iterate(v::Vec, ::Val{:z}) = (v.z, Val{:done}())
+@inline Base.iterate(::Vec, ::Val{:done}) = nothing
 
 # useful compile time constant tensors
 """
