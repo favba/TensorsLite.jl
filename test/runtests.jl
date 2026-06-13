@@ -1155,6 +1155,8 @@ end
             rand(SymTen2Dxy{Float64}) + rand()*otimes(𝐤), rand(SymTen2Dxz{Float64}) + rand()*otimes(𝐣), rand(SymTen2Dyz{Float64}) + rand()*otimes(𝐢),
             rand(Ten2Dxy{Float64}) + rand()*otimes(𝐤), rand(Ten2Dxz{Float64}) + rand()*otimes(𝐣), rand(Ten2Dyz{Float64}) + rand()*otimes(𝐢),
             rand(SymTen3D{Float64}), -rand(SymTen3D{Float64}),
+            rand(Ten3D{Float64}), -rand(Ten3D{Float64}),
+            rand(Ten3D{ComplexF64}), -rand(Ten3D{ComplexF64}),
         )
 
         @test r_eigen(T, eigen(T))
@@ -1170,7 +1172,7 @@ test_inv(a::Union{<:Ten1Dx, <:SymTen1Dx}) = a ≈ 𝐢𝐢
 test_inv(a::Union{<:Ten1Dy, <:SymTen1Dy}) = a ≈ 𝐣𝐣
 test_inv(a::Union{<:Ten1Dz, <:SymTen1Dz}) = a ≈ 𝐤𝐤
 
-@testset "QR, inv" begin
+@testset "Factorizations and inv" begin
     for T in (rand(Ten3D), rand(Ten2Dxy), rand(Ten2Dxz), rand(Ten2Dyz), rand(Ten1Dx), rand(Ten1Dy), rand(Ten1Dz),
               rand(Ten2Dxy) + rand(Ten1Dz), rand(Ten2Dxz) + rand(Ten1Dy), rand(Ten2Dyz) + rand(Ten1Dx),
               rand(DiagTen3D), rand(DiagTen2Dxy), rand(DiagTen2Dxz), rand(DiagTen2Dyz),
@@ -1185,8 +1187,15 @@ test_inv(a::Union{<:Ten1Dz, <:SymTen1Dz}) = a ≈ 𝐤𝐤
               rand(DiagSymTen3D{ComplexF64}), rand(DiagSymTen2Dxy{ComplexF64}), rand(DiagSymTen2Dxz{ComplexF64}), rand(DiagSymTen2Dyz{ComplexF64}),
               )
         @test test_inv(inv(T)*T)
+
         Q, R = qr(T)
         @test Q*R ≈ T
+
+        L, U = lu(T)
+        @test L*U ≈ T
+
+        # U, D, Vt = svd(T)
+        # @test U*diagm(D)*Vt ≈ T
     end
 end
 
