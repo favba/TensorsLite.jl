@@ -1194,8 +1194,10 @@ test_inv(a::Union{<:Ten1Dz, <:SymTen1Dz}) = a ≈ 𝐤𝐤
         L, U = lu(T)
         @test L*U ≈ T
 
-        # U, D, Vt = svd(T)
-        # @test U*diagm(D)*Vt ≈ T
+        if nonzero_eltype(T) <: Real
+            U, D, Vt = svd(T)
+            @test U*diagm(D)*Vt ≈ T
+        end
     end
 end
 

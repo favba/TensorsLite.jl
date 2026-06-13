@@ -84,6 +84,6 @@ include("LinearAlgebra/lu.jl")
 include("LinearAlgebra/qr.jl")
 include("LinearAlgebra/eigen.jl")
 
-# include("LinearAlgebra/inv.jl")
+include("LinearAlgebra/svd.jl")
 
 end
