@@ -6,7 +6,7 @@ end
 
 Base.iterate(S::QR) = (S.Q, Val(:R))
 Base.iterate(S::QR, ::Val{:R}) = (S.R, Val(:done))
-Base.iterate(S::QR, ::Val{:done}) = nothing
+Base.iterate(::QR, ::Val{:done}) = nothing
 
 function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, F::QR)
     summary(io, F); println(io)
@@ -15,6 +15,16 @@ function Base.show(io::IO, mime::MIME{Symbol("text/plain")}, F::QR)
     println(io, "\nR matrix:")
     show(io, mime, F.R)
 end
+
+@inline LinearAlgebra.dot(q::QR, T::AbstractTensor) = LinearAlgebra.dot(q.Q, LinearAlgebra.dot(q.R,T))
+
+@inline LinearAlgebra.dot(T::AbstractTensor, q::QR) = LinearAlgebra.dot(LinearAlgebra.dot(T, q.Q), q.R)
+
+@inline Base.:*(q::QR, T::Union{<:Ten,<:Vec}) = q.Q * (q.R*T)
+
+@inline Base.:*(T::Ten, q::QR) = (T*q.Q) * q.R
+
+@inline Base.:\(q::QR, v::Vec) = q.R \ (q.Q' * v)
 
 @inline _normalize(x) = copysign(one(x), x)
 
@@ -77,3 +87,4 @@ end
     Q = H1*H2
     return QR(Q, R)
 end
+

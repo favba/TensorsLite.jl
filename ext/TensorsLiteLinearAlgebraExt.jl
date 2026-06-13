@@ -5,8 +5,9 @@ using TensorsLite, Zeros
 import TensorsLite: dot, DiagTen, DiagSymTen, DDiagTen, DDiagSymTen
 import TensorsLite: QuasiTen2Dxy, QuasiTen2Dxz, QuasiTen2Dyz
 import TensorsLite: QuasiSymTen2Dxy, QuasiSymTen2Dxz, QuasiSymTen2Dyz
+import TensorsLite: DUTriTen, DLTriTen
 
-import LinearAlgebra: LinearAlgebra, norm, ⋅, cross, normalize
+import LinearAlgebra: LinearAlgebra, norm, ⋅, cross, normalize, ×
 
 # Resolve method ambiguity for broadcasting, but I actually don't know when (or if) this
 # case would ever happen and if this would be a proper fix
@@ -76,6 +77,8 @@ end
 
 @inline LinearAlgebra.det(::AntiSymTen) = 𝟎
 
+
+include("LinearAlgebra/lu.jl")
 include("LinearAlgebra/qr.jl")
 include("LinearAlgebra/eigen.jl")
 
