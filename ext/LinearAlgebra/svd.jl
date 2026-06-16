@@ -51,14 +51,12 @@ _try_pinv(x, tol) = ifelse(abs(x) > tol, inv(x), zero(x))
 
 @inline _fix_rank(U::Ten, ::Ten) = U
 #Ten2Dxy
-@inline _fix_rank(U::Ten, ::Tensor{2, Union{T, Zero, One}, Vec2Dxy{T}, Vec2Dxy{T}, Vec1Dz{One}}) where {T} = Ten(U.x, U.y, 𝐤)
+@inline _fix_rank(U::Ten, ::Tensor{2, <:Any, <:DVec2Dxy, <:DVec2Dxy, Vec1Dz{One}}) = Ten(U.x, U.y, 𝐤)
 #Ten2Dxz
-@inline _fix_rank(U::Ten, ::Tensor{2, Union{T, Zero, One}, Vec2Dxz{T}, Vec2Dxz{T}, Vec1Dy{One}}) where {T} = Ten(U.x, U.y, 𝐣)
+@inline _fix_rank(U::Ten, ::Tensor{2, <:Any, <:DVec2Dxz, <:DVec2Dxz, Vec1Dy{One}}) = Ten(U.x, U.y, 𝐣)
 #Ten2Dyz
-@inline _fix_rank(U::Ten, ::Tensor{2, Union{T, Zero, One}, Vec2Dyz{T}, Vec2Dyz{T}, Vec1Dx{One}}) where {T} = Ten(U.x, U.y, 𝐢)
-# @inline _fix_rank(U, V::DiagTen3D{One}) = V
+@inline _fix_rank(U::Ten, ::Tensor{2, <:Any, <:DVec2Dyz, <:DVec2Dyz, Vec1Dx{One}}) = Ten(U.x, U.y, 𝐢)
 
-@inline _eps(λ::Vec{T}) where {T<:Union{Zero, <:Complex}} = eps(abs(λ.x))
 @inline _eps(λ::Vec) = eps(nonzero_eltype(λ)(λ.x))
 @inline _eps(λ::Vec0D) = Zero()
 
@@ -87,7 +85,7 @@ end
 
 @inline LinearAlgebra.svd(T::Ten) = _svd(T)
 
-@inline function LinearAlgebra.svdvals(T::Ten)
+@inline function _svdvals(T::Ten)
     _eig = LinearAlgebra.eigvals(tdot(T))
     eig = _convert_ones(_eig)
 
@@ -98,6 +96,8 @@ end
 
     return map(fsqrt, λ)
 end
+
+@inline LinearAlgebra.svdvals(T::Ten) = _svdvals(T)
 
 @inline function LinearAlgebra.rank(A::Ten;
                                     atol = 0.0,

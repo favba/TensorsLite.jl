@@ -4,6 +4,7 @@ using TensorsLite, Zeros
 
 import TensorsLite: dot, DiagTen, DiagSymTen, DDiagTen, DDiagSymTen
 import TensorsLite: QuasiTen2Dxy, QuasiTen2Dxz, QuasiTen2Dyz
+import TensorsLite: DVec2Dxy, DVec2Dxz, DVec2Dyz, DVec1Dx, DVec1Dy, DVec1Dz
 import TensorsLite: QuasiSymTen2Dxy, QuasiSymTen2Dxz, QuasiSymTen2Dyz
 import TensorsLite: DUTriTen, DLTriTen
 
