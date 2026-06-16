@@ -180,8 +180,7 @@ end
     To2 = (T11 + T22)/2
     mD =  T12*T12 - T11*T22
 
-    delta2 = muladd(To2, To2, mD)
-    delta = fsqrt(delta2)
+    delta = fsqrt(muladd(To2, To2, mD))
     L1 = To2 + delta
     L2 = To2 - delta
 
@@ -333,6 +332,8 @@ end
     return SymTen(xx, xy, xz, yy, yz, zz)
 end
 
+@inline apply_jocobi_rotation(S::SymTen, V::Val{P}) where {P} = apply_jocobi_rotation(S, build_jacobi_rotation_matrix(S, V), V)
+
 @inline function sort_eigen(v, T)
     a = v.x
     b = v.y
@@ -370,7 +371,7 @@ end
     Vxz = Val{:xz}()
     Vyz = Val{:yz}()
 
-    a_tol = eps(maximum(abs, S))
+    a_tol = eps(norm(S))
 
     _Gxy = build_jacobi_rotation_matrix(S, Vxy)
     _S1 = apply_jocobi_rotation(S, _Gxy, Vxy)
@@ -414,29 +415,21 @@ end
     Vxz = Val{:xz}()
     Vyz = Val{:yz}()
 
-    a_tol = eps(maximum(abs, S))
+    a_tol = eps(norm(S))
 
-    _Gxy = build_jacobi_rotation_matrix(S, Vxy)
-    _S1 = apply_jocobi_rotation(S, _Gxy, Vxy)
+    _S1 = apply_jocobi_rotation(S, Vxy)
 
-    _Gxz = build_jacobi_rotation_matrix(_S1, Vxz)
-    _S2 = apply_jocobi_rotation(_S1, _Gxz, Vxz)
+    _S2 = apply_jocobi_rotation(_S1, Vxz)
 
-    _Gyz = build_jacobi_rotation_matrix(_S2, Vyz)
-
-    S3 = apply_jocobi_rotation(_S2, _Gyz, Vyz)
+    S3 = apply_jocobi_rotation(_S2, Vyz)
 
     i = 1
     while _not_converged(S3, a_tol) && (i <= 9)
-        Gxy = build_jacobi_rotation_matrix(S3, Vxy)
-        S1 = apply_jocobi_rotation(S3, Gxy, Vxy)
+        S1 = apply_jocobi_rotation(S3, Vxy)
 
-        Gxz = build_jacobi_rotation_matrix(S1, Vxz)
-        S2 = apply_jocobi_rotation(S1, Gxz, Vxz)
+        S2 = apply_jocobi_rotation(S1, Vxz)
 
-        Gyz = build_jacobi_rotation_matrix(S2, Vyz)
-
-        S3 = apply_jocobi_rotation(S2, Gyz, Vyz)
+        S3 = apply_jocobi_rotation(S2, Vyz)
         i+=1
     end
 

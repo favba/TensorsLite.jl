@@ -1197,7 +1197,8 @@ test_inv(a::Union{<:Ten1Dz, <:SymTen1Dz}) = a ≈ 𝐤𝐤
         if nonzero_eltype(T) <: Real
             U, D, Vt = svd(T)
             @test U*diagm(D)*Vt ≈ T
-            @test svdvals(T) == D
+            @test svdvals(T) ≈ D
+            @test typeof(svdvals(T)) === typeof(D)
         end
     end
 end

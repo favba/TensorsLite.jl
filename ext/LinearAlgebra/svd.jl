@@ -37,14 +37,23 @@ _try_pinv(::Zero, tol) = Zero()
 
 _try_pinv(x, tol) = ifelse(abs(x) > tol, inv(x), zero(x))
 
-@inline _max_to_min(v::Vec, T::Ten) = (Vec(v.z, v.y, v.x), Ten(-T.z, T.y, T.x))
-@inline _max_to_min(v::DVec2Dxy, T::Ten) = (Vec(v.y, v.x, v.z), Ten(-T.y, T.x, T.z))
-@inline _max_to_min(v::DVec2Dxz, T::Ten) = (Vec(v.z, v.x, v.y), Ten(-T.z, T.x, T.y))
-@inline _max_to_min(v::DVec2Dyz, T::Ten) = (Vec(v.z, v.y, v.x), Ten(-T.z, T.y, T.x))
-@inline _max_to_min(v::DVec1Dx, T::Ten) = (v, T)
-@inline _max_to_min(v::DVec1Dy, T::Ten) = (Vec(v.y, v.z, v.x), Ten(-T.y, T.z, T.x))
-@inline _max_to_min(v::DVec1Dz, T::Ten) = (Vec(v.z, v.y, v.x), Ten(-T.z, T.y, T.x))
-@inline _max_to_min(v::Vec0D, T::Ten) = (v, T)
+@inline _max_to_min(v::Vec) = Vec(v.z, v.y, v.x)
+@inline _max_to_min(v::DVec2Dxy) = Vec(v.y, v.x, v.z)
+@inline _max_to_min(v::DVec2Dxz) = Vec(v.z, v.x, v.y)
+@inline _max_to_min(v::DVec2Dyz) = Vec(v.z, v.y, v.x)
+@inline _max_to_min(v::DVec1Dx) = v
+@inline _max_to_min(v::DVec1Dy) = Vec(v.y, v.z, v.x)
+@inline _max_to_min(v::DVec1Dz) = Vec(v.z, v.y, v.x)
+@inline _max_to_min(v::Vec0D) = v
+
+@inline _max_to_min(v::Vec, T::Ten) = (_max_to_min(v), Ten(-T.z, T.y, T.x))
+@inline _max_to_min(v::DVec2Dxy, T::Ten) = (_max_to_min(v), Ten(-T.y, T.x, T.z))
+@inline _max_to_min(v::DVec2Dxz, T::Ten) = (_max_to_min(v), Ten(-T.z, T.x, T.y))
+@inline _max_to_min(v::DVec2Dyz, T::Ten) = (_max_to_min(v), Ten(-T.z, T.y, T.x))
+@inline _max_to_min(v::DVec1Dx, T::Ten) = (_max_to_min(v), T)
+@inline _max_to_min(v::DVec1Dy, T::Ten) = (_max_to_min(v), Ten(-T.y, T.z, T.x))
+@inline _max_to_min(v::DVec1Dz, T::Ten) = (_max_to_min(v), Ten(-T.z, T.y, T.x))
+@inline _max_to_min(v::Vec0D, T::Ten) = (_max_to_min(v), T)
 
 @inline _to_zero(x, tol) = ifelse(abs(x) > tol, x, zero(x))
 @inline _to_zero(x::Union{Zero, One}, tol) = x
@@ -89,7 +98,7 @@ end
     _eig = LinearAlgebra.eigvals(tdot(T))
     eig = _convert_ones(_eig)
 
-    λ = sort(eig) |> reverse
+    λ = _max_to_min(eig)
 
     tol = _eps(λ)
     λ = Vec(_to_zero(λ.x, tol), _to_zero(λ.y, tol), _to_zero(λ.z, tol))
