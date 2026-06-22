@@ -325,9 +325,9 @@ tensorarray(::Type{T}, d::Integer, dims::Vararg{Integer}) where {T<:AbstractTens
 
 #Definitons so broadcast return a VecArray =======================================
 
-function Base.similar(bc::Broadcast.Broadcasted, ::Type{T}) where {T<:AbstractTensor}
+function Base.similar(bc::Broadcast.Broadcasted{Broadcast.DefaultArrayStyle{NN}}, ::Type{Tensor{T, N, Tx, Ty, Tz}}) where {NN, T, N, Tx, Ty, Tz}
     s = length.(axes(bc))
-    return tensorarray(T,s)
+    return tensorarray(Tensor{T, N, Tx, Ty, Tz},s)
 end
 
 @inline function Base.getproperty(T::TenArray, s::Symbol)

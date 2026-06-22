@@ -411,3 +411,12 @@ function tensorarray(::Type{AntiSymmetricTensor{N,T,Tx,Ty,Tz}}, dims::Dims) wher
     return AntiSymmetricTensorArray(tensorarray(Tx,dims), tensorarray(Ty,dims), tensorarray(Tz,dims))
 end
 
+function Base.similar(bc::Broadcast.Broadcasted{Broadcast.DefaultArrayStyle{NN}}, ::Type{SymmetricTensor{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}}) where {NN, T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz}
+    s = length.(axes(bc))
+    return tensorarray(SymmetricTensor{T, N, Txx, Tyx, Tzx, Tyy, Tzy, Tzz},s)
+end
+
+function Base.similar(bc::Broadcast.Broadcasted{Broadcast.DefaultArrayStyle{NN}}, ::Type{AntiSymmetricTensor{T, N, Tyx, Tzx, Tzy}}) where {NN, T, N, Tyx, Tzy, Tzx}
+    s = length.(axes(bc))
+    return tensorarray(AntiSymmetricTensor{T, N, Tyx, Tzx, Tzy},s)
+end
